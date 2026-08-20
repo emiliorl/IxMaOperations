@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useAppStore, InvoiceResult } from "@/lib/store";
+import React, { useEffect } from "react";
+import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Card, CardContent } from "@/components/ui/Card";
-import { FileText, CheckCircle2, RefreshCw, Calculator, FileCheck, ShieldCheck } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { RotateCw, Check } from "lucide-react";
 
 export function InvoiceParserSandbox() {
   const { invoiceResult, setInvoiceResult, invoiceLoading, setInvoiceLoading } =
@@ -35,78 +35,59 @@ export function InvoiceParserSandbox() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* Left Pane: Simulated Document View with Bounding Boxes */}
-      <div className="lg:col-span-6 flex flex-col space-y-4">
-        <div className="rounded-xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-emerald-400" />
-              <span className="font-mono text-xs text-slate-300">
-                commercial_customs_inv_88914.pdf
-              </span>
-            </div>
-            <Badge variant="cyan" className="text-[10px]">
-              LayoutLMv3 • Multi-Modal Vision
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      {/* Left Pane: Structured Document Viewer */}
+      <div className="lg:col-span-6 space-y-3">
+        <div className="rounded-lg border border-zinc-800 bg-[#0c0c0e] overflow-hidden shadow-sm p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3 text-xs font-mono text-zinc-400">
+            <span>customs_invoice_88914.pdf</span>
+            <Badge variant="default" className="text-[10px]">
+              LayoutLMv3 OCR
             </Badge>
           </div>
 
-          {/* Document Preview Frame */}
-          <div className="rounded-lg border border-slate-700/80 bg-slate-900/90 p-5 space-y-4 text-xs font-mono relative overflow-hidden">
-            {/* Header section with bounding highlights */}
-            <div className="flex justify-between items-start border-b border-slate-800 pb-3">
+          <div className="rounded border border-zinc-800 bg-zinc-950/80 p-4 space-y-3 text-xs font-mono">
+            {/* Vendor & Header */}
+            <div className="flex justify-between items-start border-b border-zinc-800 pb-2">
               <div>
-                <div className="text-[10px] text-slate-500 uppercase">Vendor (Confidence: 99.4%)</div>
-                <div className="text-emerald-300 font-bold text-sm bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/40 inline-block">
+                <span className="text-[10px] text-zinc-500 block">Vendor [99.4%]</span>
+                <span className="text-zinc-100 font-semibold border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 rounded inline-block">
                   {invoiceResult?.vendorName || "Apex Logistics Global Corp"}
-                </div>
+                </span>
               </div>
               <div className="text-right">
-                <div className="text-[10px] text-slate-500 uppercase">Invoice #</div>
-                <div className="text-slate-200 font-bold bg-slate-800/80 px-1.5 py-0.5 rounded inline-block">
+                <span className="text-[10px] text-zinc-500 block">Invoice #</span>
+                <span className="text-zinc-300">
                   {invoiceResult?.invoiceNumber || "INV-2026-88914"}
-                </div>
+                </span>
               </div>
             </div>
 
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400">
-              <div>Invoice Date: <span className="text-slate-200">{invoiceResult?.invoiceDate || "2026-08-14"}</span></div>
-              <div>Due Date: <span className="text-slate-200">{invoiceResult?.dueDate || "2026-09-14"}</span></div>
-            </div>
-
-            {/* Line items mock table */}
-            <div className="space-y-1.5 pt-2">
-              <div className="text-[10px] text-slate-500 uppercase border-b border-slate-800 pb-1">
-                Extracted Line Item Grid
-              </div>
+            {/* Line items table */}
+            <div className="space-y-1 pt-1">
+              <span className="text-[10px] text-zinc-500 uppercase block">Extracted Line Items</span>
               {invoiceResult?.items.map((item, idx) => (
                 <div
                   key={item.id || idx}
-                  className="flex justify-between items-center bg-slate-950/60 p-1.5 rounded border border-slate-800 hover:border-emerald-500/50 transition-colors"
+                  className="flex justify-between items-center bg-zinc-900/60 p-1.5 rounded border border-zinc-800/80 text-[11px]"
                 >
-                  <span className="text-slate-300 truncate max-w-[220px]">
-                    {item.description}
-                  </span>
-                  <div className="flex items-center gap-3 font-mono">
-                    <span className="text-slate-500">x{item.quantity}</span>
-                    <span className="text-emerald-300 font-semibold">
-                      ${item.total.toFixed(2)}
-                    </span>
+                  <span className="text-zinc-300 truncate max-w-[200px]">{item.description}</span>
+                  <div className="flex gap-2">
+                    <span className="text-zinc-500">x{item.quantity}</span>
+                    <span className="text-zinc-200 font-medium">${item.total.toFixed(2)}</span>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Calculation Totals */}
-            <div className="pt-2 border-t border-slate-800 flex justify-between items-end">
-              <div className="flex items-center gap-1 text-[11px] text-emerald-400">
-                <CheckCircle2 className="h-3.5 w-3.5" />
+            {/* Totals */}
+            <div className="pt-2 border-t border-zinc-800 flex justify-between items-center text-xs">
+              <div className="flex items-center gap-1 text-emerald-400 text-[11px]">
+                <Check className="h-3.5 w-3.5" />
                 <span>Math Check: Subtotal + Tax == Total</span>
               </div>
               <div className="text-right font-mono">
-                <span className="text-slate-400 text-xs block">Total Amount Due</span>
-                <span className="text-lg font-bold text-emerald-300">
+                <span className="text-zinc-100 font-semibold text-sm">
                   ${invoiceResult?.total.toFixed(2) || "5,105.70"}
                 </span>
               </div>
@@ -121,75 +102,43 @@ export function InvoiceParserSandbox() {
               disabled={invoiceLoading}
               className="text-xs"
             >
-              <RefreshCw className={`h-3 w-3 mr-1.5 ${invoiceLoading ? "animate-spin text-emerald-400" : ""}`} />
+              <RotateCw className={`h-3 w-3 mr-1.5 ${invoiceLoading ? "animate-spin" : ""}`} />
               Re-extract Layout
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Right Pane: Structured JSON & Verification Audit */}
-      <div className="lg:col-span-6 flex flex-col space-y-4">
-        <Card className="border-slate-800 bg-slate-900/90 shadow-xl">
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileCheck className="h-5 w-5 text-emerald-400" />
-              <h4 className="font-bold text-white text-sm">Automated Reconciliation Audit</h4>
-            </div>
-            <Badge variant="default" className="text-[10px]">
-              100% Match
+      {/* Right Pane: Normalized Schema JSON */}
+      <div className="lg:col-span-6 space-y-3">
+        <Card className="p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <h4 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider font-mono">
+              Normalized ERP Schema
+            </h4>
+            <Badge variant="active" className="text-[10px]">
+              Math Verified
             </Badge>
           </div>
 
-          <CardContent className="p-5 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-                  OCR Vision Confidence
-                </span>
-                <span className="text-base font-bold text-emerald-400 font-mono">
-                  {invoiceResult ? `${(invoiceResult.ocrConfidence * 100).toFixed(1)}%` : "99.1%"}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-                  Mathematical Audit
-                </span>
-                <span className="text-base font-bold text-emerald-400 font-mono flex items-center gap-1">
-                  <Calculator className="h-4 w-4 text-emerald-400" />
-                  VERIFIED
-                </span>
-              </div>
-            </div>
-
-            {/* JSON Payload Inspector */}
-            <div className="rounded-lg bg-slate-950 p-3 border border-slate-800 space-y-1">
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                Normalized Schema Output
-              </div>
-              <pre className="text-[11px] font-mono text-cyan-300/90 overflow-x-auto max-h-48 p-2 bg-slate-900/80 rounded border border-slate-800">
+          <pre className="text-xs font-mono text-zinc-300 bg-zinc-950 p-3 rounded border border-zinc-800 overflow-x-auto max-h-56">
 {JSON.stringify(
   {
     invoiceNumber: invoiceResult?.invoiceNumber || "INV-2026-88914",
     vendor: invoiceResult?.vendorName || "Apex Logistics",
     itemsCount: invoiceResult?.items?.length || 4,
-    total: invoiceResult?.total || 5105.7,
-    status: "RECONCILED_FOR_PAYMENT",
+    totalAmount: invoiceResult?.total || 5105.7,
+    mathValidation: "MATCHED_EXACT",
+    accountingStatus: "READY_FOR_PAYMENT",
   },
   null,
   2
 )}
-              </pre>
-            </div>
+          </pre>
 
-            <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-800/40 flex items-start gap-2.5">
-              <ShieldCheck className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-              <div className="text-[11px] text-emerald-200/90 leading-relaxed">
-                Connects directly to <strong>ERP / QuickBooks / SAP</strong> via webhook for automated zero-touch payment reconciliation.
-              </div>
-            </div>
-          </CardContent>
+          <p className="text-xs text-zinc-400">
+            Automatically dispatches reconciled JSON payloads to SAP, NetSuite, and QuickBooks webhook endpoints.
+          </p>
         </Card>
       </div>
     </div>

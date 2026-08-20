@@ -5,8 +5,8 @@ import { useAppStore, ScraperLog } from "@/lib/store";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Terminal, Play, Square, Download, ShieldAlert, CheckCircle2, RotateCw } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Play, RotateCw, Download } from "lucide-react";
 
 export function ScraperTerminalSandbox() {
   const {
@@ -19,7 +19,7 @@ export function ScraperTerminalSandbox() {
     setScraperStats,
   } = useAppStore();
 
-  const [targetUrl, setTargetUrl] = useState("https://ecom-marketplace.com/industrial-sensors");
+  const [targetUrl, setTargetUrl] = useState("https://ecom-marketplace.com/sensors");
   const terminalEndRef = useRef<HTMLDivElement>(null);
 
   const startScrapeStream = () => {
@@ -61,7 +61,6 @@ export function ScraperTerminalSandbox() {
     terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [scraperLogs]);
 
-  // Initial trigger if empty
   useEffect(() => {
     if (scraperLogs.length === 0) {
       startScrapeStream();
@@ -69,35 +68,31 @@ export function ScraperTerminalSandbox() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* Terminal Live Stream View */}
-      <div className="lg:col-span-8 flex flex-col space-y-4">
-        <div className="rounded-xl border border-slate-800 bg-[#090d14] overflow-hidden shadow-2xl flex flex-col h-[420px]">
-          {/* Terminal Window Header */}
-          <div className="bg-slate-900/90 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      {/* Terminal Window Frame */}
+      <div className="lg:col-span-8 space-y-3">
+        <div className="rounded-lg border border-zinc-800 bg-[#09090b] overflow-hidden shadow-sm flex flex-col h-[380px]">
+          {/* Header Bar */}
+          <div className="bg-zinc-900/90 px-4 py-2 border-b border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-red-500/80" />
-                <div className="h-3 w-3 rounded-full bg-amber-500/80" />
-                <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
+                <div className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+                <div className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+                <div className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
               </div>
-              <span className="font-mono text-xs text-slate-400 ml-2">
-                stealth-worker@ixma-cluster:~ (Playwright Headless)
+              <span className="font-mono text-xs text-zinc-300 ml-2">
+                playwright_stealth_worker.py
               </span>
             </div>
-            <Badge
-              variant={isScraping ? "default" : "secondary"}
-              className="font-mono text-[10px] gap-1"
-            >
-              <span className={`h-1.5 w-1.5 rounded-full ${isScraping ? "bg-emerald-400 animate-ping" : "bg-slate-500"}`} />
-              {isScraping ? "LIVE STREAM (SSE)" : "COMPLETED"}
+            <Badge variant={isScraping ? "active" : "default"} className="text-[10px]">
+              {isScraping ? "STREAMING (SSE)" : "IDLE"}
             </Badge>
           </div>
 
-          {/* Terminal Stream Body */}
-          <div className="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-2 select-text">
-            <div className="text-slate-500">
-              [IXMA CLOUD] Node v20.12.0 • Playwright Stealth Engine v1.44 • Residential Proxy Pool active
+          {/* Terminal Log Output */}
+          <div className="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-1.5 select-text text-zinc-300">
+            <div className="text-zinc-500 text-[11px]">
+              [IXMA ENGINE] Headless Chromium stealth pool initialized.
             </div>
 
             {scraperLogs.map((log) => {
@@ -107,7 +102,7 @@ export function ScraperTerminalSandbox() {
 
               return (
                 <div key={log.id} className="flex items-start gap-2 leading-relaxed">
-                  <span className="text-slate-600 text-[10px]">{log.timestamp}</span>
+                  <span className="text-zinc-600 text-[10px]">{log.timestamp}</span>
                   <span
                     className={`font-semibold ${
                       isSuccess
@@ -116,107 +111,93 @@ export function ScraperTerminalSandbox() {
                         ? "text-amber-400"
                         : isError
                         ? "text-red-400"
-                        : "text-cyan-400"
+                        : "text-zinc-400"
                     }`}
                   >
                     [{log.level}]
                   </span>
-                  <span className="text-slate-300">{log.message}</span>
+                  <span className="text-zinc-200">{log.message}</span>
                 </div>
               );
             })}
 
             {isScraping && (
-              <div className="flex items-center gap-2 text-emerald-400 animate-pulse pt-2">
-                <span className="inline-block w-2 h-4 bg-emerald-400" />
-                <span>Executing stealth crawl task...</span>
+              <div className="flex items-center gap-2 text-zinc-400 pt-1">
+                <span className="inline-block w-1.5 h-3 bg-zinc-400 animate-pulse" />
+                <span>Executing worker tasks...</span>
               </div>
             )}
             <div ref={terminalEndRef} />
           </div>
         </div>
 
-        {/* URL Target Bar */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        {/* Target Input */}
+        <div className="flex gap-2">
           <Input
             value={targetUrl}
             onChange={(e) => setTargetUrl(e.target.value)}
-            placeholder="https://target-ecommerce.com/catalog"
-            className="font-mono text-xs bg-slate-900 border-slate-800"
+            placeholder="https://target-catalog.com/products"
+            className="font-mono text-xs"
           />
           <Button
             onClick={startScrapeStream}
             disabled={isScraping}
             variant="default"
-            className="gap-2 shrink-0"
+            size="sm"
+            className="gap-1.5 shrink-0"
           >
             {isScraping ? (
               <>
-                <RotateCw className="h-4 w-4 animate-spin" />
-                Running...
+                <RotateCw className="h-3.5 w-3.5 animate-spin" />
+                Scraping...
               </>
             ) : (
               <>
-                <Play className="h-4 w-4" />
-                Execute Stealth Scrape
+                <Play className="h-3.5 w-3.5" />
+                Run Scraper
               </>
             )}
           </Button>
         </div>
       </div>
 
-      {/* Structured Output & Download Card */}
-      <div className="lg:col-span-4 flex flex-col space-y-4">
-        <Card className="border-slate-800 bg-slate-900/90 shadow-xl">
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-            <h4 className="font-bold text-white text-sm">Extraction Summary</h4>
-            <Badge variant="cyan" className="text-[10px]">
-              Schema Ready
+      {/* Structured Output Card */}
+      <div className="lg:col-span-4 space-y-3">
+        <Card className="p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <h4 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider font-mono">
+              Extraction Summary
+            </h4>
+            <Badge variant="default" className="text-[10px]">
+              Ready
             </Badge>
           </div>
 
-          <CardContent className="p-5 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-                  Pages Crawled
-                </span>
-                <span className="text-xl font-bold text-slate-100 font-mono">
-                  {scraperStats.pagesScraped || 5}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
-                  SKUs Extracted
-                </span>
-                <span className="text-xl font-bold text-emerald-400 font-mono">
-                  {scraperStats.itemsExtracted || 42}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800/80 space-y-1">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
-                Defense Bypass Telemetry
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="p-2.5 rounded bg-zinc-950 border border-zinc-800">
+              <span className="text-zinc-500 text-[10px] block">Pages Crawled</span>
+              <span className="text-base font-semibold text-zinc-100 mt-0.5 block">
+                {scraperStats.pagesScraped || 5}
               </span>
-              <div className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                Cloudflare Turnstile 100% Solved
-              </div>
             </div>
 
-            <Button
-              variant="secondary"
-              className="w-full justify-center gap-2 border-slate-700 hover:bg-slate-800"
-              onClick={() => {
-                alert("Simulated CSV download: 42 structured SKU records generated.");
-              }}
-            >
-              <Download className="h-4 w-4 text-emerald-400" />
-              Download Extracted CSV
-            </Button>
-          </CardContent>
+            <div className="p-2.5 rounded bg-zinc-950 border border-zinc-800">
+              <span className="text-zinc-500 text-[10px] block">SKUs Parsed</span>
+              <span className="text-base font-semibold text-zinc-100 mt-0.5 block">
+                {scraperStats.itemsExtracted || 42}
+              </span>
+            </div>
+          </div>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full justify-center gap-1.5 text-xs"
+            onClick={() => alert("CSV Export: 42 records downloaded.")}
+          >
+            <Download className="h-3.5 w-3.5" />
+            Download Extracted CSV
+          </Button>
         </Card>
       </div>
     </div>

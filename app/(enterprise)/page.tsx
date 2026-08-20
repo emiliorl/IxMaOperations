@@ -10,11 +10,10 @@ import { InvoiceParserSandbox } from "@/components/sandboxes/InvoiceParserSandbo
 import { ScraperTerminalSandbox } from "@/components/sandboxes/ScraperTerminalSandbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import { Badge } from "@/components/ui/Badge";
-import { Camera, ShieldAlert, FileText, Terminal, Sparkles } from "lucide-react";
 
 export default function EnterpriseHomePage() {
   return (
-    <div className="space-y-12">
+    <div>
       {/* 1. High-Ticket Positioning Hero */}
       <HeroSection />
 
@@ -22,57 +21,53 @@ export default function EnterpriseHomePage() {
       <ROIStatsGrid />
 
       {/* 3. Live Interactive Portfolio Sandboxes Showcase */}
-      <section className="py-16 container mx-auto px-4 max-w-6xl">
-        <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
-          <Badge variant="cyan" className="text-[10px] font-mono mb-1">
-            Live Engineering Laboratory
-          </Badge>
-          <h2 className="text-3xl font-extrabold text-white tracking-tight">
-            Interactive Technical Sandboxes
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Test our sub-15ms edge inference, defect segmentation heatmaps, and document vision engines live.
-          </p>
-        </div>
-
-        <Tabs defaultValue="alpr" className="w-full space-y-6">
-          <div className="flex justify-center">
-            <TabsList className="bg-slate-900 border-slate-800 p-1.5 h-auto flex-wrap">
-              <TabsTrigger value="alpr" className="gap-2 text-xs py-2 px-4">
-                <Camera className="h-4 w-4" />
-                ALPR & Logistics OCR
-              </TabsTrigger>
-              <TabsTrigger value="qc" className="gap-2 text-xs py-2 px-4">
-                <ShieldAlert className="h-4 w-4" />
-                Defect QC Inspector
-              </TabsTrigger>
-              <TabsTrigger value="invoice" className="gap-2 text-xs py-2 px-4">
-                <FileText className="h-4 w-4" />
-                Document LayoutLM
-              </TabsTrigger>
-              <TabsTrigger value="scraper" className="gap-2 text-xs py-2 px-4">
-                <Terminal className="h-4 w-4" />
-                Live Playwright Scraper
-              </TabsTrigger>
-            </TabsList>
+      <section className="py-16 border-b border-zinc-800">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="max-w-xl mb-10 space-y-1.5">
+            <Badge variant="default" className="mb-2">
+              Interactive Lab
+            </Badge>
+            <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+              Production Sandboxes
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Test sub-15ms edge vision models, defect segmentation overlays, and streaming Playwright workers live.
+            </p>
           </div>
 
-          <TabsContent value="alpr">
-            <AlprOcrSandbox />
-          </TabsContent>
+          <Tabs defaultValue="alpr" className="w-full space-y-6">
+            <TabsList className="p-1 h-auto flex flex-wrap gap-1">
+              <TabsTrigger value="alpr" className="text-xs py-1.5 px-3">
+                ALPR & Logistics OCR
+              </TabsTrigger>
+              <TabsTrigger value="qc" className="text-xs py-1.5 px-3">
+                Defect QC Inspector
+              </TabsTrigger>
+              <TabsTrigger value="invoice" className="text-xs py-1.5 px-3">
+                Document LayoutLM
+              </TabsTrigger>
+              <TabsTrigger value="scraper" className="text-xs py-1.5 px-3">
+                Playwright Scraper
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="qc">
-            <DefectQcSandbox />
-          </TabsContent>
+            <TabsContent value="alpr">
+              <AlprOcrSandbox />
+            </TabsContent>
 
-          <TabsContent value="invoice">
-            <InvoiceParserSandbox />
-          </TabsContent>
+            <TabsContent value="qc">
+              <DefectQcSandbox />
+            </TabsContent>
 
-          <TabsContent value="scraper">
-            <ScraperTerminalSandbox />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="invoice">
+              <InvoiceParserSandbox />
+            </TabsContent>
+
+            <TabsContent value="scraper">
+              <ScraperTerminalSandbox />
+            </TabsContent>
+          </Tabs>
+        </div>
       </section>
 
       {/* 4. Industrial Architecture Pipeline */}

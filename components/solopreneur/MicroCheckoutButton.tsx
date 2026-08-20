@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMicroSprintCheckoutSession } from "@/lib/stripe";
 import { Button } from "@/components/ui/Button";
-import { ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { RotateCw } from "lucide-react";
 
 interface MicroCheckoutButtonProps {
   toolSlug: string;
@@ -38,7 +38,6 @@ export function MicroCheckoutButton({
       }
     } catch (e) {
       console.error("Checkout dispatch error:", e);
-      // Fallback
       router.push(`/onboarding/ix_ord_${Date.now()}?slug=${toolSlug}`);
     } finally {
       setLoading(false);
@@ -50,18 +49,15 @@ export function MicroCheckoutButton({
       onClick={handleCheckout}
       disabled={loading}
       variant="default"
-      className={`gap-2 font-semibold shadow-lg shadow-emerald-500/20 ${className || ""}`}
+      className={`font-semibold shadow-sm ${className || ""}`}
     >
       {loading ? (
         <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Securing Sprint Slot...
+          <RotateCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+          Processing...
         </>
       ) : (
-        <>
-          <Sparkles className="h-4 w-4" />
-          Launch 48-Hour Micro-Sprint (${priceAmount})
-        </>
+        `Launch 48-Hour Sprint ($${priceAmount})`
       )}
     </Button>
   );

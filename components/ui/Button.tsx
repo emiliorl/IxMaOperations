@@ -3,28 +3,26 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.99]",
   {
     variants: {
       variant: {
         default:
-          "bg-emerald-500 text-slate-950 font-semibold hover:bg-emerald-400 shadow-lg shadow-emerald-500/20",
+          "bg-zinc-100 text-zinc-900 font-semibold hover:bg-zinc-200 shadow-sm border border-zinc-200",
         secondary:
-          "bg-slate-800 text-slate-100 hover:bg-slate-700 border border-slate-700",
+          "bg-zinc-900/80 text-zinc-200 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700",
         outline:
-          "border border-slate-700 bg-transparent hover:bg-slate-800/60 text-slate-200",
+          "border border-zinc-800 bg-transparent hover:bg-zinc-900 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700",
         ghost:
-          "hover:bg-slate-800 text-slate-300 hover:text-slate-100",
-        cyan:
-          "bg-cyan-500 text-slate-950 font-semibold hover:bg-cyan-400 shadow-lg shadow-cyan-500/20",
+          "hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100",
         destructive:
-          "bg-red-600 text-white hover:bg-red-500 shadow-lg shadow-red-600/20",
+          "bg-red-950/60 text-red-300 hover:bg-red-900/80 border border-red-900/60",
       },
       size: {
-        default: "h-10 px-4 py-2",
+        default: "h-9 px-4 py-2",
         sm: "h-8 rounded px-3 text-xs",
-        lg: "h-12 rounded-lg px-6 text-base font-semibold",
-        icon: "h-10 w-10",
+        lg: "h-11 rounded-md px-6 text-sm font-semibold",
+        icon: "h-9 w-9",
       },
     },
     defaultVariants: {
