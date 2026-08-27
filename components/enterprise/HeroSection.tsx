@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Play } from "lucide-react";
 
 export function HeroSection() {
   const { setFeasibilityModalOpen } = useAppStore();
@@ -17,6 +16,13 @@ export function HeroSection() {
     setActiveTrack(track);
     if (track === "sprints") {
       router.push("/tools");
+    }
+  };
+
+  const scrollToSimulator = () => {
+    const el = document.getElementById("simulator");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -34,7 +40,7 @@ export function HeroSection() {
                   : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
-              Enterprise Deployments
+              Custom Systems & Automation
             </button>
             <button
               onClick={() => handleTrackChange("sprints")}
@@ -48,14 +54,15 @@ export function HeroSection() {
             </button>
           </div>
 
-          {/* Crisp White Heading — No Gradient AI Slop */}
+          {/* Crisp White Heading — Clear & Direct Value */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight text-white leading-[1.1]">
-            Deterministic AI systems for industrial and high-consequence operations.
+            Custom AI automations, intelligent data pipelines, and internal tools that eliminate manual busywork.
           </h1>
 
           {/* Subtitle */}
           <p className="text-base sm:text-lg text-zinc-400 leading-relaxed max-w-2xl">
-            We engineer sub-15ms TensorRT computer vision models, PLC hardware reject actuators, and multi-modal document reconciliation engines for manufacturing and enterprise logistics.
+            We turn repetitive manual workflows, messy documents, and disconnected software into reliable, high-speed
+            custom systems built specifically for your company. You own 100% of the code.
           </p>
 
           {/* Action CTAs */}
@@ -70,26 +77,36 @@ export function HeroSection() {
               <ArrowRight className="h-4 w-4" />
             </Button>
 
+            <Button
+              size="lg"
+              variant="secondary"
+              onClick={scrollToSimulator}
+              className="gap-2 justify-center"
+            >
+              <Play className="h-3.5 w-3.5 fill-current" />
+              See Practical Demos
+            </Button>
+
             <Link href="/audit" className="w-full sm:w-auto">
-              <Button size="lg" variant="secondary" className="w-full justify-center">
+              <Button size="lg" variant="ghost" className="w-full justify-center text-zinc-400 hover:text-zinc-200">
                 2-Week Discovery Audit
               </Button>
             </Link>
           </div>
 
           {/* Minimal Sourced Trust Badges */}
-          <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-zinc-400">
+          <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-zinc-400 font-mono">
             <div className="flex items-center gap-1.5">
               <Check className="h-3.5 w-3.5 text-zinc-300" />
-              <span>NVIDIA TensorRT 8.6+</span>
+              <span>100% Owned Source Code</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Check className="h-3.5 w-3.5 text-zinc-300" />
-              <span>OPC UA / Siemens PLC</span>
+              <span>Zero Per-Seat SaaS Taxes</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Check className="h-3.5 w-3.5 text-zinc-300" />
-              <span>Zero-Hallucination Guarantees</span>
+              <span>Private Cloud & On-Prem Deploy</span>
             </div>
           </div>
         </div>
@@ -97,3 +114,4 @@ export function HeroSection() {
     </section>
   );
 }
+

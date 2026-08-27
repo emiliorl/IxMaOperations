@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createMicroSprintCheckoutSession } from "@/lib/stripe";
 import { Button } from "@/components/ui/Button";
 import { RotateCw } from "lucide-react";
 
@@ -25,16 +24,26 @@ export function MicroCheckoutButton({
   const handleCheckout = async () => {
     setLoading(true);
     try {
-      const { checkoutUrl } = await createMicroSprintCheckoutSession({
-        toolSlug,
-        toolTitle,
-        priceAmount,
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toolSlug,
+          toolTitle,
+          priceAmount,
+        }),
       });
 
-      if (checkoutUrl.startsWith("http")) {
-        window.location.href = checkoutUrl;
+      const data = await res.json();
+
+      if (data.checkoutUrl) {
+        if (data.checkoutUrl.startsWith("http")) {
+          window.location.href = data.checkoutUrl;
+        } else {
+          router.push(data.checkoutUrl);
+        }
       } else {
-        router.push(checkoutUrl);
+        router.push(`/onboarding/${data.orderId || `ix_ord_${Date.now()}`}?slug=${toolSlug}`);
       }
     } catch (e) {
       console.error("Checkout dispatch error:", e);

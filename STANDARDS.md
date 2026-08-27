@@ -59,18 +59,18 @@ The color system relies on high-contrast neutrals, subtle hairline borders (`1px
 
 ## 4. Header & Navigation Constraints
 
-The header in the original layout was overcrowded with badges, pricing tags, and dual CTAs. All developers must adhere to the simplified navigation structure:
+> **v2 update (Aug 2026):** The dual-funnel Enterprise/Solopreneur track switcher has been retired along with pricing tiers and checkout CTAs. This is now a single, minimalist site — one nav, one CTA. See `PROJECT_BLUEPRINT.md` for the repositioning rationale.
 
 ```
-[ LOGO ]        Enterprise    Interactive Sandboxes    Case Studies          [ Book Feasibility Call ]
+[ LOGO ]        Services    Examples    Contact          [ Book a Call ]
 ```
 
 ### Navigation Rules
 
-1. **Maximum 4 Links:** Navigation links must be plain text with subtle hover states (`text-zinc-400 hover:text-zinc-100`).
-2. **NO Pricing Badges in Navigation:** Do NOT attach `($5k-$25k)` or `($499+)` tags inside header links.
-3. **Dual-Track Segmented Control:** Move the Enterprise vs. Solopreneur track switcher down to a dedicated, clean segmented control block directly inside the **Hero Section** or **Pricing Section**, NOT in the top sticky navbar.
-4. **Single Header CTA:** Exactly ONE high-contrast primary button (`Book Feasibility Call` on enterprise routes; `Explore Micro-Sprints` on `/tools`).
+1. **Maximum 4 Links:** Navigation links must be plain text with subtle hover states (`text-zinc-400 hover:text-zinc-100`). No track switcher, no dropdown mega-menu.
+2. **NO Pricing Badges in Navigation:** Do NOT attach price tags or tier badges inside header links.
+3. **No Segmented Control:** There is only one track now — do not reintroduce a track/tier switcher in the hero or header.
+4. **Single Header CTA:** Exactly ONE high-contrast primary button, consistent site-wide (`Book a Call` or `Get a Quote` — pick one as the default and use it everywhere; both route to `/contact`).
 
 ---
 
