@@ -13,8 +13,8 @@ This document tracks execution of the **v2 repositioning**: from the dual-funnel
 ```
 Legacy Build (Stages 1-6):        [██████████] 100% — Superseded, see note below
 Stage 7  (Content & IA):          [██████████] 100%
-Stage 8  (Nav & Layout):          [          ] 0%
-Stage 9  (Homepage + Examples):   [          ] 0%
+Stage 8  (Nav & Layout):          [██████████] 100%
+Stage 9  (Homepage + Examples):   [██████████] 100%
 Stage 10 (Service Detail Pages):  [          ] 0%
 Stage 11 (Contact + Scheduling):  [          ] 0%
 Stage 12 (Remove Dead Weight):    [          ] 0%
@@ -49,22 +49,25 @@ Full original breakdown preserved in git history / previous version of this file
 
 ---
 
-### 🔲 Stage 8: Navigation & Layout Simplification
+### ✅ Stage 8: Navigation & Layout Simplification — Complete (Aug 27, 2026)
 **Goal:** Collapse the dual-funnel header/layout into one simple site shell.
-- [ ] **Task 8.1:** Replace `app/(enterprise)/layout.tsx` and `app/(solopreneur)/layout.tsx` with a single `app/layout.tsx` shell — one header, one footer, no track switcher.
-- [ ] **Task 8.2:** Header: logo, 4 nav links max, one primary CTA button ("Book a Call" or "Get a Quote" — pick one as the site-wide default).
-- [ ] **Task 8.3:** Footer: contact links, and a link to `/contact` again.
-- **Stage 8 Verification:** No page in the app references the old Enterprise/Solopreneur toggle.
+- [x] **Task 8.1:** Deleted `app/(enterprise)/layout.tsx` and `app/(solopreneur)/layout.tsx`. `app/layout.tsx` is now the single root shell — imports `Header`/`Footer`, wraps `{children}` in `<main className="flex-1">`, and carries new v2 metadata (title/description/keywords rewritten, no more TensorRT/YOLOv8 keyword list).
+- [x] **Task 8.2:** New `components/layout/Header.tsx` — logo (links to `/`), nav = Services (`/#services`) / Examples (`/examples`) / Contact (`/contact`) (3 links, matches the exact mockup in `STANDARDS.md` Section 4 — logo doubles as Home), one primary CTA — **"Book a Call"**, routing to `/contact` everywhere via `buttonVariants` (added an export to `Button.tsx` so the CTA renders as a real `<Link>` styled like a button, avoiding an invalid nested `<a>`/`<button>`).
+- [x] **Task 8.3:** New `components/layout/Footer.tsx` — brand blurb, Services/Examples links, and two `/contact` links ("Get a Quote" and "Book a Call") so there's always a second way to reach it besides the header CTA.
+- **Stage 8 Verification:** ✅ No page references the old Enterprise/Solopreneur toggle — both group layouts (the only place the switcher link lived) are deleted; confirmed via repo-wide grep. `tsc --noEmit` shows zero new errors (the 11 remaining are pre-existing legacy issues in v1 code slated for Stage 12 removal — missing `stripe` package, a stale `Badge` `"cyan"` variant, `lib/crypto.ts` buffer typing — none touched by this stage).
+
+> Note: `app/(enterprise)/page.tsx` and the other legacy route-group pages still render under the new shell as-is (old copy, old components) since they no longer have their own layout — that's expected; Stage 9/10 replace their content and Stage 12 deletes the route groups outright.
 
 ---
 
-### 🔲 Stage 9: Homepage + Practical Examples Rebuild
+### ✅ Stage 9: Homepage + Practical Examples Rebuild — Complete (Aug 27, 2026)
 **Goal:** One clear homepage that shows what you do and who it's for within one scroll.
-- [ ] **Task 9.1:** `components/home/Hero.tsx` — repurpose `enterprise/HeroSection.tsx`, rewrite copy: who you help (solo operators/creators/VAs) + what you do (automate the repetitive grind) in one sentence, one CTA.
-- [ ] **Task 9.2:** `components/home/ServicesGrid.tsx` — repurpose `enterprise/ServicesMatrix.tsx` into a clean 5-card grid pulling from `lib/services.ts`.
-- [ ] **Task 9.3:** `components/home/ProcessSteps.tsx` — new, simple 3-step strip: Discover → Build → Deliver (replaces the old audit/discovery-call enterprise framing).
-- [ ] **Task 9.4:** `app/examples/page.tsx` — gallery view using `BeforeAfterSimulator.tsx` (kept as-is) to show a before/after for each offer in one place.
-- **Stage 9 Verification:** Homepage loads with no dual-funnel remnants; a first-time visitor can tell what you do and how to reach you without scrolling past unrelated content.
+- [x] **Task 9.1:** `components/home/Hero.tsx` — repurposed from `enterprise/HeroSection.tsx`; drops the enterprise/sprints track switcher entirely, one sentence on who it's for + what it does, single "Book a Call" CTA plus a secondary link to `/examples`.
+- [x] **Task 9.2:** `components/home/ServicesGrid.tsx` — repurposed from `enterprise/ServicesMatrix.tsx` into a 5-card grid pulling live from `lib/services.ts` (name, pitch, hours/week, grind description, link to `/services/[slug]`) instead of a hardcoded list.
+- [x] **Task 9.3:** `components/home/ProcessSteps.tsx` — new 3-step strip: Discover → Build → Deliver.
+- [x] **Task 9.4:** `app/examples/page.tsx` — gallery view using `components/sandboxes/BeforeAfterSimulator.tsx`. **Correction to the original plan:** the file's `SCENARIOS` data was still 100% v1 industrial-B2B content (document/PLC/SAML/Okta scenarios) — not actually reusable "as-is" without violating the no-jargon standard. Recopied it instead: kept the exact tabs + simulate mechanic, replaced all 6 old scenarios with 5 new ones matching `lib/services.ts` slugs 1:1, and dropped its Zustand/`FeasibilityModal` dependency in favor of a plain `/contact` link.
+- `app/page.tsx` (new) assembles Hero → ServicesGrid → ProcessSteps → closing CTA, replacing `app/(enterprise)/page.tsx` as the homepage (that file is deleted — it would otherwise collide with the new `/` route; the rest of the legacy `(enterprise)`/`(solopreneur)` route groups are untouched and still reachable at their own paths until Stage 12).
+- **Stage 9 Verification:** ✅ Homepage loads with no dual-funnel remnants — no track switcher, no Zustand-driven feasibility modal on the new pages. `tsc --noEmit` shows zero new errors (same 11 pre-existing legacy errors as Stage 8, none in any Stage 9 file).
 
 ---
 

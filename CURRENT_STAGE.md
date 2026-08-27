@@ -1,4 +1,4 @@
-# Current Stage Tracker: Stage 8 (Repositioning — Nav & Layout Simplification)
+# Current Stage Tracker: Stage 10 (Repositioning — Service Detail Pages + Recopied Demos)
 
 > **Active Document:** `CURRENT_STAGE.md`
 > **Target Branch:** `dev`
@@ -14,25 +14,30 @@ The v1 build (dual-funnel Enterprise/Solopreneur platform, Stripe checkout, AES-
 
 ---
 
-## ✅ Stage 7 — Content & Information Architecture (Complete, Aug 27, 2026)
+## ✅ Stages 7-9 — Complete (Aug 27, 2026)
 
-All 5 offers confirmed and modeled in `lib/services.ts` (`ServiceOffer[]`, plus `getServiceBySlug()`). Copy is plain-language, no industrial jargon. Sitemap and nav locked: `/`, `/services/[slug]`, `/examples`, `/contact` — nav = Home / Services / Examples / Contact, single site-wide CTA = **"Book a Call"** (routes to `/contact`). Full detail in `PLAN_PROGRESS.md` Stage 7.
+- **Stage 7 (Content & IA):** All 5 offers modeled in `lib/services.ts`. Sitemap/nav locked, CTA = "Book a Call".
+- **Stage 8 (Nav & Layout):** Single `app/layout.tsx` shell, `components/layout/Header.tsx` + `Footer.tsx`, both legacy group layouts deleted.
+- **Stage 9 (Homepage + Examples):** New `app/page.tsx` (Hero → ServicesGrid → ProcessSteps → CTA), `app/examples/page.tsx` using a recopied `BeforeAfterSimulator.tsx` (5 scenarios matching the 5 offers, no more v1 industrial content).
+
+Full detail in `PLAN_PROGRESS.md`.
 
 ---
 
-## 🎯 Current Focus: Stage 8 — Navigation & Layout Simplification
+## 🎯 Current Focus: Stage 10 — Service Detail Pages + Recopied Demos
 
-Collapse the dual-funnel header/layout into one simple site shell:
-1. Replace `app/(enterprise)/layout.tsx` and `app/(solopreneur)/layout.tsx` with a single `app/layout.tsx` — one header, one footer, no track switcher.
-2. Header: logo, 4 nav links (Home / Services / Examples / Contact), one primary CTA button — **"Book a Call"** (confirmed default, per Stage 7).
-3. Footer: contact links + a repeated link to `/contact`.
+One detail page per offer, with a concrete example — 2 of the 5 get a live interactive demo.
+1. `app/services/[slug]/page.tsx` — dynamic page rendering problem → solution → example → CTA from `lib/services.ts`.
+2. Recopy `ScraperTerminalSandbox.tsx` for **Lead Intelligence** — same SSE terminal UI, log lines reframed as "enriching a sample lead list."
+3. Recopy `InvoiceParserSandbox.tsx` for **Visual Asset Vault** — same split-pane extraction UI, framed as receipt/invoice OCR.
+4. Content Engine, Client Onboarding, and Inbox Copilot ship with the static before/after already built in Stage 9's `BeforeAfterSimulator` — no live sandbox needed yet.
 
-### Immediate Next Steps (Task 8.1–8.3 in `PLAN_PROGRESS.md`)
-- [ ] Build `app/layout.tsx` as the single root shell.
-- [ ] Build the header component (logo, 4 links, "Book a Call" CTA).
-- [ ] Build the footer component.
-- [ ] Remove references to the old Enterprise/Solopreneur toggle from any page still using it.
+### Immediate Next Steps (Task 10.1–10.4 in `PLAN_PROGRESS.md`)
+- [ ] Build `app/services/[slug]/page.tsx` using `getServiceBySlug()`.
+- [ ] Recopy the scraper sandbox for Lead Intelligence.
+- [ ] Recopy the invoice sandbox for Visual Asset Vault.
+- [ ] Confirm each of the 5 service cards on the homepage links to a working detail page.
 
 ### Also Needed Before Stage 11 Can Finish
-- [x] Calendly confirmed — booking link stored in `.env.local` as `NEXT_PUBLIC_CALENDLY_URL`, ready for `ScheduleEmbed.tsx`.
-- [x] Email provider — Resend confirmed, account created, API key in `.env.local` as `RESEND_API_KEY` (never committed or pasted into chat/docs).
+- [x] Calendly confirmed — booking link stored in `.env.local` as `NEXT_PUBLIC_CALENDLY_URL`.
+- [x] Email provider — Resend confirmed, API key in `.env.local` as `RESEND_API_KEY`.

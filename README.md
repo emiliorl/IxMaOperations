@@ -64,9 +64,9 @@ Open [http://localhost:3000](http://localhost:3000) to view the site.
 |---|---|---|
 | **Legacy 1–6** | Dual-funnel platform (Stripe, vault, 4 industrial sandboxes) | ✅ Complete — superseded |
 | **Stage 7** | Content & information architecture — lock down 5 offers | ✅ Complete |
-| **Stage 8** | Navigation & layout simplification | 🔄 In Progress |
-| **Stage 9** | Homepage + practical examples rebuild | ⬜ Not started |
-| **Stage 10** | Service detail pages + recopied demos | ⬜ Not started |
+| **Stage 8** | Navigation & layout simplification | ✅ Complete |
+| **Stage 9** | Homepage + practical examples rebuild | ✅ Complete |
+| **Stage 10** | Service detail pages + recopied demos | 🔄 In Progress |
 | **Stage 11** | Contact form + scheduling embed | ⬜ Not started |
 | **Stage 12** | Remove dead weight (Stripe, vault, dual-funnel routes) | ⬜ Not started |
 | **Stage 13** | Visual simplification pass, QA & deploy | ⬜ Not started |

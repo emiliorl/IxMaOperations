@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "IxMaOperations — Industrial AI Engineering & Autonomous Micro-Sprints",
+  title: "IxMaOperations — Practical Automation for Solo Operators & Creators",
   description:
-    "Enterprise-grade Computer Vision, TensorRT Edge Inference, Multi-Agent RAG, and 48-Hour Productized Micro-Sprints for high-growth operators.",
+    "Done-for-you automation for solo operators, freelancers, VAs, and creators — content repurposing, lead prospecting, client onboarding, receipt/media tagging, and inbox triage. See a practical example, then get a quote or book a call.",
   keywords: [
-    "Computer Vision",
-    "TensorRT",
-    "YOLOv8",
-    "Defect QA",
-    "ALPR OCR",
-    "AI Agency",
-    "Micro-SaaS",
-    "Playwright Scraper",
+    "automation for creators",
+    "automation for freelancers",
+    "content repurposing",
+    "lead generation automation",
+    "client onboarding automation",
+    "receipt OCR automation",
+    "inbox automation",
   ],
 };
 
@@ -33,7 +34,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col font-sans">
-        {children}
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
       </body>
     </html>
   );
