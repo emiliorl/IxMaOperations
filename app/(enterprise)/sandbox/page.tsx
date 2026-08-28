@@ -13,7 +13,7 @@ export default function DedicatedSandboxPage() {
   return (
     <div className="py-12 container mx-auto px-4 max-w-6xl space-y-8">
       <div className="text-center max-w-2xl mx-auto space-y-2">
-        <Badge variant="cyan" className="text-[10px] font-mono">
+        <Badge variant="outline" className="text-[10px] font-mono">
           Full Interactive Laboratory
         </Badge>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">

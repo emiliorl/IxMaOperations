@@ -37,7 +37,7 @@ export default function DiscoveryAuditPage() {
     <div className="py-16 container mx-auto px-4 max-w-5xl space-y-16">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <Badge variant="cyan" className="text-xs font-mono">
+        <Badge variant="outline" className="text-xs font-mono">
           Fixed-Price Engagement • $5,000 Total
         </Badge>
         <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">

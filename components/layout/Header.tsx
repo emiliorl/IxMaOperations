@@ -6,16 +6,16 @@ import { usePathname } from "next/navigation";
 import { buttonVariants } from "@/components/ui/Button";
 
 /**
- * Single site-wide header — replaces the old (enterprise)/(solopreneur)
- * layout headers and the Enterprise/Solopreneur track switcher.
+ * Single site-wide header (Stage 8 Task 8.2) — replaces the v2 Services/
+ * Examples/Contact nav.
  *
- * Nav = Services / Examples / Contact (3 links, logo doubles as Home),
- * one CTA — "Book a Call" — everywhere, routing to /contact.
- * See STANDARDS.md Section 4 and PLAN_PROGRESS.md Stage 8.
+ * Nav = Packages / Custom Projects / Contact (3 links, logo doubles as
+ * Home), one CTA — "Get Started" — routing to /packages. No price ever
+ * appears here (STANDARDS.md Rule 2, .agents/rules/website-style.md).
  */
 const NAV_LINKS = [
-  { href: "/#services", label: "Services" },
-  { href: "/examples", label: "Examples" },
+  { href: "/packages", label: "Packages" },
+  { href: "/custom-projects", label: "Custom Projects" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -49,8 +49,8 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link href="/contact" className={buttonVariants({ size: "sm", variant: "default" })}>
-            Book a Call
+          <Link href="/packages" className={buttonVariants({ size: "sm", variant: "default" })}>
+            Get Started
           </Link>
         </div>
       </div>

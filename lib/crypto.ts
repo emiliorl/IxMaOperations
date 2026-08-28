@@ -73,7 +73,11 @@ export async function encryptVaultPayload(
   const encryptedBuffer = await c.subtle.encrypt(
     {
       name: "AES-GCM",
-      iv: iv,
+      // Cast needed: @types/node's global Uint8Array augmentation widens its
+      // `buffer` type to ArrayBufferLike (includes SharedArrayBuffer), which
+      // no longer structurally matches lib.dom's BufferSource. Runtime value
+      // is unaffected — iv is always backed by a plain ArrayBuffer here.
+      iv: iv as BufferSource,
     },
     key,
     encoder.encode(plaintext)
@@ -102,10 +106,11 @@ export async function decryptVaultPayload(
   const decryptedBuffer = await c.subtle.decrypt(
     {
       name: "AES-GCM",
-      iv: iv,
+      // See cast note in encryptVaultPayload above.
+      iv: iv as BufferSource,
     },
     key,
-    encryptedBuffer
+    encryptedBuffer as BufferSource
   );
 
   return decoder.decode(decryptedBuffer);

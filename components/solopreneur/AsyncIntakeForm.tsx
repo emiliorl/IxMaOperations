@@ -82,7 +82,7 @@ export function AsyncIntakeForm({ orderId, initialSlug }: AsyncIntakeFormProps) 
     <div className="space-y-8 max-w-3xl mx-auto">
       {/* Intake Guide Header */}
       <div className="space-y-2 text-center sm:text-left">
-        <Badge variant="cyan" className="text-xs font-mono">
+        <Badge variant="outline" className="text-xs font-mono">
           Zero-Touch Asynchronous Intake Engine
         </Badge>
         <h1 className="text-3xl font-extrabold text-white">

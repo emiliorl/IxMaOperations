@@ -4,17 +4,18 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "IxMaOperations — Practical Automation for Solo Operators & Creators",
+  title: "IxMaOperations — Contract Automation Work",
   description:
-    "Done-for-you automation for solo operators, freelancers, VAs, and creators — content repurposing, lead prospecting, client onboarding, receipt/media tagging, and inbox triage. See a practical example, then get a quote or book a call.",
+    "Pick a pre-scoped automation package or bring a custom project — submit a request and get a price and timeline back. Lead scraping, OCR pipelines, content repurposing, data auditing, API integrations, and custom vision models.",
   keywords: [
-    "automation for creators",
-    "automation for freelancers",
-    "content repurposing",
-    "lead generation automation",
-    "client onboarding automation",
+    "automation packages",
+    "custom automation project",
+    "lead scraping automation",
     "receipt OCR automation",
-    "inbox automation",
+    "content repurposing automation",
+    "data auditing script",
+    "API workflow integration",
+    "custom vision model",
   ],
 };
 

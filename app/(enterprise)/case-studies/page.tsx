@@ -15,7 +15,7 @@ export default function CaseStudiesPage() {
     <div className="py-16 container mx-auto px-4 max-w-6xl space-y-16">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <Badge variant="cyan" className="text-xs font-mono">
+        <Badge variant="outline" className="text-xs font-mono">
           Industrial Case Studies & Field Results
         </Badge>
         <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">

@@ -84,7 +84,7 @@ A light strip — not a portfolio — showing the skill areas behind the package
 | **Payments** | *(none wired into the site for now)* | — | **Deferred, not v3-in-progress.** Packages no longer have self-serve checkout (Section 2) — every path is request-first. When a price is agreed after a reply/call, Emilio sends payment via a manual Stripe Payment Link or invoice outside this codebase. Revisit real Stripe Checkout integration only if/when self-serve buying comes back as a deliberate decision. |
 | **Forms & Validation** | React Hook Form + Zod | Package request form + Custom Projects brief form (shared component, Section 6) | Unchanged |
 | **Scheduling** | Calendly embed | Book-a-call on `/custom-projects` | Confirmed — `https://calendly.com/emilio-a-ramirezl` |
-| **Email** | Resend via `/api/request` | Package + custom-project request submissions to Emilio (shared route, Section 6) | Confirmed — Resend account created |
+| **Email** | Resend via `/api/request` | Package + custom-project request submissions to `OWNER_EMAIL` (shared route, Section 6) | Built Aug 28, 2026 — `from` still Resend's shared sandbox sender (`onboarding@resend.dev`); swap to a verified domain before relying on it for real requests |
 | **State** | React local state | No sandbox global state needed (placeholders are static) | Zustand still not needed |
 | **Credential Handling** | *(none)* | — | AES-256 vault stays removed — no client credentials collected |
 | **Database** | *(none required for v1)* | — | Stripe's own dashboard tracks orders; revisit only if order volume needs a real backend |
@@ -119,6 +119,7 @@ IxMaOperations/
 ├── lib/
 │   ├── packages.ts                       # Canonical array of the 6 packages (source of truth for catalog; prices stay internal-only, not rendered)
 │   ├── capabilities.ts                   # Written (Stage 7 Task 7.4) — 6 shallow capability entries, 1:1 with packages.ts slugs
+│   ├── schemas.ts                        # Zod schema for the request form, shared by BriefForm.tsx (client) and api/request/route.ts (server)
 │   ├── email.ts                          # Resend client for request emails
 │   └── utils.ts                          # KEEP
 ```

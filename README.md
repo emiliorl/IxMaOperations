@@ -50,12 +50,12 @@ Open [http://localhost:3000](http://localhost:3000).
 |---|---|---|
 | **Legacy 1–6 (v1)** | Dual-funnel platform, Stripe, vault, 4 industrial sandboxes | ✅ Complete — superseded |
 | **v2 (7–9 built, 10–13 not)** | Single-funnel minimalist site | ⛔ Superseded — Stages 7-9 built, need rework in Stage 12 |
-| **v3 Stage 7** | Content & package definition | 🔄 In Progress |
-| **v3 Stage 8** | Layout & navigation | ⬜ Not started |
-| **v3 Stage 9** | Homepage (two-path hero) | ⬜ Not started |
-| **v3 Stage 10** | Packages catalog (no pricing) | ⬜ Not started |
-| **v3 Stage 11** | Shared request flow (Packages + Custom Projects) | ⬜ Not started |
-| **v3 Stage 12** | Cleanup — remove remaining dead weight | ⬜ Not started |
+| **v3 Stage 7** | Content & package definition | 🔄 ~90% — blocked on portfolio URL |
+| **v3 Stage 8** | Layout & navigation | ✅ Complete |
+| **v3 Stage 9** | Homepage (two-path hero) | ✅ Complete |
+| **v3 Stage 10** | Packages catalog (no pricing) | ✅ Complete |
+| **v3 Stage 11** | Shared request flow (Packages + Custom Projects) | 🔄 Built, email delivery not yet tested end-to-end |
+| **v3 Stage 12** | Cleanup — remove remaining dead weight | 🔄 Partial — v2 orphans removed, v1 remains |
 | **v3 Stage 13** | QA, polish & deploy | ⬜ Not started |
 
 ---

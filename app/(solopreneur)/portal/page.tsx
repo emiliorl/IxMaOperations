@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -10,7 +10,17 @@ import { Input } from "@/components/ui/Input";
 import { Progress } from "@/components/ui/Progress";
 import { CheckCircle2, Clock, Terminal, Download, ShieldCheck, Search, ArrowRight } from "lucide-react";
 
+// useSearchParams() opts a client component out of static rendering unless
+// it's wrapped in Suspense — see the default export below.
 export default function ClientPortalPage() {
+  return (
+    <Suspense fallback={null}>
+      <ClientPortalContent />
+    </Suspense>
+  );
+}
+
+function ClientPortalContent() {
   const searchParams = useSearchParams();
   const initialOrderId = searchParams.get("orderId") || "ix_ord_demo_2026";
   const [orderQuery, setOrderQuery] = useState(initialOrderId);
@@ -27,7 +37,7 @@ export default function ClientPortalPage() {
     <div className="py-12 container mx-auto px-4 max-w-4xl space-y-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="cyan" className="text-xs font-mono mb-2">
+          <Badge variant="outline" className="text-xs font-mono mb-2">
             Client Asynchronous Dashboard
           </Badge>
           <h1 className="text-3xl font-extrabold text-white">

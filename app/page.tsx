@@ -1,22 +1,20 @@
 import Link from "next/link";
 import { Hero } from "@/components/home/Hero";
-import { ServicesGrid } from "@/components/home/ServicesGrid";
-import { ProcessSteps } from "@/components/home/ProcessSteps";
+import { CapabilityStrip } from "@/components/home/CapabilityStrip";
 import { Badge } from "@/components/ui/Badge";
 import { buttonVariants } from "@/components/ui/Button";
 import { ArrowRight } from "lucide-react";
 
 /**
- * v2 homepage (Task 9.1-9.3) — replaces app/(enterprise)/page.tsx.
- * One scroll: hero, services grid, process, closing CTA. No dual-funnel
- * remnants, single "Book a Call" CTA family throughout.
+ * v3 homepage (Stage 9 Tasks 9.1-9.2) — replaces the v2 homepage
+ * (Hero → ServicesGrid → ProcessSteps → CTA). One scroll: two-path hero,
+ * capability strip, closing CTA repeating both paths. No price anywhere.
  */
 export default function HomePage() {
   return (
     <div>
       <Hero />
-      <ServicesGrid />
-      <ProcessSteps />
+      <CapabilityStrip />
 
       <section className="py-16 md:py-20 border-b border-zinc-800 bg-zinc-950/80">
         <div className="container mx-auto px-6 max-w-4xl text-center space-y-6">
@@ -24,16 +22,20 @@ export default function HomePage() {
             Free 15-Minute Call
           </Badge>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
-            Ready to get an hour of your week back?
+            Not sure which path fits? Reach out either way.
           </h2>
           <p className="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
-            Tell us which grind is costing you the most time. We'll tell you honestly whether it's worth
-            automating and what it would take.
+            Pick a package if your project matches one, or describe something custom — you'll hear back
+            with a price and a timeline, not a hard sell.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link href="/contact" className={buttonVariants({ size: "lg", variant: "default", className: "w-full sm:w-auto gap-2" })}>
-              Book a Call
+            <Link href="/packages" className={buttonVariants({ size: "lg", variant: "default", className: "w-full sm:w-auto gap-2" })}>
+              Browse Packages
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/custom-projects" className={buttonVariants({ size: "lg", variant: "secondary", className: "w-full sm:w-auto gap-2" })}>
+              Describe a Custom Project
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

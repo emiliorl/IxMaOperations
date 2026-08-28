@@ -43,7 +43,7 @@ export default function MicroSprintDetailPage() {
       {/* Header & Pricing Hero */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="cyan" className="text-xs font-mono">
+          <Badge variant="outline" className="text-xs font-mono">
             {sprint.category}
           </Badge>
           <Badge variant="default" className="text-xs font-mono">
