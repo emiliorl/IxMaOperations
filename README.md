@@ -1,76 +1,63 @@
-# IxMaOperations — Automation Services for Solo Operators & Creators
+# IxMaOperations — Contract Work Storefront
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![Branch](https://img.shields.io/badge/Active%20Branch-dev-emerald)](https://github.com/)
 
-> **Simple, minimalist site showing solo operators and creators practical examples of what automation can do for them — then making it easy to get a quote or book a call.**
-> Built with Next.js App Router and Tailwind CSS.
+> **Two ways to work with Emilio: pick one of six pre-scoped automation packages, or bring a custom project — either way, submit a request and get a price + timeline back.**
+> Built with Next.js App Router and Tailwind CSS. No pricing is shown anywhere on the site.
 
 ---
 
 ## 🎯 Main Goal of the Project
 
-**IxMaOperations** shows potential clients — solo operators, freelancers, VAs, and content creators — concrete before/after examples of the repetitive work automation can take off their plate, then gives them one clear path to reach out: a contact/quote form and a book-a-call link. No dual funnel, no self-serve checkout, no credential vault.
+**IxMaOperations is not a portfolio** — that lives on a separate, dedicated site. This one exists purely to get contract work, two ways:
 
-It provides:
-1. **A homepage** stating who it's for and what the offers are, in one scroll.
-2. **5 service pages**, one per offer, each with a plain-language explanation and a practical example (2 of the 5 include a live interactive demo).
-3. **An examples gallery** showing before/after for each offer in one place.
-4. **A contact page** with a quote request form and an embedded scheduling widget.
+1. **Individuals & small teams** (`/packages`) — 6 pre-scoped, fixed-turnaround automation packages (lead scraping, OCR pipelines, content repurposing, data auditing, API integrations, custom vision models). No price shown; "Request This" submits a brief and Emilio replies with price + timeline.
+2. **Businesses** (`/custom-projects`) — no public pricing; submit a brief, then book a call via Calendly to settle a price + timeline.
 
-> ⚠️ This is a **v2 repositioning** of a prior build. The site previously ran as a dual-funnel Enterprise/Solopreneur platform with Stripe checkout and an AES-256 credential vault — that direction is being retired because it didn't match the actual offer. See `PROJECT_BLUEPRINT.md` Section 0 and `PLAN_PROGRESS.md` for the full rationale, what's being kept, and what's being removed.
+Both paths share the same request flow underneath — the split is about scope (pick a defined package vs. describe an open-ended need), not self-serve checkout vs. consultation.
+
+A shallow skills/capabilities strip supports both paths without duplicating the portfolio site's deep case studies. Any interactive-looking capability card on this site is a placeholder — Emilio builds and links the real working projects himself.
+
+> ⚠️ This is **v3** of the plan. The site was previously built as a dual-funnel Enterprise/Solopreneur platform (v1, fully built, retired) and then rebuilt as a single-funnel portfolio-style site (v2, built through Stage 9 — homepage, nav, examples gallery — then retired before Stage 10). See `PROJECT_BLUEPRINT.md` Section 0 for the full history.
 
 ---
 
 ## 📖 Detailed Blueprint & Stage Roadmap
 
-For the complete technical blueprint, component breakdown, and architecture specifications, please refer to:
-👉 **[`PROJECT_BLUEPRINT.md`](./PROJECT_BLUEPRINT.md)**
-
-For the current stage and open questions blocking completion:
-👉 **[`CURRENT_STAGE.md`](./CURRENT_STAGE.md)**
-
-For the full stage-by-stage task checklist:
-👉 **[`PLAN_PROGRESS.md`](./PLAN_PROGRESS.md)**
+👉 **[`PROJECT_BLUEPRINT.md`](./PROJECT_BLUEPRINT.md)** — full architecture, the 6 packages (internal reference pricing only, not shown publicly), tech stack.
+👉 **[`CURRENT_STAGE.md`](./CURRENT_STAGE.md)** — what's active right now and open questions.
+👉 **[`PLAN_PROGRESS.md`](./PLAN_PROGRESS.md)** — full stage-by-stage task checklist.
 
 ---
 
 ## 🚀 Quickstart Guide
 
-### 1. Active Branch
-All active feature development happens on the **`dev`** branch:
 ```bash
 git checkout dev
-```
-
-### 2. Install Dependencies
-```bash
 npm install
-```
-
-### 3. Start Development Server
-```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) to view the site.
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 📊 Development Stages & Milestones (v2)
+## 📊 Development Stages & Milestones (v3)
 
 | Stage | Focus Area | Status |
 |---|---|---|
-| **Legacy 1–6** | Dual-funnel platform (Stripe, vault, 4 industrial sandboxes) | ✅ Complete — superseded |
-| **Stage 7** | Content & information architecture — lock down 5 offers | ✅ Complete |
-| **Stage 8** | Navigation & layout simplification | ✅ Complete |
-| **Stage 9** | Homepage + practical examples rebuild | ✅ Complete |
-| **Stage 10** | Service detail pages + recopied demos | 🔄 In Progress |
-| **Stage 11** | Contact form + scheduling embed | ⬜ Not started |
-| **Stage 12** | Remove dead weight (Stripe, vault, dual-funnel routes) | ⬜ Not started |
-| **Stage 13** | Visual simplification pass, QA & deploy | ⬜ Not started |
+| **Legacy 1–6 (v1)** | Dual-funnel platform, Stripe, vault, 4 industrial sandboxes | ✅ Complete — superseded |
+| **v2 (7–9 built, 10–13 not)** | Single-funnel minimalist site | ⛔ Superseded — Stages 7-9 built, need rework in Stage 12 |
+| **v3 Stage 7** | Content & package definition | 🔄 In Progress |
+| **v3 Stage 8** | Layout & navigation | ⬜ Not started |
+| **v3 Stage 9** | Homepage (two-path hero) | ⬜ Not started |
+| **v3 Stage 10** | Packages catalog (no pricing) | ⬜ Not started |
+| **v3 Stage 11** | Shared request flow (Packages + Custom Projects) | ⬜ Not started |
+| **v3 Stage 12** | Cleanup — remove remaining dead weight | ⬜ Not started |
+| **v3 Stage 13** | QA, polish & deploy | ⬜ Not started |
 
 ---
 
-*For contributions, always create feature branches off `dev` (e.g. `feat/contact-form` or `chore/remove-vault`).*
+*For contributions, always create feature branches off `dev` (e.g. `feat/packages-catalog` or `feat/custom-projects-form`).*

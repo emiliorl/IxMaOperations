@@ -59,18 +59,18 @@ The color system relies on high-contrast neutrals, subtle hairline borders (`1px
 
 ## 4. Header & Navigation Constraints
 
-> **v2 update (Aug 2026):** The dual-funnel Enterprise/Solopreneur track switcher has been retired along with pricing tiers and checkout CTAs. This is now a single, minimalist site — one nav, one CTA. See `PROJECT_BLUEPRINT.md` for the repositioning rationale.
+> **v3 update (Aug 2026):** This is a contract-work storefront with two real paths — fixed-price packages (individuals/small teams) and custom projects (businesses, quote-only). The header stays minimal with one CTA; the **homepage hero is the one sanctioned place** for a second CTA, since it's genuinely two different audiences choosing a path, not a pricing-tier switcher. See `PROJECT_BLUEPRINT.md` for the full rationale.
 
 ```
-[ LOGO ]        Services    Examples    Contact          [ Book a Call ]
+[ LOGO ]        Packages    Custom Projects    Contact          [ Get Started ]
 ```
 
 ### Navigation Rules
 
-1. **Maximum 4 Links:** Navigation links must be plain text with subtle hover states (`text-zinc-400 hover:text-zinc-100`). No track switcher, no dropdown mega-menu.
-2. **NO Pricing Badges in Navigation:** Do NOT attach price tags or tier badges inside header links.
-3. **No Segmented Control:** There is only one track now — do not reintroduce a track/tier switcher in the hero or header.
-4. **Single Header CTA:** Exactly ONE high-contrast primary button, consistent site-wide (`Book a Call` or `Get a Quote` — pick one as the default and use it everywhere; both route to `/contact`).
+1. **Maximum 4 Links:** Navigation links must be plain text with subtle hover states (`text-zinc-400 hover:text-zinc-100`). No dropdown mega-menu.
+2. **NO Pricing Badges in Navigation:** Do NOT attach specific prices or tier badges inside header links — package prices live on `/packages` and its detail pages only.
+3. **Two-Path Hero, Not a Segmented Control:** The homepage hero may show two clear buttons ("I have a project to build" → `/packages`, "I'm a business with a custom need" → `/custom-projects`). Do not turn this into a pill/segmented switcher, and do not repeat it in the sticky header.
+4. **Single Header CTA:** Exactly ONE high-contrast primary button in the header (`Get Started`, routing to `/packages`). The hero's two-button pattern stays confined to the hero section.
 
 ---
 

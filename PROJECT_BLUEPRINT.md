@@ -1,145 +1,158 @@
-# IxMaOperations — Practical AI Automation for Solo Operators & Creators
+# IxMaOperations — Contract Work Site (Packages + Custom Projects)
 
-> **Developer & Architecture Blueprint — v2 (Repositioning)**
-> *Target Branch:* `dev` | *Primary Tech Stack:* Next.js 15 (React 19) / TypeScript / Tailwind CSS / Radix UI
+> **Developer & Architecture Blueprint — v3 (Final Direction)**
+> *Target Branch:* `dev` | *Primary Tech Stack:* Next.js 15 (React 19) / TypeScript / Tailwind CSS / Stripe
 
 ---
 
-## 0. Why This Version Exists
+## 0. Version History (why this doc keeps changing)
 
-The v1 build (see `PLAN_PROGRESS.md` → "Legacy Build") was architected as a **dual-funnel Enterprise/Solopreneur platform** with Stripe checkout, an AES-256 client vault, a client portal, and four industrial computer-vision sandboxes (ALPR, manufacturing defect QC, invoice parsing, scraper terminal).
+- **v1 (Legacy, Stages 1-6, built):** Dual-funnel "Enterprise vs. Solopreneur" platform — Stripe checkout, AES-256 credential vault, 4 industrial CV sandboxes, client portal. Fully built but didn't match the actual offer — industrial/enterprise framing, fabricated case studies, a vault nobody needed.
+- **v2 (built through Stage 9, then superseded):** Single-funnel minimalist site — 5 "solo operator pain point" service offers, no pricing shown, contact form + Calendly only. `lib/services.ts`, the site shell (`Header`/`Footer`), and the homepage + examples gallery were fully built and committed (Stages 7-9) before this pivot — Stage 10 (service detail pages + 2 recopied live demos) was next when the direction changed. Corrected the fake-industrial framing, but overcorrected: dropped Stripe and fixed pricing entirely, and assumed the site was a general portfolio when it isn't. Its code needs to be reworked or removed in Stage 12, not skipped as unbuilt scaffolding.
+- **v3 (this version, current direction):** This site is **not** a portfolio — Emilio has a separate dedicated portfolio site for that. This site exists purely to **get contract work**, two ways:
+  1. **Individuals & small teams** who have an idea and need it built — browse fixed-price packages, pay directly via Stripe.
+  2. **Businesses** — larger custom-scoped work, no public pricing, submit a brief and book a call for a quote.
 
-That build drifted from what's actually being sold. The real offer — per the pain-point research already on file for this project — is **done-for-you automation for solo operators, freelancers, VAs, and creators**, sold through a simple path: *see a practical example → get a quote or book a call*. The industrial/enterprise framing, the self-serve Stripe checkout, and the credential vault don't belong to that story and were confusing visitors.
-
-**v2 goal:** one clean, minimalist site. No dual-funnel switch, no checkout, no vault. Five service offers shown as practical before/after examples, a contact form, and a scheduling link. Everything else is either retired or repurposed.
+  A light skills/capabilities section supports both paths but stays shallow on purpose — deep case studies and full project write-ups belong on the portfolio site, not here. Interactive "sandbox" elements are **placeholders only**: Emilio is building the real projects himself; this codebase should not simulate working backends for them.
 
 ---
 
 ## 1. Project Mission & Executive Goal
 
-**IxMaOperations** helps solo operators, freelancers, VAs, and content creators automate the repetitive administrative and production work that quietly eats 10–20 hours a week — content repurposing, lead prospecting, client onboarding, and media/receipt tagging — by mapping each manual grind to a small, concrete automation build.
+**IxMaOperations** is Emilio's contract-work storefront: individuals and small teams get a catalog of fixed-price, fixed-turnaround automation packages they can buy directly; businesses get a path to describe a custom project and book a call for a quote. One site, two clearly separated paths, no portfolio duplication.
 
 ```
-[ Practical Example ]  →  [ "I want this" ]  →  [ Get a Quote / Book a Call ]  →  [ Scoped Project ]
+                         [ IxMaOperations ]
+                                │
+              ┌─────────────────┴─────────────────┐
+              ▼                                     ▼
+   [ Individuals / Small Teams ]           [ Businesses ]
+   Route: /packages                        Route: /custom-projects
+   ─────────────────────────────           ─────────────────────────────
+   Pre-scoped, fixed-turnaround offers     Open-ended, custom-scoped work
+   Primary CTA: Request This → brief form  Primary CTA: Submit a brief → Book a call
+   No price shown — priced after reply     Quote given after a call
 ```
 
-One track. One story. No enterprise/solopreneur toggle.
-
-### The 5 Core Service Offers
-(Offers 1–3 and the pain point/tech stack for #4 are from the pain-point research already on file. Offer #4's tagline and all of Offer #5 were missing from that source and were drafted fresh on Aug 27, 2026 — confirmed with Emilio.)
-
-| # | Offer | Manual Grind It Replaces | Practical Example on Site |
-|---|---|---|---|
-| 1 | **1-Click Content Engine** — turn 1 raw video into 15 multi-platform posts | Transcribing, summarizing, reformatting for X/LinkedIn/IG/newsletter by hand (10–12 hrs/wk) | Before/after: raw transcript → generated thread + carousel outline |
-| 2 | **Automated Lead Intelligence** — scrape, enrich, and draft personalized outreach | Manually visiting profiles, copying data into spreadsheets, writing cold emails (8–15 hrs/wk) | Live terminal demo: scrape a sample profile list → enriched rows → drafted outreach line |
-| 3 | **Zero-Touch Client Onboarding** — auto-provision on payment | Emailing for assets, creating Drive folders, building project boards, sending invoices by hand (6–10 hrs/wk) | Simple flow diagram: Payment → folder + board auto-created → welcome email sent |
-| 4 | **AI Visual Asset Vault** — auto-tag, OCR, and log receipts/media | Renaming files, retyping receipt text, logging expenses by hand (5–8 hrs/wk) | Live demo: upload a receipt/invoice image → extracted line items in a table |
-| 5 | **AI Inbox Copilot** — auto-sort, auto-answer FAQs, surface real leads | Manually triaging email/DM/comment inboxes, answering repetitive questions, and missing real leads in the noise (5–10 hrs/wk) | Static before/after: cluttered inbox → triaged view with auto-drafted replies (live demo is a possible Stage 14 add-on) |
-
-#### Full Text — Offer #4 (tagline confirmed Aug 27, 2026)
-* **Client-Centric Value Offer:** *"AI Visual Asset Vault: Turn a Shoebox of Receipts and Screenshots into a Searchable, Auto-Categorized Expense Log — Instantly."*
-* (Manual grind and technical build stack were already on file — unchanged: CV/OCR pipeline, auto-crop and background-clean, key-value invoice extraction, vector embeddings indexed in Supabase `pgvector` for natural-language search.)
-
-#### Full Text — Offer #5 (new, drafted and confirmed Aug 27, 2026 — not in original source notes)
-* **Manual Grind (5–10 hrs/week):** Freelancers, creators, and solo consultants manually sift through email inboxes, Instagram/TikTok/X DMs, and post comments — answering the same handful of FAQs over and over, filtering spam and low-intent messages from real leads, and manually forwarding hot leads to their calendar or CRM.
-* **Technical Build Stack:** FastAPI backend with an LLM intent-classification pipeline; RAG-based FAQ answering over Supabase `pgvector` (same retrieval infra as Offer #2's lead enrichment); inbox/DM API integrations (Gmail/Outlook, plus Instagram/TikTok/X where their APIs allow); a daily Slack/email digest of the items that still need a human.
-* **Client-Centric Value Offer:** *"The AI Inbox Copilot: Auto-Sort, Auto-Answer FAQs, and Surface Only the Leads That Matter — In Real Time."*
+> **No public pricing anywhere (locked Aug 27, 2026).** Neither path shows a price. Packages show name, description, and turnaround only; "Request This" routes into the same brief-form/email flow Custom Projects uses (optionally pre-tagged with which package). This replaces the original "direct Stripe checkout, no consultation" plan for Packages — see Section 7 item 3 (resolved) and Section 5 for what that means for the Stripe line in the stack.
 
 ---
 
-## 2. Technical Stack & Architecture (v2 — Trimmed)
+## 2. The 6 Starter Packages (Individuals / Small Teams)
 
-| Layer | Technologies | Purpose | Change from v1 |
+**No price is shown publicly for any package** (locked Aug 27, 2026) — the table below is Emilio's internal reference for what to quote once someone requests one, not catalog copy. Public package cards show only name, description, and turnaround. Every package routes to the same "Request This" → brief form → Emilio replies with price + timeline flow as Custom Projects, rather than self-serve checkout.
+
+Internal reference prices are starting points — informed by general freelance/agency market rates for this kind of work, not a guarantee of what any client will pay. Adjust after the first few real projects.
+
+| # | Package | Internal Ref. Price (not shown publicly) | Turnaround | What It Is |
+|---|---|---|---|---|
+| 1 | **Custom Lead Scraper + Enrichment List** | $549 | 3–5 days | Scrape a defined source, enrich records, hand back a clean list |
+| 2 | **Receipt/Invoice OCR Pipeline Setup** | $599 | 3–5 days | Upload receipts/invoices → structured, exportable data |
+| 3 | **Content Repurposing Automation** | $499 | 2–4 days | One video/transcript → multi-platform post drafts |
+| 4 | **Small-Scope Data QA/Audit Script** | $749 | 4–6 days | Rule + LLM-based checking of a defined dataset, with a measurable accuracy score |
+| 5 | **Custom API/Workflow Integration** | $649 | 3–6 days | Connect 2+ tools/systems with a custom automation script |
+| 6 | **Custom-Trained Vision Model (small scope)** | Starting around $1,200 | Varies | Bespoke computer-vision model when off-the-shelf OCR/CV isn't accurate enough |
+
+Anything bigger or not covered by these six also routes to the same "Request This" flow — package #6 isn't structurally different from the other five anymore now that none of them show a price or checkout.
+
+---
+
+## 3. Businesses Path — Custom Projects
+
+No public pricing. Flow: short brief form (what they're trying to solve, timeline, optional budget range, and — shared with the Packages path, see Section 2 — an optional "which package (if any)?" selector) → submission emailed to Emilio via Resend → Calendly booking link (https://calendly.com/emilio-a-ramirezl) to get on a call and settle a price + timeline.
+
+**Internal quoting anchor (Emilio's reference only, never shown publicly):** ~$75–$120/hr equivalent, or a stated project minimum around $2,000+. **Resolved Aug 27, 2026:** no pricing anchor is shown on `/custom-projects` or anywhere else on the site — visitors reach out first, price and timeline are discussed by email/call. This decision now applies to Packages too (Section 2), not just Custom Projects.
+
+---
+
+## 4. Skills/Capabilities Section (Shared, Kept Shallow)
+
+A light strip — not a portfolio — showing the skill areas behind the packages: multi-agent LLM systems, computer vision/OCR, data auditing, backend integrations. Each capability gets a small placeholder card, not a working demo:
+
+- **Placeholder only.** No live backend, no simulated data, no `/api/sandbox/*` routes. A static card with a short description and (once Emilio has the link) a "See it in action →" link out to the portfolio site.
+- Emilio is building the real, working versions of these himself; this codebase's job is to leave clean, obviously-labeled slots for him to drop links/embeds into later, not to fake functionality.
+
+---
+
+## 5. Technical Stack & Architecture (v3)
+
+| Layer | Technologies | Purpose | Note |
 |---|---|---|---|
 | **Framework** | Next.js 15 / React 19 (App Router) | Pages, route handlers | Unchanged |
 | **Language** | TypeScript v5+ | Type safety | Unchanged |
-| **Styling** | Tailwind CSS + CSS Variables | Sober, minimal design system | Unchanged (see `STANDARDS.md`) |
-| **UI Primitives** | Radix UI (`Dialog`, `Tabs` where still needed) | Accessible primitives | Trimmed — only what the 5 service pages + contact form need |
-| **State** | React local state / Context | Sandbox demo state | Zustand **dropped** — the remaining 2 demos don't need a global store |
-| **Forms & Validation** | React Hook Form + Zod | Contact/quote form | Unchanged, now used for one form instead of five |
-| **Scheduling** | Calendly embed (`<iframe>` or official embed script) — confirmed | Book-a-call widget on `/contact` | **New** |
-| **Contact/Quote Delivery** | Resend via `/api/contact` — account created | Emails form submissions to Emilio | **New** — replaces Stripe checkout + webhook as the primary conversion path |
-| **Payments** | *(none for now)* | — | Stripe SDK, checkout route, and webhook **removed**. Reintroduce later only if/when a self-serve product is actually sold. |
-| **Credential Handling** | *(none)* | — | AES-256 vault, `lib/crypto.ts`, `/api/vault`, `ApiKeyVault.tsx` **removed** — no client credentials are collected on this site. |
-| **Database** | *(none required)* | — | Supabase/`pgvector` **deferred** — not needed until there's a reason to store leads instead of just emailing them. Revisit if volume grows. |
+| **Styling** | Tailwind CSS + CSS Variables | Sober, minimal design system | Unchanged (`STANDARDS.md`) |
+| **Payments** | *(none wired into the site for now)* | — | **Deferred, not v3-in-progress.** Packages no longer have self-serve checkout (Section 2) — every path is request-first. When a price is agreed after a reply/call, Emilio sends payment via a manual Stripe Payment Link or invoice outside this codebase. Revisit real Stripe Checkout integration only if/when self-serve buying comes back as a deliberate decision. |
+| **Forms & Validation** | React Hook Form + Zod | Package request form + Custom Projects brief form (shared component, Section 6) | Unchanged |
+| **Scheduling** | Calendly embed | Book-a-call on `/custom-projects` | Confirmed — `https://calendly.com/emilio-a-ramirezl` |
+| **Email** | Resend via `/api/request` | Package + custom-project request submissions to Emilio (shared route, Section 6) | Confirmed — Resend account created |
+| **State** | React local state | No sandbox global state needed (placeholders are static) | Zustand still not needed |
+| **Credential Handling** | *(none)* | — | AES-256 vault stays removed — no client credentials collected |
+| **Database** | *(none required for v1)* | — | Stripe's own dashboard tracks orders; revisit only if order volume needs a real backend |
 
 ---
 
-## 3. Directory & File Blueprint (v2)
+## 6. Directory & File Blueprint (v3)
 
 ```
 IxMaOperations/
 ├── app/
-│   ├── page.tsx                        # Home: hero, condensed services grid, process, CTA
-│   ├── services/
-│   │   └── [slug]/page.tsx             # One detail page per offer (problem → example → CTA)
-│   ├── examples/page.tsx               # Practical examples gallery (before/after for all offers)
-│   ├── contact/page.tsx                # Quote form + Calendly/Cal.com embed
+│   ├── page.tsx                          # Home: hero w/ two entry paths, capability strip
+│   ├── packages/
+│   │   ├── page.tsx                      # Catalog: 6 pre-scoped packages, no price shown
+│   │   └── [slug]/page.tsx               # Package detail (what's included, turnaround) + "Request This" CTA
+│   ├── custom-projects/page.tsx          # Shared request path: brief form (works for both a picked package and an open-ended brief) + Calendly embed
+│   ├── contact/page.tsx                  # General fallback contact (doesn't fit the two paths above)
 │   ├── api/
-│   │   ├── contact/route.ts            # Sends quote/contact submissions by email
-│   │   └── sandbox/
-│   │       ├── scrape/route.ts         # KEEP — repurposed as Lead Intelligence demo
-│   │       └── invoice/route.ts        # KEEP — repurposed as Visual Asset Vault (OCR) demo
-│   ├── layout.tsx                      # Root layout — single nav, no track switcher
+│   │   └── request/route.ts              # Emails the brief (package request or custom project) to Emilio via Resend
+│   ├── layout.tsx                        # Root layout — single nav, no track switcher in the header
 │   └── globals.css
 ├── components/
 │   ├── home/
-│   │   ├── Hero.tsx                    # Repurposed from enterprise/HeroSection.tsx, copy rewritten
-│   │   ├── ServicesGrid.tsx            # Repurposed from enterprise/ServicesMatrix.tsx
-│   │   └── ProcessSteps.tsx            # New — "Discover → Build → Deliver" 3-step strip
-│   ├── examples/
-│   │   └── BeforeAfterSimulator.tsx    # KEEP as-is — already fits "practical example" framing
-│   ├── sandboxes/
-│   │   ├── ScraperTerminalSandbox.tsx  # KEEP — recopy for lead-prospecting framing
-│   │   └── InvoiceParserSandbox.tsx    # KEEP — recopy for receipt/invoice OCR framing
-│   ├── contact/
-│   │   ├── ContactForm.tsx             # New
-│   │   └── ScheduleEmbed.tsx           # New — Calendly/Cal.com iframe wrapper
-│   └── ui/                             # KEEP: Button, Card, Badge, Input, Tabs
+│   │   ├── Hero.tsx                      # Two-path hero (Individuals/Small Teams vs. Businesses)
+│   │   └── CapabilityStrip.tsx           # Placeholder capability cards, shallow, links out to portfolio
+│   ├── packages/
+│   │   └── PackageCard.tsx               # Catalog grid item — name, description, turnaround, "Request This" link into /custom-projects?package=slug
+│   ├── custom-projects/
+│   │   ├── BriefForm.tsx                 # Problem / timeline / budget range intake + optional "which package?" selector (pre-filled via ?package= query param)
+│   │   └── ScheduleEmbed.tsx             # Calendly iframe wrapper (calendly.com/emilio-a-ramirezl)
+│   └── ui/                               # KEEP: Button, Card, Badge, Input, Tabs
 ├── lib/
-│   ├── services.ts                     # New — canonical array of the 5 offers (content model)
-│   ├── email.ts                        # New — Resend/Nodemailer client for /api/contact
-│   └── utils.ts                        # KEEP
+│   ├── packages.ts                       # Canonical array of the 6 packages (source of truth for catalog; prices stay internal-only, not rendered)
+│   ├── capabilities.ts                   # Written (Stage 7 Task 7.4) — 6 shallow capability entries, 1:1 with packages.ts slugs
+│   ├── email.ts                          # Resend client for request emails
+│   └── utils.ts                          # KEEP
 ```
 
-### Removed entirely
-- `app/(enterprise)/*`, `app/(solopreneur)/*` route groups (dual-funnel layouts, audit page, case-studies page, tools catalog, onboarding wizard, client portal)
-- `app/api/checkout`, `app/api/webhooks/stripe`, `app/api/vault`
-- `app/api/sandbox/alpr`, `app/api/sandbox/qc` (industrial demos with no matching offer)
-- `components/enterprise/FeasibilityModal.tsx`, `ArchitectureDiagram.tsx`, `ROIStatsGrid.tsx`
-- `components/solopreneur/*` (`ApiKeyVault.tsx`, `AsyncIntakeForm.tsx`, `MicroCheckoutButton.tsx`, `MicroSprintCard.tsx`)
-- `components/sandboxes/AlprOcrSandbox.tsx`, `DefectQcSandbox.tsx`
-- `lib/crypto.ts`, `lib/stripe.ts`, `lib/store.ts` (Zustand store — no longer needed)
+### Removed / stays removed from v1
+- `app/(enterprise)/*`, `app/(solopreneur)/*` route groups, the Enterprise/Solopreneur toggle
+- `lib/crypto.ts` (AES-256 vault), `app/api/vault/*`, `components/solopreneur/ApiKeyVault.tsx`
+- The async onboarding wizard and client portal dashboard (`onboarding/[orderId]`, `portal/`) — post-purchase is just a confirmation page + email, not a dashboard, for v1
+- `app/api/sandbox/*` backend routes — no live-data simulation for placeholder capability cards
+- `zustand` — not needed without live sandbox state
 
-**Note on `AlprOcrSandbox` and `DefectQcSandbox`:** these were built for an industrial B2B pitch (license-plate/container OCR, manufacturing defect heatmaps) that has no counterpart in the actual solo-operator offers. Retiring them rather than reskinning avoids stretching two demos to fit a story they weren't built for. If Emilio does want a computer-vision offer for creators/e-commerce sellers (e.g., product photo cleanup, background removal — this shows up in pain point 4's "custom CV" stack), one of these can be revived and recopied instead of built from scratch.
-
----
-
-## 4. Development Stages (v2)
-
-```mermaid
-graph TD
-    L[Legacy: Stages 1-6 — Dual-Funnel Build] -.superseded.-> S7
-    S7[Stage 7: Content & IA — define 5 offers, write plain-language copy] --> S8[Stage 8: Nav & Layout Simplification]
-    S8 --> S9[Stage 9: Homepage + Examples Rebuild]
-    S9 --> S10[Stage 10: Service Detail Pages + Recopied Demos]
-    S10 --> S11[Stage 11: Contact Form + Scheduling Embed]
-    S11 --> S12[Stage 12: Remove Dead Weight — Stripe, Vault, Dual-Funnel Routes]
-    S12 --> S13[Stage 13: Visual Simplification Pass + QA + Deploy]
-```
-
-See `PLAN_PROGRESS.md` for the full checklist under each stage.
+### Brought back, deliberately, scoped down from v1
+- The existing sandbox components (`ScraperTerminalSandbox.tsx`, `InvoiceParserSandbox.tsx`, etc.) get **converted to static placeholder cards** rather than deleted outright — their visual shell is reusable, their fake backend logic is not.
 
 ---
 
-## 5. Coding Standards & Architectural Guardrails (v2)
+## 7. Open Items Blocking Full Completion
 
-1. **One funnel, one CTA family.** Every page's primary action is either "Get a Quote" (contact form) or "Book a Call" (scheduling embed). No pricing tiers, no checkout buttons, no enterprise/solopreneur toggle.
-2. **No credential collection.** This site never asks a visitor for an API key, password, or payment credential. If that need reappears, treat it as a new, separately-scoped feature — don't resurrect `lib/crypto.ts` as a default.
-3. **Every demo maps to a real offer.** A sandbox/interactive element only ships if it illustrates one of the 5 service cards. No demo exists purely to show off a technique.
-4. **Strict types.** Component props and the `/api/contact` payload validated via Zod, same as v1.
-5. **Design system stays.** The sober, minimal aesthetic in `STANDARDS.md` (zinc palette, no neon glows, no gradient text, max 4 nav links, one header CTA) already matches the "simple minimalist" direction — keep it, just drop the "Enterprise" framing language in the doc's examples.
+1. ~~**Emilio's Calendly booking link**~~ — **Resolved Aug 27, 2026:** `https://calendly.com/emilio-a-ramirezl`.
+2. **Portfolio site URL** — still pending. Needed so capability placeholder cards can link out to real project write-ups; leave the link slot clearly labeled/commented as pending until Emilio provides it.
+3. ~~**Public vs. internal-only pricing anchor for Custom Projects**~~ — **Resolved Aug 27, 2026:** no price shown anywhere, for either path. Visitors submit a request; Emilio replies with price + timeline. This also settled what was an open question for Packages (Section 2), not just Custom Projects.
+4. **Final review of the 6 package internal reference prices** (Section 2) — no longer blocking anything public-facing since prices aren't shown or wired to Stripe. Still worth confirming whenever, purely as Emilio's own quoting reference.
+5. **Which packages get a capability placeholder card** — likely all 6, but confirm before building `CapabilityStrip.tsx`.
 
 ---
 
-*Authored for the IxMaOperations project — Branch: `dev`. Supersedes the dual-funnel positioning in v1 of this document (retained for reference in Section 0 and `PLAN_PROGRESS.md`).*
+## 8. Coding Standards & Architectural Guardrails (v3)
+
+1. **Two paths, two CTAs, clearly separated — but both request-first.** Never show a price anywhere on the site, for either path. The split between Packages and Custom Projects is about scope (pre-defined vs. open-ended), not about self-serve checkout vs. consultation — both funnel into the same brief-form/email/Calendly flow.
+2. **Placeholders stay placeholders.** No component under `components/*` may fake a working backend for a capability that doesn't exist yet. Label it, link out to the portfolio site once that link exists, and stop there.
+3. **No self-serve checkout without a new, deliberate decision.** Stripe is deferred (Section 5) — don't reintroduce Checkout, a client portal, a vault, or an account system on your own initiative.
+4. **No portfolio duplication.** Deep case studies, full project narratives, and resume-style content belong on Emilio's separate portfolio site — this site links out, it doesn't rebuild that content.
+5. **Design system stays** — sober zinc palette, no neon/gradients, max 4 nav links, one header CTA (`STANDARDS.md`). The homepage hero is the one place a second CTA is allowed, since it's genuinely two different audiences choosing a path, not a pricing-tier switcher.
+
+---
+
+*Authored for the IxMaOperations project — Branch: `dev`. Supersedes v2 (never implemented) and the dual-funnel positioning of v1 (Section 0 has the full history).*

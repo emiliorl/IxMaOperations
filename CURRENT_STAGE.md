@@ -1,43 +1,40 @@
-# Current Stage Tracker: Stage 10 (Repositioning — Service Detail Pages + Recopied Demos)
+# Current Stage Tracker: Stage 7 (v3 — Content & Package Definition)
 
 > **Active Document:** `CURRENT_STAGE.md`
 > **Target Branch:** `dev`
-> **Status:** 🟡 In Progress — v2 Repositioning
+> **Status:** 🟡 In Progress — v3 Direction Locked, No Public Pricing Anywhere
 
 ---
 
-## 🔄 What Changed
+## 🔄 What This Site Actually Is (read this first)
 
-The v1 build (dual-funnel Enterprise/Solopreneur platform, Stripe checkout, AES-256 vault, 4 industrial CV sandboxes) is **superseded**, not deleted yet — code removal happens in Stage 12 once the new pages exist to replace it. See `PROJECT_BLUEPRINT.md` Section 0 and `PLAN_PROGRESS.md` for the full rationale and stage breakdown.
+This is **not** a portfolio site — Emilio has a separate dedicated site for that. IxMaOperations exists to get contract work, two ways:
 
-**New direction:** one minimalist site built around 5 practical automation offers for solo operators/creators, each shown as a before/after example, with a single conversion path: contact form (quote request) + scheduling embed (book a call). No pricing tiers, no checkout, no credential vault.
+1. **Individuals & small teams** — browse 6 pre-scoped, fixed-turnaround packages. No price is shown; a "Request This" button submits a brief and Emilio replies with price + timeline.
+2. **Businesses** — no public pricing; submit a brief describing the project, then book a call (Calendly) to settle a price + timeline.
 
----
+Both paths share the same request flow underneath — the difference is scope (pick a defined package vs. describe an open-ended need), not self-serve checkout vs. consultation. **No price is shown publicly anywhere on the site** (locked Aug 27, 2026).
 
-## ✅ Stages 7-9 — Complete (Aug 27, 2026)
+A shallow skills/capabilities strip supports both paths but is intentionally light — deep case studies belong on the portfolio site, not here. Any "sandbox" or interactive-looking element on this site is a **placeholder only**: Emilio is building the real working projects himself; this codebase should never fake a working backend for them.
 
-- **Stage 7 (Content & IA):** All 5 offers modeled in `lib/services.ts`. Sitemap/nav locked, CTA = "Book a Call".
-- **Stage 8 (Nav & Layout):** Single `app/layout.tsx` shell, `components/layout/Header.tsx` + `Footer.tsx`, both legacy group layouts deleted.
-- **Stage 9 (Homepage + Examples):** New `app/page.tsx` (Hero → ServicesGrid → ProcessSteps → CTA), `app/examples/page.tsx` using a recopied `BeforeAfterSimulator.tsx` (5 scenarios matching the 5 offers, no more v1 industrial content).
-
-Full detail in `PLAN_PROGRESS.md`.
+This is **v3** of the plan. v1 (dual-funnel Enterprise/Solopreneur, fully built) and v2 (single-funnel minimalist, built through Stage 9 — homepage, nav, examples gallery, 5-offer content model — then superseded before Stage 10) are both retired — see `PROJECT_BLUEPRINT.md` Section 0 for why each one missed the mark and what v2 code still needs cleanup in Stage 12.
 
 ---
 
-## 🎯 Current Focus: Stage 10 — Service Detail Pages + Recopied Demos
+## 🎯 Current Focus: Stage 7 — Content & Package Definition
 
-One detail page per offer, with a concrete example — 2 of the 5 get a live interactive demo.
-1. `app/services/[slug]/page.tsx` — dynamic page rendering problem → solution → example → CTA from `lib/services.ts`.
-2. Recopy `ScraperTerminalSandbox.tsx` for **Lead Intelligence** — same SSE terminal UI, log lines reframed as "enriching a sample lead list."
-3. Recopy `InvoiceParserSandbox.tsx` for **Visual Asset Vault** — same split-pane extraction UI, framed as receipt/invoice OCR.
-4. Content Engine, Client Onboarding, and Inbox Copilot ship with the static before/after already built in Stage 9's `BeforeAfterSimulator` — no live sandbox needed yet.
+- [x] The 6 starter packages are defined with names, descriptions, internal reference turnaround times (`PROJECT_BLUEPRINT.md` Section 2). Prices are internal-only — they are never rendered on the site.
+- [x] ~~Confirm/adjust the 6 package prices before Stripe products get created~~ — moot, no Stripe products.
+- [x] Custom Projects brief form fields defined: problem description, timeline, optional budget range, optional "which package?" selector. Public pricing anchor decision **resolved: none, anywhere.**
+- [x] `lib/capabilities.ts` written — shallow copy, 6 entries, 1:1 with the 6 packages.
+- [x] Calendly link confirmed. Portfolio site URL still pending.
 
-### Immediate Next Steps (Task 10.1–10.4 in `PLAN_PROGRESS.md`)
-- [ ] Build `app/services/[slug]/page.tsx` using `getServiceBySlug()`.
-- [ ] Recopy the scraper sandbox for Lead Intelligence.
-- [ ] Recopy the invoice sandbox for Visual Asset Vault.
-- [ ] Confirm each of the 5 service cards on the homepage links to a working detail page.
+### Still Needed Before the Rest Can Finish
+- [ ] Portfolio site URL (for capability placeholders to link out to) — pending. `lib/capabilities.ts`'s `portfolioUrl` field is left `undefined` until then; `CapabilityStrip.tsx` (Stage 9) must render cards without a broken/placeholder link in the meantime.
 
-### Also Needed Before Stage 11 Can Finish
-- [x] Calendly confirmed — booking link stored in `.env.local` as `NEXT_PUBLIC_CALENDLY_URL`.
-- [x] Email provider — Resend confirmed, API key in `.env.local` as `RESEND_API_KEY`.
+### Resolved (Aug 27, 2026)
+- Calendly booking link: `https://calendly.com/emilio-a-ramirezl`.
+- No public pricing anywhere, for either path — Packages lost their direct-Stripe-checkout model and now route into the same request flow as Custom Projects.
+- All 6 packages get a capability card, 1:1 (`lib/capabilities.ts`).
+
+Stage 7 is now effectively done except for the pending portfolio URL, which doesn't block starting Stage 8/9/10.
