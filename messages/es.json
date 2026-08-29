@@ -85,6 +85,7 @@
       "samplesLabel": "O probar:",
       "sampleCafe": "Recibo de Café",
       "sampleHardware": "Factura de Ferretería",
+      "sampleRetail": "Retail (Multi-Línea)",
       "emptyState": "Sube la foto de un recibo o factura, o elige un ejemplo, para correr OCR real — tesseract.js, directo en tu navegador.",
       "errorPrefix": "No se pudo procesar esa imagen",
       "statusPreprocessing": "Mejorando imagen…",

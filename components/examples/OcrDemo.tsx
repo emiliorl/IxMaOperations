@@ -42,9 +42,10 @@ import {
   type AmountLabel,
 } from "@/lib/ocr-engine";
 
-const SAMPLES: Array<{ url: string; labelKey: "sampleCafe" | "sampleHardware" }> = [
+const SAMPLES: Array<{ url: string; labelKey: "sampleCafe" | "sampleHardware" | "sampleRetail" }> = [
   { url: "/samples/ocr/receipt-cafe.png", labelKey: "sampleCafe" },
   { url: "/samples/ocr/receipt-hardware.png", labelKey: "sampleHardware" },
+  { url: "/samples/ocr/receipt-retail.png", labelKey: "sampleRetail" },
 ];
 
 const AMOUNT_ORDER: AmountLabel[] = ["subtotal", "tax", "tip", "discount", "total"];
@@ -140,6 +141,10 @@ export function OcrDemo() {
           setProgress(Math.round((m.progress ?? 0) * 100));
         },
       });
+      // Retains the gap between tabular columns (description vs. price)
+      // instead of collapsing them to a single space — receipts with
+      // wide-spaced price columns read noticeably cleaner with this on.
+      await worker.setParameters({ preserve_interword_spaces: "1" });
 
       try {
         // rotateAuto: real phone photos are sometimes shot sideways/upside
@@ -390,7 +395,8 @@ export function OcrDemo() {
                       <div key={label}>
                         <dt className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{label}</dt>
                         <dd className="text-xs text-zinc-300 mt-0.5 font-mono">
-                          {extraction.amounts[label]!.currency} {extraction.amounts[label]!.value.toFixed(2)}
+                          {extraction.amounts[label]!.currency ? `${extraction.amounts[label]!.currency} ` : ""}
+                          {extraction.amounts[label]!.value.toFixed(2)}
                         </dd>
                       </div>
                     ))}

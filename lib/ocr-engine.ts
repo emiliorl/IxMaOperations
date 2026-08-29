@@ -141,21 +141,57 @@ function isoFromParts(year: string, month: string, day: string): string | null {
   return `${year}-${pad2(month)}-${pad2(day)}`;
 }
 
+/** Numeric slash/dash dates are ambiguous between MM/DD and DD/MM. US
+ *  receipts are overwhelmingly MM/DD, so that's tried first — but when it's
+ *  impossible (e.g. "25/12/2018", month 25 doesn't exist), the only other
+ *  reading is DD/MM, so that's tried as a fallback rather than giving up. */
+function isoFromAmbiguousParts(year: string, first: string, second: string): string | null {
+  return isoFromParts(year, first, second) ?? isoFromParts(year, second, first);
+}
+
+const MONTH_NUMBERS: Record<string, string> = {
+  jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+  jul: "07", aug: "08", sep: "09", sept: "09", oct: "10", nov: "11", dec: "12",
+};
+
+function monthNumberFromName(name: string): string | null {
+  const key = name.toLowerCase().startsWith("sept") ? "sept" : name.toLowerCase().slice(0, 3);
+  return MONTH_NUMBERS[key] ?? null;
+}
+
 const DATE_PATTERNS: Array<{ re: RegExp; toIso: (m: RegExpMatchArray) => string | null }> = [
   { re: /\b(\d{4})-(\d{2})-(\d{2})\b/, toIso: (m) => isoFromParts(m[1], m[2], m[3]) },
-  // US receipts overwhelmingly print MM/DD/YYYY or MM-DD-YYYY.
-  { re: /\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/, toIso: (m) => isoFromParts(m[3], m[1], m[2]) },
-  { re: /\b(\d{1,2})-(\d{1,2})-(\d{4})\b/, toIso: (m) => isoFromParts(m[3], m[1], m[2]) },
+  { re: /\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/, toIso: (m) => isoFromAmbiguousParts(m[3], m[1], m[2]) },
+  { re: /\b(\d{1,2})-(\d{1,2})-(\d{4})\b/, toIso: (m) => isoFromAmbiguousParts(m[3], m[1], m[2]) },
+  // "25 Dec 2018" / "25-Dec-2018"
+  { re: /\b(\d{1,2})[\s-]([A-Za-z]{3,9})[\s-](\d{4})\b/, toIso: (m) => {
+      const mm = monthNumberFromName(m[2]);
+      return mm ? isoFromParts(m[3], mm, m[1]) : null;
+    } },
+  // "Dec 25, 2018" / "December 25 2018"
+  { re: /\b([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})\b/, toIso: (m) => {
+      const mm = monthNumberFromName(m[1]);
+      return mm ? isoFromParts(m[3], mm, m[2]) : null;
+    } },
 ];
 
 export function extractDate(lines: OcrLine[]): OcrDate | null {
+  // A pattern can match text that *looks* date-shaped but isn't (an
+  // unrecognized "month" word, an impossible day) — toIso returns null for
+  // those. Rather than stop at the first match, keep looking for one that
+  // actually validates; only fall back to a best-effort raw match if
+  // nothing on the whole receipt does.
+  let fallback: OcrDate | null = null;
   for (const line of lines) {
     for (const { re, toIso } of DATE_PATTERNS) {
       const m = line.text.match(re);
-      if (m) return { rawText: m[0], iso: toIso(m) };
+      if (!m) continue;
+      const iso = toIso(m);
+      if (iso) return { rawText: m[0], iso };
+      if (!fallback) fallback = { rawText: m[0], iso: null };
     }
   }
-  return null;
+  return fallback;
 }
 
 // --- amounts & line items ----------------------------------------------------
@@ -164,16 +200,47 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   "$": "USD",
   "€": "EUR",
   "£": "GBP",
+  "¥": "JPY",
+  "₹": "INR",
+  "₩": "KRW",
   MXN: "MXN",
   USD: "USD",
   EUR: "EUR",
   GBP: "GBP",
+  RM: "MYR",
+  CAD: "CAD",
+  AUD: "AUD",
+  SGD: "SGD",
+  CHF: "CHF",
+  NZD: "NZD",
+  JPY: "JPY",
+  CNY: "CNY",
+  KRW: "KRW",
+  INR: "INR",
+  BRL: "BRL",
 };
 
-// Requires an explicit currency marker ($, €, £, MXN, ...) rather than a
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Longest-first so a shorter token can never shadow a longer one that
+// starts with the same letters (none currently overlap, but keeps this
+// safe as more currencies get added).
+const CURRENCY_TOKEN_PATTERN = Object.keys(CURRENCY_SYMBOLS)
+  .sort((a, b) => b.length - a.length)
+  .map(escapeRegExp)
+  .join("|");
+
+// Requires an explicit currency marker ($, €, RM, MXN, ...) rather than a
 // bare number — a receipt line has plenty of bare numbers (quantities,
 // SKUs) that aren't prices, but a currency-marked figure almost always is.
-const AMOUNT_SOURCE = "(\\$|€|£|MXN|USD|EUR|GBP)\\s?(\\d{1,3}(?:,\\d{3})*\\.\\d{2}|\\d+\\.\\d{2}|\\d+)";
+const AMOUNT_SOURCE = `(${CURRENCY_TOKEN_PATTERN})\\s?(\\d{1,3}(?:,\\d{3})*\\.\\d{2}|\\d+\\.\\d{2}|\\d+)`;
+// Fallback for receipts that print price columns with no currency marker at
+// all (common outside the US) — still requires a 2-decimal-place figure,
+// which is specific enough on its own not to catch quantities/SKUs/years.
+// Currency comes back "" (unknown) rather than a guessed default.
+const BARE_AMOUNT_SOURCE = "()(\\d{1,3}(?:,\\d{3})*\\.\\d{2}|\\d+\\.\\d{2})";
 
 interface FoundAmount {
   value: number;
@@ -182,18 +249,28 @@ interface FoundAmount {
   index: number;
 }
 
-function findAmountsInLine(text: string): FoundAmount[] {
+function findAmountsWithPattern(text: string, source: string): FoundAmount[] {
   // Fresh RegExp per call — a shared global-flag regex would carry
   // `lastIndex` state across lines and silently skip matches.
-  const re = new RegExp(AMOUNT_SOURCE, "gi");
+  const re = new RegExp(source, "gi");
   const found: FoundAmount[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     const value = Number(m[2].replace(/,/g, ""));
     if (Number.isNaN(value)) continue;
-    found.push({ value, currency: CURRENCY_SYMBOLS[m[1].toUpperCase()] ?? "USD", rawText: m[0], index: m.index });
+    found.push({ value, currency: m[1] ? CURRENCY_SYMBOLS[m[1].toUpperCase()] ?? "" : "", rawText: m[0], index: m.index });
   }
   return found;
+}
+
+/** Tries a currency-marked match first (high precision); only when a line
+ *  has no marked figure at all does it fall back to a bare decimal — so a
+ *  receipt mixing a marked total ("Rounded Total (RM): 9.00") with bare
+ *  item-row prices ("1 PC * 9.00 0.00 9.00") gets both right. */
+function findAmountsInLine(text: string): FoundAmount[] {
+  const marked = findAmountsWithPattern(text, AMOUNT_SOURCE);
+  if (marked.length > 0) return marked;
+  return findAmountsWithPattern(text, BARE_AMOUNT_SOURCE);
 }
 
 // Order matters: "subtotal" and "total" both match /total/, so the more
@@ -203,7 +280,7 @@ const AMOUNT_KEYWORDS: Array<{ label: AmountLabel; re: RegExp }> = [
   { label: "tax", re: /\b(sales\s+)?tax\b|\bvat\b|\bgst\b/i },
   { label: "tip", re: /\btip\b|\bgratuity\b/i },
   { label: "discount", re: /\bdiscount\b|\bcoupon\b/i },
-  { label: "total", re: /\btotal\b/i },
+  { label: "total", re: /\b(rounded|grand|net)\s+total\b|\btotal\b|\bbalance\s+due\b|\bamount\s+due\b/i },
 ];
 
 function labelForLine(text: string): AmountLabel | null {
@@ -238,14 +315,28 @@ function splitQuantity(text: string): { quantity: number | null; description: st
   return { quantity: null, description: text };
 }
 
+// A row like "1 PC * 9.00 0.00 9.00" — some POS layouts (common outside the
+// US) print an item's SKU/description on one line and its qty/unit-price/
+// total on the very next line, instead of one line per item.
+const QTY_PRICE_ROW_RE = /^(\d+)\s*(?:pcs?|ea|units?)?\s*[*x×]\s*[\d.,]+/i;
+// A long leading digit run at the start of a description line is a barcode/
+// SKU number printed before the item name, not part of the name.
+const LEADING_SKU_RE = /^\d{8,14}\s+/;
+
 /**
  * Single pass over the receipt's lines: a line with a keyword (subtotal/
- * tax/tip/discount/total) and a trailing currency amount becomes a labeled
- * total; any other line with a trailing amount becomes a line item, split
- * into quantity/description/amount. Lines with no currency-marked figure at
- * all (store name, address, "thank you") are skipped — this is the plan's
- * "line-item table builder", using each OCR line's own already-clustered
- * bbox rather than re-deriving columns from scratch.
+ * tax/tip/discount/total) and a trailing amount becomes a labeled total;
+ * any other line with a trailing amount becomes a line item, split into
+ * quantity/description/amount. This is the plan's "line-item table
+ * builder", using each OCR line's own already-clustered bbox rather than
+ * re-deriving columns from scratch.
+ *
+ * A second pass then looks for the two-row item layout described above:
+ * among lines the first pass left untouched (no amount of their own), a
+ * description-looking line immediately followed by a qty/price-shaped line
+ * gets merged into one item. Only ever fills in what the first pass
+ * couldn't already claim — never overrides a line that already resolved on
+ * its own.
  */
 export function extractAmountsAndLineItems(lines: OcrLine[]): {
   amounts: Partial<Record<AmountLabel, OcrAmount>>;
@@ -253,27 +344,83 @@ export function extractAmountsAndLineItems(lines: OcrLine[]): {
 } {
   const amounts: Partial<Record<AmountLabel, OcrAmount>> = {};
   const lineItems: OcrLineItem[] = [];
+  const consumed = new Set<number>();
 
-  for (const line of lines) {
+  lines.forEach((line, i) => {
     const found = findAmountsInLine(line.text);
-    if (found.length === 0) continue;
+    if (found.length === 0) return;
 
     const last = found[found.length - 1]; // the trailing figure is the one that matters on a receipt line
     const label = labelForLine(line.text);
 
     if (label) {
       amounts[label] = { label, value: last.value, currency: last.currency, rawText: line.text };
-      continue;
+      consumed.add(i);
+      return;
     }
 
+    // A qty/price row ("1 PC * 9.00 0.00 9.00") on its own isn't a usable
+    // item — everything before its trailing amount is more qty/price noise,
+    // not a description. Leave it unconsumed for the two-row merge below,
+    // which pairs it with the separate description line above it.
+    if (QTY_PRICE_ROW_RE.test(line.text)) return;
+
     const rawDescription = line.text.slice(0, last.index).trim().replace(/[.\-\s]+$/, "");
-    if (!rawDescription) continue; // a bare amount with no description isn't a usable line item
+    if (!rawDescription) return; // a bare amount with no description isn't a usable line item
     const { quantity, description } = splitQuantity(rawDescription);
-    if (!description) continue; // guard: a quantity token with nothing after it
+    if (!description) return; // guard: a quantity token with nothing after it
     lineItems.push({ quantity, description, amount: last.value, currency: last.currency, rawText: line.text });
+    consumed.add(i);
+  });
+
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (consumed.has(i) || consumed.has(i + 1)) continue;
+
+    const descLine = lines[i];
+    const priceLine = lines[i + 1];
+    if (!/[a-zA-Z]/.test(descLine.text)) continue; // a description candidate needs actual letters
+
+    const qtyMatch = priceLine.text.match(QTY_PRICE_ROW_RE);
+    if (!qtyMatch) continue;
+    const priceFound = findAmountsInLine(priceLine.text);
+    if (priceFound.length === 0) continue;
+
+    const description = descLine.text.replace(LEADING_SKU_RE, "").trim();
+    if (!description) continue;
+
+    const last = priceFound[priceFound.length - 1];
+    lineItems.push({
+      quantity: Number(qtyMatch[1]) || null,
+      description,
+      amount: last.value,
+      currency: last.currency,
+      rawText: `${descLine.text} | ${priceLine.text}`,
+    });
+    consumed.add(i);
+    consumed.add(i + 1);
   }
 
   return { amounts, lineItems };
+}
+
+const NOISE_CONFIDENCE_THRESHOLD = 35;
+
+function alnumRatio(text: string): number {
+  const stripped = text.replace(/\s/g, "");
+  if (!stripped) return 0;
+  const alnum = stripped.replace(/[^a-zA-Z0-9]/g, "");
+  return alnum.length / stripped.length;
+}
+
+/** Barcodes and other non-text image noise sometimes get "read" by
+ *  tesseract as short, garbled strings — low confidence and/or almost no
+ *  real alphanumeric content. Excluded before parsing (and before the
+ *  confidence average) so they can't seed a bogus line item or drag the
+ *  displayed confidence down on an otherwise-clean read. */
+function isNoiseLine(line: OcrLine): boolean {
+  if (line.confidence < NOISE_CONFIDENCE_THRESHOLD) return true;
+  const stripped = line.text.replace(/\s/g, "");
+  return stripped.length >= 4 && alnumRatio(line.text) < 0.4;
 }
 
 export function averageConfidence(lines: OcrLine[]): number {
@@ -283,12 +430,13 @@ export function averageConfidence(lines: OcrLine[]): number {
 }
 
 export function extractReceiptData(lines: OcrLine[]): OcrExtraction {
-  const { amounts, lineItems } = extractAmountsAndLineItems(lines);
+  const cleanLines = lines.filter((l) => !isNoiseLine(l));
+  const { amounts, lineItems } = extractAmountsAndLineItems(cleanLines);
   return {
-    date: extractDate(lines),
+    date: extractDate(cleanLines),
     amounts,
     lineItems,
-    averageConfidence: averageConfidence(lines),
+    averageConfidence: averageConfidence(cleanLines),
   };
 }
 

@@ -85,6 +85,7 @@
       "samplesLabel": "Or try:",
       "sampleCafe": "Coffee Receipt",
       "sampleHardware": "Hardware Invoice",
+      "sampleRetail": "Retail (Multi-Line)",
       "emptyState": "Upload a receipt/invoice photo, or pick a sample, to run real OCR — tesseract.js, right in your browser.",
       "errorPrefix": "Couldn't process that image",
       "statusPreprocessing": "Enhancing image…",
