@@ -1,19 +1,48 @@
 import Link from "next/link";
 import { Hero } from "@/components/home/Hero";
 import { CapabilityStrip } from "@/components/home/CapabilityStrip";
+import { ProjectEstimatorWizard } from "@/components/onboarding/ProjectEstimatorWizard";
 import { Badge } from "@/components/ui/Badge";
 import { buttonVariants } from "@/components/ui/Button";
 import { ArrowRight } from "lucide-react";
 
 /**
- * v3 homepage (Stage 9 Tasks 9.1-9.2) — replaces the v2 homepage
- * (Hero → ServicesGrid → ProcessSteps → CTA). One scroll: two-path hero,
- * capability strip, closing CTA repeating both paths. No price anywhere.
+ * v3 homepage (Stage 9 Tasks 9.1-9.2; estimator added Stage 14) — Hero →
+ * Project Scoper → capability strip, closing CTA repeating both paths. No
+ * price anywhere (STANDARDS.md Rule 2) — the estimator resolves to a
+ * qualitative scope tier, never a dollar figure (lib/estimator-logic.ts).
+ *
+ * The estimator gets its own section rather than replacing Hero's two-CTA
+ * choice or turning into a tabbed switcher — both would conflict with
+ * STANDARDS.md §4.3 ("Two-Path Hero, Not a Segmented Control").
  */
 export default function HomePage() {
   return (
     <div>
       <Hero />
+
+      <section id="project-scoper" className="py-16 md:py-20 border-b border-zinc-800 scroll-mt-16">
+        <div className="container mx-auto px-6 max-w-3xl text-center space-y-3 mb-10">
+          <Badge variant="default" className="text-[11px] font-mono">
+            Project Scoper
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white tracking-tight">
+            Not sure what this needs? Answer five questions.
+          </h2>
+          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-xl mx-auto">
+            Get a matched scope tier and turnaround estimate, then book a call or send the brief straight
+            through — or{" "}
+            <Link href="/packages" className="text-zinc-300 underline underline-offset-4 hover:text-zinc-100">
+              browse pre-scoped packages
+            </Link>{" "}
+            instead.
+          </p>
+        </div>
+        <div className="container mx-auto px-6 max-w-2xl">
+          <ProjectEstimatorWizard />
+        </div>
+      </section>
+
       <CapabilityStrip />
 
       <section className="py-16 md:py-20 border-b border-zinc-800 bg-zinc-950/80">

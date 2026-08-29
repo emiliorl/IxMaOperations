@@ -5,8 +5,24 @@
  * email to Emilio (OWNER_EMAIL) per submission from either the Packages or
  * Custom Projects path — there is no separate checkout confirmation email
  * since there's no checkout (PROJECT_BLUEPRINT.md Section 5).
+ *
+ * Stage 14: an optional `survey` block carries the Project Estimator
+ * Wizard's result, including `internalPriceRange` — the one place that
+ * number is allowed to surface. It renders only in this email body, never
+ * in an API response or a component (STANDARDS.md Rule 2, packages.ts's
+ * locked pricing rule).
  */
 import { Resend } from "resend";
+import { formatPriceRange, type Complexity, type Deliverable, type Urgency } from "./estimator-logic";
+
+export interface RequestEmailSurvey {
+  scopeTierName: string;
+  complexity: Complexity;
+  deliverable: Deliverable;
+  urgency: Urgency;
+  /** Internal-only — see file header. Never surfaced anywhere but this email. */
+  internalPriceRange: { low: number; high: number };
+}
 
 export interface RequestEmailPayload {
   name: string;
@@ -16,6 +32,8 @@ export interface RequestEmailPayload {
   problem: string;
   timeline: string;
   budgetRange?: string;
+  /** Project Estimator Wizard result, if the request came from there. */
+  survey?: RequestEmailSurvey;
 }
 
 function getResendClient() {
@@ -46,6 +64,18 @@ export async function sendRequestEmail(payload: RequestEmailPayload) {
     "What they're trying to solve:",
     payload.problem,
   ];
+
+  if (payload.survey) {
+    lines.push(
+      "",
+      "--- Project Estimator Wizard ---",
+      `Matched scope tier: ${payload.survey.scopeTierName}`,
+      `Complexity: ${payload.survey.complexity}`,
+      `Deliverable: ${payload.survey.deliverable}`,
+      `Urgency: ${payload.survey.urgency}`,
+      `Suggested reference price (internal only — do not quote verbatim): ${formatPriceRange(payload.survey.internalPriceRange)}`
+    );
+  }
 
   const result = await resend.emails.send({
     // TODO: swap to a verified sending domain once one exists for this project.

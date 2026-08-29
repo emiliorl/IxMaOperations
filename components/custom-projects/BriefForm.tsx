@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { requestSchema, type RequestFormValues } from "@/lib/schemas";
 import { PACKAGES } from "@/lib/packages";
+import { matchScopeTier, type SurveyAnswers } from "@/lib/estimator-logic";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Check, Loader2 } from "lucide-react";
@@ -16,8 +17,19 @@ import { cn } from "@/lib/utils";
  * `initialPackageSlug`) and an open-ended custom brief. Zod-validated
  * client-side (lib/schemas.ts, shared with the server route) and again
  * server-side in app/api/request/route.ts.
+ *
+ * Stage 14: `initialSurveyAnswers` carries the Project Estimator Wizard's
+ * result over from the homepage (via /custom-projects's searchParams). The
+ * four survey* fields ride along as hidden inputs — the visible summary
+ * card shows the same qualitative tier the wizard showed, never a price.
  */
-export function BriefForm({ initialPackageSlug = "" }: { initialPackageSlug?: string }) {
+export function BriefForm({
+  initialPackageSlug = "",
+  initialSurveyAnswers,
+}: {
+  initialPackageSlug?: string;
+  initialSurveyAnswers?: SurveyAnswers;
+}) {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -34,8 +46,14 @@ export function BriefForm({ initialPackageSlug = "" }: { initialPackageSlug?: st
       problem: "",
       timeline: "",
       budgetRange: "",
+      surveyCategory: initialSurveyAnswers?.category ?? "",
+      surveyComplexity: initialSurveyAnswers?.complexity ?? "",
+      surveyDeliverable: initialSurveyAnswers?.deliverable ?? "",
+      surveyUrgency: initialSurveyAnswers?.urgency ?? "",
     },
   });
+
+  const scopeTier = initialSurveyAnswers ? matchScopeTier(initialSurveyAnswers.category) : undefined;
 
   const onSubmit = async (values: RequestFormValues) => {
     setStatus("submitting");
@@ -74,6 +92,20 @@ export function BriefForm({ initialPackageSlug = "" }: { initialPackageSlug?: st
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      {scopeTier && (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 text-xs text-zinc-400 space-y-1">
+          <span className="font-mono uppercase tracking-wider text-zinc-500">From your project scope</span>
+          <p className="text-zinc-200">
+            {scopeTier.tierName} — {scopeTier.turnaround}
+          </p>
+        </div>
+      )}
+
+      <input type="hidden" {...register("surveyCategory")} />
+      <input type="hidden" {...register("surveyComplexity")} />
+      <input type="hidden" {...register("surveyDeliverable")} />
+      <input type="hidden" {...register("surveyUrgency")} />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Name" error={errors.name?.message}>
           <Input {...register("name")} placeholder="Your name" autoComplete="name" />

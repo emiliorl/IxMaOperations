@@ -2,9 +2,10 @@ import React from "react";
 import Link from "next/link";
 
 /**
- * Single site-wide footer (Stage 8 Task 8.3) — links repeat /packages and
- * /custom-projects so there's always a second way into either path besides
- * the header CTA, plus a fallback /contact.
+ * Single site-wide footer (Stage 8 Task 8.3; Project Scoper link added
+ * Stage 14) — links repeat /packages and /custom-projects so there's
+ * always a second way into either path besides the header CTA, plus a
+ * fallback /contact and an anchor into the homepage estimator section.
  */
 export function Footer() {
   return (
@@ -16,6 +17,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-5 text-zinc-400 text-xs">
+          <Link href="/#project-scoper" className="hover:text-zinc-200">Project Scoper</Link>
           <Link href="/packages" className="hover:text-zinc-200">Packages</Link>
           <Link href="/custom-projects" className="hover:text-zinc-200">Custom Projects</Link>
           <Link href="/contact" className="hover:text-zinc-200">Contact</Link>

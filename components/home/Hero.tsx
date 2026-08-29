@@ -40,7 +40,7 @@ export function Hero() {
           <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-zinc-400 font-mono">
             <div className="flex items-center gap-1.5">
               <Check className="h-3.5 w-3.5 text-zinc-300" />
-              <span>No price shown upfront, ever</span>
+              <span>Deterministic, fixed timelines</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Check className="h-3.5 w-3.5 text-zinc-300" />

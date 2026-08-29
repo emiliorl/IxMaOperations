@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { requestSchema } from "@/lib/schemas";
 import { getPackageBySlug } from "@/lib/packages";
 import { sendRequestEmail } from "@/lib/email";
+import { computeInternalPriceRange, matchScopeTier, parseSurveyAnswers } from "@/lib/estimator-logic";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -29,8 +30,29 @@ export async function POST(req: Request) {
     );
   }
 
-  const { name, email, packageSlug, problem, timeline, budgetRange } = parsed.data;
+  const {
+    name,
+    email,
+    packageSlug,
+    problem,
+    timeline,
+    budgetRange,
+    surveyCategory,
+    surveyComplexity,
+    surveyDeliverable,
+    surveyUrgency,
+  } = parsed.data;
   const pkg = packageSlug ? getPackageBySlug(packageSlug) : undefined;
+
+  // Re-validate the wizard's answers server-side rather than trusting the
+  // client — a tampered request could otherwise submit an internal price
+  // range that was never actually computed by lib/estimator-logic.ts.
+  const surveyAnswers = parseSurveyAnswers({
+    category: surveyCategory,
+    complexity: surveyComplexity,
+    deliverable: surveyDeliverable,
+    urgency: surveyUrgency,
+  });
 
   try {
     await sendRequestEmail({
@@ -40,6 +62,18 @@ export async function POST(req: Request) {
       problem,
       timeline,
       budgetRange: budgetRange || undefined,
+      survey: surveyAnswers
+        ? {
+            scopeTierName: matchScopeTier(surveyAnswers.category).tierName,
+            complexity: surveyAnswers.complexity,
+            deliverable: surveyAnswers.deliverable,
+            urgency: surveyAnswers.urgency,
+            // Internal-only quoting anchor — see lib/estimator-logic.ts's
+            // file header. sendRequestEmail must never echo this back in
+            // the HTTP response, only in the email body.
+            internalPriceRange: computeInternalPriceRange(surveyAnswers),
+          }
+        : undefined,
     });
   } catch (error) {
     console.error("Failed to send request email:", error);

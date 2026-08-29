@@ -4,16 +4,8 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { CAPABILITIES } from "@/lib/capabilities";
 import { getPackageBySlug } from "@/lib/packages";
-import { Search, Receipt, FileVideo, ShieldCheck, Workflow, Eye, ArrowRight, type LucideIcon } from "lucide-react";
-
-const ICONS: Record<string, LucideIcon> = {
-  Search,
-  Receipt,
-  FileVideo,
-  ShieldCheck,
-  Workflow,
-  Eye,
-};
+import { CAPABILITY_ICONS } from "@/lib/capability-icons";
+import { ArrowRight } from "lucide-react";
 
 /**
  * Homepage capability strip (Stage 9 Task 9.2). Shallow, placeholder-only
@@ -44,7 +36,7 @@ export function CapabilityStrip() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CAPABILITIES.map((capability) => {
-            const Icon = ICONS[capability.icon];
+            const Icon = CAPABILITY_ICONS[capability.icon];
             const relatedPackage = getPackageBySlug(capability.packageSlug);
             return (
               <Card key={capability.packageSlug} className="flex flex-col justify-between p-6 space-y-5">
