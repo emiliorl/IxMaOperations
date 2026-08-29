@@ -1,21 +1,24 @@
 /**
  * lib/capabilities.ts
  *
- * Canonical content for the shallow skills/capabilities strip shown on the
- * homepage (`components/home/CapabilityStrip.tsx`, Stage 9 Task 9.2) and
- * reused wherever a package detail page wants to point at the underlying
- * skill area (Stage 10).
+ * Canonical content for the "See It In Action" examples section shown on
+ * the homepage (`components/home/ExamplesSection.tsx`, v4 pivot Aug 29,
+ * 2026 — replaces the old CapabilityStrip) and reused wherever a package
+ * detail page wants to point at the underlying skill area (Stage 10).
  *
- * See PROJECT_BLUEPRINT.md Section 4 for the "placeholder only" rule and
- * PLAN_PROGRESS.md Stage 7 Task 7.4 / open item #5 for status.
+ * v4 note: this content now lives and is demonstrated directly on this
+ * site (no more external portfolio hand-off — PROJECT_BLUEPRINT.md Section
+ * 0 v4). Each entry gets a real animation/graph slot in ExamplesSection;
+ * until Emilio drops the actual media in, the card renders a labeled
+ * "coming soon" placeholder instead of a working demo (still no faked
+ * backends — Section 8 Rule 2 stands).
  *
  * Content rules (STANDARDS.md, PROJECT_BLUEPRINT.md Section 5 & 8):
  * - One capability per package (open item #5, resolved — all 6, 1:1).
  * - Plain, client-facing language only — no TensorRT/LayoutLM/PLC/OPC-UA or
  *   other leftover industrial-B2B jargon.
- * - Shallow on purpose: one sentence on the skill, not a case study. Deep
- *   write-ups live on the portfolio site — this is a labeled slot that
- *   links out, never a working demo or simulated backend (Section 8 Rule 2).
+ * - Shallow copy is still fine (one sentence on the skill) — the real
+ *   depth comes from the media slot, not a wall of case-study text.
  */
 
 export interface Capability {
@@ -27,14 +30,6 @@ export interface Capability {
   description: string;
   /** lucide-react icon name, resolved by the component that renders the strip. */
   icon: "Search" | "Receipt" | "FileVideo" | "ShieldCheck" | "Workflow" | "Eye";
-  /**
-   * "See it in action →" target on the portfolio site.
-   * TODO(open item #2): portfolio site URL is still pending from Emilio.
-   * Leave `undefined` — CapabilityStrip.tsx must render the card without a
-   * working link (label it "Coming soon" or omit the link entirely) until
-   * this is filled in. Do not point it at a placeholder URL.
-   */
-  portfolioUrl?: string;
 }
 
 export const CAPABILITIES: Capability[] = [

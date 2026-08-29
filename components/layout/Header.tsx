@@ -6,16 +6,17 @@ import { usePathname } from "next/navigation";
 import { buttonVariants } from "@/components/ui/Button";
 
 /**
- * Single site-wide header (Stage 8 Task 8.2) — replaces the v2 Services/
- * Examples/Contact nav.
+ * Single site-wide header (v4 pivot, Aug 29, 2026 — replaces the v3 Stage 8
+ * nav now that the homepage leads with one onboarding flow instead of a
+ * Packages/Custom Projects split).
  *
- * Nav = Packages / Custom Projects / Contact (3 links, logo doubles as
- * Home), one CTA — "Get Started" — routing to /packages. No price ever
- * appears here (STANDARDS.md Rule 2, .agents/rules/website-style.md).
+ * Nav = Examples / Packages / Contact (3 links, logo doubles as Home), one
+ * CTA — "Get Started" — routing into the homepage questionnaire. No price
+ * ever appears here (STANDARDS.md Rule 2, .agents/rules/website-style.md).
  */
 const NAV_LINKS = [
+  { href: "/#examples", label: "Examples" },
   { href: "/packages", label: "Packages" },
-  { href: "/custom-projects", label: "Custom Projects" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -49,7 +50,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link href="/packages" className={buttonVariants({ size: "sm", variant: "default" })}>
+          <Link href="/#project-scoper" className={buttonVariants({ size: "sm", variant: "default" })}>
             Get Started
           </Link>
         </div>

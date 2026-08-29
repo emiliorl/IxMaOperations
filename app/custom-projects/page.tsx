@@ -35,7 +35,7 @@ export default function CustomProjectsPage({
       <div className="container mx-auto px-6 max-w-5xl">
         <div className="max-w-2xl mb-12 space-y-2">
           <Badge variant="default" className="mb-1 text-[11px] font-mono">
-            {preselected ? `Requesting: ${preselected.name}` : "Businesses & Custom Needs"}
+            {preselected ? `Requesting: ${preselected.name}` : "Start a Project"}
           </Badge>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
             {preselected ? "Request this package" : "Describe your project"}

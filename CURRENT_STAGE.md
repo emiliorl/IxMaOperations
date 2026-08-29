@@ -8,7 +8,9 @@
 
 ## 🔄 What This Site Actually Is (read this first)
 
-This is **not** a portfolio site — Emilio has a separate dedicated site for that. IxMaOperations exists to get contract work, two ways:
+> **v4 pivot (Aug 29, 2026):** The homepage no longer leads with the two-path split described below — it leads with one onboarding questionnaire (already built as `ProjectEstimatorWizard`, now the primary CTA) plus a new "See It In Action" examples section (`components/home/ExamplesSection.tsx`) showing skill demos directly on this site. `/packages` and `/custom-projects` are unchanged underneath and still both work — they're just no longer the homepage's first decision. Full rationale: `PROJECT_BLUEPRINT.md` Section 0 v4. The two-path description just below is the pre-pivot (v3) framing, kept for stage-history context.
+
+IxMaOperations exists to get contract work, two ways:
 
 1. **Individuals & small teams** — browse 6 pre-scoped, fixed-turnaround packages. No price is shown; a "Request This" button submits a brief and Emilio replies with price + timeline.
 2. **Businesses** — no public pricing; submit a brief describing the project, then book a call (Calendly) to settle a price + timeline.

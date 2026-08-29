@@ -10,9 +10,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * Packages catalog (Stage 10 Task 10.2). No price anywhere on this page
- * (STANDARDS.md Rule 2) — every card links to its detail page, which links
- * into the shared request flow (Stage 11).
+ * Packages catalog (Stage 10 Task 10.2; demoted from a top-level homepage
+ * path to a reference page in the v4 pivot — PROJECT_BLUEPRINT.md Section
+ * 0 v4). No price anywhere on this page (STANDARDS.md Rule 2) — every card
+ * links to its detail page, which links into the shared request flow
+ * (Stage 11).
  */
 export default function PackagesPage() {
   return (
@@ -20,7 +22,7 @@ export default function PackagesPage() {
       <div className="container mx-auto px-6 max-w-6xl">
         <div className="max-w-2xl mb-12 space-y-2">
           <Badge variant="default" className="mb-1 text-[11px] font-mono">
-            Individuals & Small Teams
+            Already Know What You Need?
           </Badge>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
             Six pre-scoped automation packages

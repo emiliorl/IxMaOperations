@@ -14,6 +14,10 @@
   2. **Businesses** — larger custom-scoped work, no public pricing, submit a brief and book a call for a quote.
 
   A light skills/capabilities section supports both paths but stays shallow on purpose — deep case studies and full project write-ups belong on the portfolio site, not here. Interactive "sandbox" elements are **placeholders only**: Emilio is building the real projects himself; this codebase should not simulate working backends for them.
+- **v4 (pivot, Aug 29, 2026 — current direction):** Emilio flagged that the v3 storefront still felt disconnected from the actual goal: onboard a possible client through a short questionnaire that gives Emilio context and gets a meeting on the calendar, with proof-of-skill (animations/graphs, added over time) shown on the same page — not a catalog to shop. Changes from v3:
+  1. **One unified flow replaces the two-path hero.** The homepage no longer splits visitors into "Individuals/Small Teams → /packages" vs. "Businesses → /custom-projects" as the first decision. The Project Estimator Wizard (built Stage 14, previously framed as a "not sure?" fallback under the two-path hero) is now the primary, only front-door CTA — "Tell Me What You Need" scrolls to it. `/packages` and `/custom-projects` still exist and still work exactly as before (Stage 10/11 untouched), just demoted from top-level hero choices to a secondary reference path (nav link + footer link) for someone who already knows what they want.
+  2. **Examples now live on this site, not just linked out.** `CapabilityStrip.tsx` (shallow cards linking to a pending external portfolio URL) is replaced by `components/home/ExamplesSection.tsx` ("See It In Action") — same six capability entries from `lib/capabilities.ts`, but each card now carries a real animation/graph slot instead of a portfolio hand-off link. Emilio hasn't dropped the real media in yet, so each slot renders a labeled "coming soon" placeholder, not a working demo (Section 8 Rule 2 still applies — no faked backends). This supersedes Section 4's "not a portfolio, links out" framing below.
+  3. **No pricing/Stripe/request-flow changes.** Sections 2, 3, 5, 6 (packages, custom projects, stack, request flow) are unchanged — the pivot is about what leads the homepage and where examples live, not the underlying commerce model.
 
 ---
 
@@ -65,12 +69,12 @@ No public pricing. Flow: short brief form (what they're trying to solve, timelin
 
 ---
 
-## 4. Skills/Capabilities Section (Shared, Kept Shallow)
+## 4. Examples in Action Section (Shared, v4)
 
-A light strip — not a portfolio — showing the skill areas behind the packages: multi-agent LLM systems, computer vision/OCR, data auditing, backend integrations. Each capability gets a small placeholder card, not a working demo:
+**Superseded Aug 29, 2026 (Section 0 v4):** this section used to describe a shallow strip that linked out to a separate portfolio site. It now describes `components/home/ExamplesSection.tsx` — a homepage section showing the skill areas behind the packages (multi-agent LLM systems, computer vision/OCR, data auditing, backend integrations) with a real animation/graph slot per capability, demonstrated directly on this site:
 
-- **Placeholder only.** No live backend, no simulated data, no `/api/sandbox/*` routes. A static card with a short description and (once Emilio has the link) a "See it in action →" link out to the portfolio site.
-- Emilio is building the real, working versions of these himself; this codebase's job is to leave clean, obviously-labeled slots for him to drop links/embeds into later, not to fake functionality.
+- **Placeholder media, not a placeholder site.** No live backend, no simulated data, no `/api/sandbox/*` routes — each card's media slot renders a clearly labeled "coming soon" placeholder until Emilio drops the real animation/graph in. The distinction that still matters (Section 8 Rule 2): the placeholder must stay honest about being one, never fake a working demo.
+- Emilio is building the real, working versions of these himself; this codebase's job is to leave clean, obviously-labeled slots for him to drop the actual media into later.
 
 ---
 
@@ -149,7 +153,7 @@ IxMaOperations/
 1. **Two paths, two CTAs, clearly separated — but both request-first.** Never show a price anywhere on the site, for either path. The split between Packages and Custom Projects is about scope (pre-defined vs. open-ended), not about self-serve checkout vs. consultation — both funnel into the same brief-form/email/Calendly flow.
 2. **Placeholders stay placeholders.** No component under `components/*` may fake a working backend for a capability that doesn't exist yet. Label it, link out to the portfolio site once that link exists, and stop there.
 3. **No self-serve checkout without a new, deliberate decision.** Stripe is deferred (Section 5) — don't reintroduce Checkout, a client portal, a vault, or an account system on your own initiative.
-4. **No portfolio duplication.** Deep case studies, full project narratives, and resume-style content belong on Emilio's separate portfolio site — this site links out, it doesn't rebuild that content.
+4. **No portfolio duplication, even after v4.** The Examples in Action section (Section 4) shows short animations/graphs per capability directly on this site — that's a deliberate v4 change, not a scope creep license. Deep case studies, full project narratives, and resume-style write-ups still belong on Emilio's separate portfolio site, not here.
 5. **Design system stays** — sober zinc palette, no neon/gradients, max 4 nav links, one header CTA (`STANDARDS.md`). The homepage hero is the one place a second CTA is allowed, since it's genuinely two different audiences choosing a path, not a pricing-tier switcher.
 
 ---
