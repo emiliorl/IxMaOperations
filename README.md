@@ -54,9 +54,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | **v3 Stage 8** | Layout & navigation | ✅ Complete |
 | **v3 Stage 9** | Homepage (two-path hero) | ✅ Complete |
 | **v3 Stage 10** | Packages catalog (no pricing) | ✅ Complete |
-| **v3 Stage 11** | Shared request flow (Packages + Custom Projects) | 🔄 Built, email delivery not yet tested end-to-end |
-| **v3 Stage 12** | Cleanup — remove remaining dead weight | 🔄 Partial — v2 orphans removed, v1 remains |
-| **v3 Stage 13** | QA, polish & deploy | ⬜ Not started |
+| **v3 Stage 11** | Shared request flow (Packages + Custom Projects) | ✅ Complete — tested end-to-end, delivery confirmed |
+| **v3 Stage 12** | Cleanup — remove remaining dead weight | ✅ Complete — all v1/v2 code deleted from disk |
+| **v3 Stage 13** | QA, polish & deploy | 🔄 In Progress |
 
 ---
 

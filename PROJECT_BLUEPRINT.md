@@ -124,15 +124,13 @@ IxMaOperations/
 │   └── utils.ts                          # KEEP
 ```
 
-### Removed / stays removed from v1
-- `app/(enterprise)/*`, `app/(solopreneur)/*` route groups, the Enterprise/Solopreneur toggle
-- `lib/crypto.ts` (AES-256 vault), `app/api/vault/*`, `components/solopreneur/ApiKeyVault.tsx`
-- The async onboarding wizard and client portal dashboard (`onboarding/[orderId]`, `portal/`) — post-purchase is just a confirmation page + email, not a dashboard, for v1
-- `app/api/sandbox/*` backend routes — no live-data simulation for placeholder capability cards
-- `zustand` — not needed without live sandbox state
-
-### Brought back, deliberately, scoped down from v1
-- The existing sandbox components (`ScraperTerminalSandbox.tsx`, `InvoiceParserSandbox.tsx`, etc.) get **converted to static placeholder cards** rather than deleted outright — their visual shell is reusable, their fake backend logic is not.
+### Deleted from disk (Stage 12, Aug 28, 2026 — see PLAN_PROGRESS.md Task 12.1-12.3)
+- `app/(enterprise)/*`, `app/(solopreneur)/*` route groups and their dedicated `components/enterprise/`, `components/solopreneur/` directories, including the async onboarding wizard and client portal dashboard.
+- `lib/crypto.ts` (AES-256 vault), `app/api/vault/*`.
+- `app/api/sandbox/*`, `app/api/checkout/*`, `app/api/webhooks/*` — the latter two also dead once Stage 11 replaced them with `app/api/request/route.ts`.
+- `lib/store.ts`, `lib/stripe.ts` (0 importers, orphaned), `lib/mock-data.ts`; `zustand`, `stripe`, `@stripe/stripe-js`, `@radix-ui/react-dialog` removed from `package.json`.
+- `components/sandboxes/*` (`ScraperTerminalSandbox.tsx`, `InvoiceParserSandbox.tsx`, etc.) — **deleted outright, not converted to placeholder cards as originally planned.** `CapabilityStrip.tsx` (Stage 9) already satisfies the "shallow placeholder card" requirement (Section 4) more simply than converting these would have; the sandboxes themselves simulated live backends, which Section 8 Rule 2 prohibits, so converting them risked reproducing the exact anti-pattern this section bans instead of removing it.
+- `components/ui/Dialog.tsx`, `Progress.tsx` — orphaned once their only consumers (above) were deleted.
 
 ---
 
