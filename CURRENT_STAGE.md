@@ -9,6 +9,8 @@
 ## 🔄 What This Site Actually Is (read this first)
 
 > **v4 pivot (Aug 29, 2026):** The homepage no longer leads with the two-path split described below — it leads with one onboarding questionnaire (already built as `ProjectEstimatorWizard`, now the primary CTA) plus a new "See It In Action" examples section (`components/home/ExamplesSection.tsx`) showing skill demos directly on this site. `/packages` and `/custom-projects` are unchanged underneath and still both work — they're just no longer the homepage's first decision. Full rationale: `PROJECT_BLUEPRINT.md` Section 0 v4. The two-path description just below is the pre-pivot (v3) framing, kept for stage-history context.
+>
+> **i18n (Aug 29, 2026):** The site is now bilingual (English + Spanish) via `next-intl`, with every route moved under `app/[locale]/` and locale-prefixed URLs (`/es/...`; English keeps its existing unprefixed paths). All visitor-facing copy lives in `messages/en.json`/`messages/es.json`. See `PROJECT_BLUEPRINT.md` Section 0's i18n entry for the full rundown, and `lib/schemas.ts`'s file header for why the request email to Emilio stays English-only regardless of the visitor's locale.
 
 IxMaOperations exists to get contract work, two ways:
 

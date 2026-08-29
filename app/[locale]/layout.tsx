@@ -1,31 +1,53 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import { hasLocale } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
+import "../globals.css";
+import { routing } from "@/i18n/routing";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
-export const metadata: Metadata = {
-  title: "IxMaOperations — Contract Automation Work",
-  description:
-    "Pick a pre-scoped automation package or bring a custom project — submit a request and get a price and timeline back. Lead scraping, OCR pipelines, content repurposing, data auditing, API integrations, and custom vision models.",
-  keywords: [
-    "automation packages",
-    "custom automation project",
-    "lead scraping automation",
-    "receipt OCR automation",
-    "content repurposing automation",
-    "data auditing script",
-    "API workflow integration",
-    "custom vision model",
-  ],
-};
+/**
+ * Root layout (v5 i18n pivot, Aug 29, 2026) — moved under app/[locale] so
+ * every page renders under a resolved locale (next-intl's App Router
+ * pattern). This is the outermost layout in the tree, so it still owns
+ * <html>/<body> exactly like the old app/layout.tsx did; only the import
+ * path for globals.css changed (one level up). app/api/* stays outside
+ * this segment — route handlers don't need a locale or a layout.
+ */
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
-export default function RootLayout({
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: "Metadata" });
+  return {
+    title: t("title"),
+    description: t("description"),
+    keywords: t.raw("keywords") as string[],
+  };
+}
+
+export default async function LocaleLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: { locale: string };
 }) {
+  const { locale } = params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+
+  // Enables static rendering for this locale (next-intl App Router pattern).
+  setRequestLocale(locale);
+
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -35,9 +57,11 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-foreground flex flex-col font-sans">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <NextIntlClientProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

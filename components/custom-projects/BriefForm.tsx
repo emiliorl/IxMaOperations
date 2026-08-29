@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { requestSchema, type RequestFormValues } from "@/lib/schemas";
+import { useTranslations } from "next-intl";
+import { createRequestSchema, type RequestFormValues } from "@/lib/schemas";
 import { PACKAGES } from "@/lib/packages";
 import { matchScopeTier, type SurveyAnswers } from "@/lib/estimator-logic";
 import { Input, Textarea } from "@/components/ui/Input";
@@ -15,13 +16,21 @@ import { cn } from "@/lib/utils";
  * Shared brief/request form (Stage 11 Task 11.2) — serves both a picked
  * package ("Request This Package" from /packages/[slug], pre-filled via
  * `initialPackageSlug`) and an open-ended custom brief. Zod-validated
- * client-side (lib/schemas.ts, shared with the server route) and again
- * server-side in app/api/request/route.ts.
+ * client-side (lib/schemas.ts, shared shape with the server route) and
+ * again server-side in app/api/request/route.ts.
  *
  * Stage 14: `initialSurveyAnswers` carries the Project Estimator Wizard's
  * result over from the homepage (via /custom-projects's searchParams). The
  * four survey* fields ride along as hidden inputs — the visible summary
  * card shows the same qualitative tier the wizard showed, never a price.
+ *
+ * i18n pivot (Aug 29, 2026): labels/placeholders/validation messages come
+ * from messages/<locale>.json's `BriefForm` namespace; the package <select>
+ * shows each package's translated name via the `Packages.items` namespace.
+ * `createRequestSchema` builds a validator with the current locale's error
+ * strings so react-hook-form + zodResolver validate and display errors in
+ * whichever locale the visitor is on (see lib/schemas.ts for why the
+ * server route stays on the fixed English schema instead).
  */
 export function BriefForm({
   initialPackageSlug = "",
@@ -30,8 +39,13 @@ export function BriefForm({
   initialPackageSlug?: string;
   initialSurveyAnswers?: SurveyAnswers;
 }) {
+  const t = useTranslations("BriefForm");
+  const tPkg = useTranslations("Packages.items");
+  const tEstimator = useTranslations("Estimator");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const requestSchema = useMemo(() => createRequestSchema(t), [t]);
 
   const {
     register,
@@ -54,6 +68,11 @@ export function BriefForm({
   });
 
   const scopeTier = initialSurveyAnswers ? matchScopeTier(initialSurveyAnswers.category) : undefined;
+  const scopeTierName = scopeTier?.packageSlug
+    ? tPkg(`${scopeTier.packageSlug}.name`)
+    : scopeTier
+      ? tEstimator("bespokeTierName")
+      : undefined;
 
   const onSubmit = async (values: RequestFormValues) => {
     setStatus("submitting");
@@ -66,12 +85,12 @@ export function BriefForm({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error || "Something went wrong. Please try again.");
+        throw new Error(data?.error || t("errorGeneric"));
       }
       setStatus("success");
     } catch (err) {
       setStatus("error");
-      setErrorMessage(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setErrorMessage(err instanceof Error ? err.message : t("errorGeneric"));
     }
   };
 
@@ -80,11 +99,8 @@ export function BriefForm({
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-6 flex items-start gap-3">
         <Check className="h-5 w-5 text-zinc-300 mt-0.5 flex-shrink-0" />
         <div className="space-y-1">
-          <p className="text-sm font-medium text-zinc-100">Request sent.</p>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            I'll reply by email with a price and timeline. If you'd rather talk it through first, book a
-            call below.
-          </p>
+          <p className="text-sm font-medium text-zinc-100">{t("successTitle")}</p>
+          <p className="text-xs text-zinc-400 leading-relaxed">{t("successBody")}</p>
         </div>
       </div>
     );
@@ -94,9 +110,9 @@ export function BriefForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
       {scopeTier && (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 text-xs text-zinc-400 space-y-1">
-          <span className="font-mono uppercase tracking-wider text-zinc-500">From your project scope</span>
+          <span className="font-mono uppercase tracking-wider text-zinc-500">{t("fromYourScope")}</span>
           <p className="text-zinc-200">
-            {scopeTier.tierName} — {scopeTier.turnaround}
+            {scopeTierName} — {scopeTier.packageSlug ? tPkg(`${scopeTier.packageSlug}.turnaround`) : tEstimator("confirmedOnCall")}
           </p>
         </div>
       )}
@@ -107,42 +123,38 @@ export function BriefForm({
       <input type="hidden" {...register("surveyUrgency")} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Name" error={errors.name?.message}>
-          <Input {...register("name")} placeholder="Your name" autoComplete="name" />
+        <Field label={t("nameLabel")} error={errors.name?.message}>
+          <Input {...register("name")} placeholder={t("namePlaceholder")} autoComplete="name" />
         </Field>
-        <Field label="Email" error={errors.email?.message}>
-          <Input {...register("email")} type="email" placeholder="you@example.com" autoComplete="email" />
+        <Field label={t("emailLabel")} error={errors.email?.message}>
+          <Input {...register("email")} type="email" placeholder={t("emailPlaceholder")} autoComplete="email" />
         </Field>
       </div>
 
-      <Field label="Which package? (optional)" error={errors.packageSlug?.message}>
+      <Field label={t("packageLabel")} error={errors.packageSlug?.message}>
         <select
           {...register("packageSlug")}
           className="flex h-10 w-full rounded-md border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
         >
-          <option value="">Custom / not listed</option>
+          <option value="">{t("packageNotListed")}</option>
           {PACKAGES.map((pkg) => (
             <option key={pkg.slug} value={pkg.slug}>
-              {pkg.name}
+              {tPkg(`${pkg.slug}.name`)}
             </option>
           ))}
         </select>
       </Field>
 
-      <Field label="What are you trying to solve?" error={errors.problem?.message}>
-        <Textarea
-          {...register("problem")}
-          placeholder="Describe the problem, the data/systems involved, and what a finished result looks like."
-          rows={5}
-        />
+      <Field label={t("problemLabel")} error={errors.problem?.message}>
+        <Textarea {...register("problem")} placeholder={t("problemPlaceholder")} rows={5} />
       </Field>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Timeline" error={errors.timeline?.message}>
-          <Input {...register("timeline")} placeholder="e.g. within 2 weeks" />
+        <Field label={t("timelineLabel")} error={errors.timeline?.message}>
+          <Input {...register("timeline")} placeholder={t("timelinePlaceholder")} />
         </Field>
-        <Field label="Budget range (optional)" error={errors.budgetRange?.message}>
-          <Input {...register("budgetRange")} placeholder="e.g. $500–$1,000" />
+        <Field label={t("budgetLabel")} error={errors.budgetRange?.message}>
+          <Input {...register("budgetRange")} placeholder={t("budgetPlaceholder")} />
         </Field>
       </div>
 
@@ -152,7 +164,7 @@ export function BriefForm({
 
       <Button type="submit" size="lg" disabled={status === "submitting"} className="gap-2">
         {status === "submitting" && <Loader2 className="h-4 w-4 animate-spin" />}
-        {status === "submitting" ? "Sending…" : "Send Request"}
+        {status === "submitting" ? t("sending") : t("submit")}
       </Button>
     </form>
   );

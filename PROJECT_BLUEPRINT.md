@@ -18,6 +18,7 @@
   1. **One unified flow replaces the two-path hero.** The homepage no longer splits visitors into "Individuals/Small Teams → /packages" vs. "Businesses → /custom-projects" as the first decision. The Project Estimator Wizard (built Stage 14, previously framed as a "not sure?" fallback under the two-path hero) is now the primary, only front-door CTA — "Tell Me What You Need" scrolls to it. `/packages` and `/custom-projects` still exist and still work exactly as before (Stage 10/11 untouched), just demoted from top-level hero choices to a secondary reference path (nav link + footer link) for someone who already knows what they want.
   2. **Examples now live on this site, not just linked out.** `CapabilityStrip.tsx` (shallow cards linking to a pending external portfolio URL) is replaced by `components/home/ExamplesSection.tsx` ("See It In Action") — same six capability entries from `lib/capabilities.ts`, but each card now carries a real animation/graph slot instead of a portfolio hand-off link. Emilio hasn't dropped the real media in yet, so each slot renders a labeled "coming soon" placeholder, not a working demo (Section 8 Rule 2 still applies — no faked backends). This supersedes Section 4's "not a portfolio, links out" framing below.
   3. **No pricing/Stripe/request-flow changes.** Sections 2, 3, 5, 6 (packages, custom projects, stack, request flow) are unchanged — the pivot is about what leads the homepage and where examples live, not the underlying commerce model.
+- **i18n (Aug 29, 2026 — Spanish added):** The whole visitor-facing site (nav, hero, onboarding wizard, packages, custom-projects, contact, and BriefForm's labels/validation) is now translatable, with Spanish as the second language. Routing uses `next-intl` with locale-prefixed URLs (`localePrefix: "as-needed"`) — English keeps its existing unprefixed paths (`/packages`, `/custom-projects`, ...) and Spanish gets the same paths under `/es` (`/es/packages`, ...). Every route moved under `app/[locale]/`; `app/api/request/route.ts` stayed put (route handlers don't need a locale). All display strings live in `messages/en.json` / `messages/es.json`, keyed by the same slugs/ids `lib/packages.ts`/`lib/capabilities.ts`/`lib/estimator-logic.ts` already use — those `lib/*.ts` files are unchanged and stay the canonical English data (matching logic, internal pricing, and the email Emilio receives, which is deliberately English-only regardless of the visitor's locale — see `lib/schemas.ts`'s file header for why server-side validation also stays on a fixed English schema). Adding a third language later means adding a locale to `i18n/routing.ts` and a matching `messages/<locale>.json`.
 
 ---
 
@@ -88,6 +89,7 @@ No public pricing. Flow: short brief form (what they're trying to solve, timelin
 | **Payments** | *(none wired into the site for now)* | — | **Deferred, not v3-in-progress.** Packages no longer have self-serve checkout (Section 2) — every path is request-first. When a price is agreed after a reply/call, Emilio sends payment via a manual Stripe Payment Link or invoice outside this codebase. Revisit real Stripe Checkout integration only if/when self-serve buying comes back as a deliberate decision. |
 | **Forms & Validation** | React Hook Form + Zod | Package request form + Custom Projects brief form (shared component, Section 6) | Unchanged |
 | **Scheduling** | Calendly embed | Book-a-call on `/custom-projects` | Confirmed — `https://calendly.com/emilio-a-ramirezl` |
+| **i18n** | `next-intl` | English + Spanish, locale-prefixed routing (`/es/...`) | Added Aug 29, 2026 — see Section 0's i18n entry |
 | **Email** | Resend via `/api/request` | Package + custom-project request submissions to `OWNER_EMAIL` (shared route, Section 6) | Built Aug 28, 2026 — `from` still Resend's shared sandbox sender (`onboarding@resend.dev`); swap to a verified domain before relying on it for real requests |
 | **State** | React local state | No sandbox global state needed (placeholders are static) | Zustand still not needed |
 | **Credential Handling** | *(none)* | — | AES-256 vault stays removed — no client credentials collected |
@@ -99,31 +101,42 @@ No public pricing. Flow: short brief form (what they're trying to solve, timelin
 
 ```
 IxMaOperations/
+├── middleware.ts                         # next-intl locale detection/routing (i18n, Aug 29 2026)
+├── i18n/
+│   ├── routing.ts                        # Locale list, default locale, localePrefix strategy
+│   ├── navigation.ts                     # Locale-aware Link/usePathname/useRouter (use instead of next/link, next/navigation)
+│   └── request.ts                        # Resolves locale + loads messages/<locale>.json per request
+├── messages/
+│   ├── en.json                           # All visitor-facing strings, canonical English
+│   └── es.json                           # Same keys, Spanish
 ├── app/
-│   ├── page.tsx                          # Home: hero w/ two entry paths, capability strip
-│   ├── packages/
-│   │   ├── page.tsx                      # Catalog: 6 pre-scoped packages, no price shown
-│   │   └── [slug]/page.tsx               # Package detail (what's included, turnaround) + "Request This" CTA
-│   ├── custom-projects/page.tsx          # Shared request path: brief form (works for both a picked package and an open-ended brief) + Calendly embed
-│   ├── contact/page.tsx                  # General fallback contact (doesn't fit the two paths above)
+│   ├── [locale]/
+│   │   ├── page.tsx                      # Home: hero → onboarding wizard → examples in action (v4)
+│   │   ├── packages/
+│   │   │   ├── page.tsx                  # Catalog: 6 pre-scoped packages, no price shown
+│   │   │   └── [slug]/page.tsx           # Package detail (what's included, turnaround) + "Request This" CTA
+│   │   ├── custom-projects/page.tsx      # Shared request path: brief form (works for both a picked package and an open-ended brief) + Calendly embed
+│   │   ├── contact/page.tsx              # General fallback contact (doesn't fit the two paths above)
+│   │   └── layout.tsx                    # Root layout (owns <html>/<body>) — single nav, locale switcher, no track switcher
 │   ├── api/
-│   │   └── request/route.ts              # Emails the brief (package request or custom project) to Emilio via Resend
-│   ├── layout.tsx                        # Root layout — single nav, no track switcher in the header
+│   │   └── request/route.ts              # Emails the brief (package request or custom project) to Emilio via Resend — outside [locale], route handlers don't need one
 │   └── globals.css
 ├── components/
 │   ├── home/
-│   │   ├── Hero.tsx                      # Two-path hero (Individuals/Small Teams vs. Businesses)
-│   │   └── CapabilityStrip.tsx           # Placeholder capability cards, shallow, links out to portfolio
+│   │   ├── Hero.tsx                      # Single-flow hero (v4) — "Tell Me What You Need" is the one primary CTA
+│   │   └── ExamplesSection.tsx           # "See It In Action" — real animation/graph slot per capability (v4, replaces CapabilityStrip)
 │   ├── packages/
 │   │   └── PackageCard.tsx               # Catalog grid item — name, description, turnaround, "Request This" link into /custom-projects?package=slug
 │   ├── custom-projects/
 │   │   ├── BriefForm.tsx                 # Problem / timeline / budget range intake + optional "which package?" selector (pre-filled via ?package= query param)
 │   │   └── ScheduleEmbed.tsx             # Calendly iframe wrapper (calendly.com/emilio-a-ramirezl)
+│   ├── layout/
+│   │   └── LanguageSwitcher.tsx          # EN/ES toggle in the header (i18n, Aug 29 2026)
 │   └── ui/                               # KEEP: Button, Card, Badge, Input, Tabs
 ├── lib/
 │   ├── packages.ts                       # Canonical array of the 6 packages (source of truth for catalog; prices stay internal-only, not rendered)
 │   ├── capabilities.ts                   # Written (Stage 7 Task 7.4) — 6 shallow capability entries, 1:1 with packages.ts slugs
-│   ├── schemas.ts                        # Zod schema for the request form, shared by BriefForm.tsx (client) and api/request/route.ts (server)
+│   ├── schemas.ts                        # Zod schema factory for the request form — createRequestSchema(t) for BriefForm.tsx (localized), requestSchema (fixed English) for api/request/route.ts
 │   ├── email.ts                          # Resend client for request emails
 │   └── utils.ts                          # KEEP
 ```

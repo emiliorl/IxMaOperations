@@ -1,0 +1,236 @@
+{
+  "Metadata": {
+    "title": "IxMaOperations — Contract Automation Work",
+    "description": "Pick a pre-scoped automation package or bring a custom project — submit a request and get a price and timeline back. Lead scraping, OCR pipelines, content repurposing, data auditing, API integrations, and custom vision models.",
+    "keywords": [
+      "automation packages",
+      "custom automation project",
+      "lead scraping automation",
+      "receipt OCR automation",
+      "content repurposing automation",
+      "data auditing script",
+      "API workflow integration",
+      "custom vision model"
+    ]
+  },
+  "Header": {
+    "navExamples": "Examples",
+    "navPackages": "Packages",
+    "navContact": "Contact",
+    "getStarted": "Get Started"
+  },
+  "Footer": {
+    "tagline": "Automation and AI tooling — tell me what you need, I'll reply with scope and a time to talk.",
+    "startHere": "Start Here",
+    "examples": "Examples",
+    "packages": "Packages",
+    "customProjects": "Custom Projects",
+    "contact": "Contact"
+  },
+  "Hero": {
+    "title": "Automation and AI tooling, built around your problem.",
+    "description": "Tell me what you're trying to solve — scraping, document processing, content workflows, data QA, integrations, or custom vision. Answer a few questions and I'll get back to you with real scope and a time to talk.",
+    "ctaPrimary": "Tell Me What You Need",
+    "ctaSecondary": "See It In Action",
+    "badge1": "Five questions, no forms to decode",
+    "badge2": "Real reply with scope + timeline",
+    "badge3": "Book a call or send a brief — you pick"
+  },
+  "HomeScoper": {
+    "badge": "Start Here",
+    "title": "Five quick questions about your project",
+    "description": "Get a matched scope and turnaround estimate, then book a call or send the brief straight through — or, if you'd rather skip straight to it, <emailLink>email me directly</emailLink>."
+  },
+  "Examples": {
+    "badge": "See It In Action",
+    "title": "What this looks like when it's built",
+    "description": "Live walkthroughs and graphs for each skill area, going up here as they're ready.",
+    "comingSoon": "Animation / graph — coming soon"
+  },
+  "ClosingCta": {
+    "badge": "Free 15-Minute Call",
+    "title": "Ready to talk it through?",
+    "description": "Answer the five questions above and you'll hear back with a scope, a timeline, and a time to talk — not a hard sell.",
+    "cta": "Tell Me What You Need"
+  },
+  "Capabilities": {
+    "lead-scraper-enrichment": {
+      "name": "Scraping & Enrichment",
+      "description": "Pulling structured data out of unstructured web sources and enriching it with the context that makes it usable — company, role, recent activity — not just raw scraped rows."
+    },
+    "invoice-ocr-pipeline": {
+      "name": "Document & Receipt OCR",
+      "description": "Turning photos and PDFs of receipts, invoices, and forms into clean, structured, exportable data — no manual retyping."
+    },
+    "content-repurposing": {
+      "name": "Content Automation",
+      "description": "Breaking one piece of long-form content into platform-ready drafts automatically — transcript in, threads and captions out."
+    },
+    "data-qa-audit": {
+      "name": "Data Auditing",
+      "description": "Rule-based and LLM-based checks that catch bad records at scale, with a measurable accuracy score instead of a gut feeling."
+    },
+    "api-workflow-integration": {
+      "name": "Backend Integrations",
+      "description": "Connecting the tools you already use so information moves between them automatically instead of being copy-pasted by hand."
+    },
+    "custom-vision-model": {
+      "name": "Computer Vision",
+      "description": "Training a model on your specific images when off-the-shelf OCR or object detection isn't accurate enough for the job."
+    }
+  },
+  "Packages": {
+    "listBadge": "Already Know What You Need?",
+    "listTitle": "Six pre-scoped automation packages",
+    "listDescription": "Each one has a defined scope and turnaround. No price is shown here — pick the one that matches what you need, submit a request, and you'll hear back with a price and a timeline.",
+    "viewDetails": "View details",
+    "whatsIncludedHeading": "What's Included",
+    "builtOn": "Built on: {name}",
+    "noPriceNote": "No price is shown here — submit a request and I'll reply with a price and timeline.",
+    "requestThisPackage": "Request This Package",
+    "items": {
+      "lead-scraper-enrichment": {
+        "name": "Custom Lead Scraper + Enrichment List",
+        "pitch": "Scrape a defined source, enrich records, hand back a clean list.",
+        "whatItIs": "You give me a defined source and the criteria that matter — I build a one-off scrape-and-enrich pass and hand back a clean, ready-to-use list instead of raw scraped rows.",
+        "whatsIncluded": [
+          "Scrape of one clearly defined source against your criteria",
+          "Enrichment of each record with the context that makes it usable",
+          "A clean, deduplicated export (spreadsheet or CSV)"
+        ],
+        "turnaround": "3–5 days"
+      },
+      "invoice-ocr-pipeline": {
+        "name": "Receipt/Invoice OCR Pipeline Setup",
+        "pitch": "Upload receipts/invoices → structured, exportable data.",
+        "whatItIs": "A one-time setup that turns photos or PDFs of receipts and invoices into structured, exportable line items — no more retyping totals by hand.",
+        "whatsIncluded": [
+          "Pipeline configured for your receipt/invoice format",
+          "Structured output (vendor, amount, date, category)",
+          "Exportable to spreadsheet/CSV"
+        ],
+        "turnaround": "3–5 days"
+      },
+      "content-repurposing": {
+        "name": "Content Repurposing Automation",
+        "pitch": "One video/transcript → multi-platform post drafts.",
+        "whatItIs": "Feed in one raw video or transcript and get back a batch of platform-ready drafts — no more manually reformatting the same idea five different ways.",
+        "whatsIncluded": [
+          "Transcription + key-idea breakdown of one source video/recording",
+          "Platform-ready drafts (threads, captions, a newsletter blurb)",
+          "One round of revisions on the draft set"
+        ],
+        "turnaround": "2–4 days"
+      },
+      "data-qa-audit": {
+        "name": "Small-Scope Data QA/Audit Script",
+        "pitch": "Rule + LLM-based checking of a defined dataset, with a measurable accuracy score.",
+        "whatItIs": "A script that checks a defined dataset against rules and an LLM-based review pass, so you get a measurable accuracy score instead of a gut feeling about your data quality.",
+        "whatsIncluded": [
+          "Rule-based + LLM-based checks against your dataset",
+          "A flagged-records report with a measurable accuracy score",
+          "The script itself, so you can re-run it later"
+        ],
+        "turnaround": "4–6 days"
+      },
+      "api-workflow-integration": {
+        "name": "Custom API/Workflow Integration",
+        "pitch": "Connect 2+ tools/systems with a custom automation script.",
+        "whatItIs": "I connect two or more tools you already use with a custom automation script, so information moves between them on its own instead of being copy-pasted by hand.",
+        "whatsIncluded": [
+          "Integration script connecting your specified tools/systems",
+          "Basic error handling and a run log",
+          "Handoff notes on how it works"
+        ],
+        "turnaround": "3–6 days"
+      },
+      "custom-vision-model": {
+        "name": "Custom-Trained Vision Model (small scope)",
+        "pitch": "A bespoke computer-vision model when off-the-shelf OCR/CV isn't accurate enough.",
+        "whatItIs": "When general-purpose OCR or object detection isn't accurate enough for your specific images, I train a small-scope custom vision model against your actual data instead.",
+        "whatsIncluded": [
+          "Model trained against a sample of your images",
+          "An accuracy report against a held-out test set",
+          "Delivery notes on how to run/integrate it"
+        ],
+        "turnaround": "Varies with scope"
+      }
+    }
+  },
+  "CustomProjects": {
+    "badgeDefault": "Start a Project",
+    "badgeRequesting": "Requesting: {name}",
+    "titleDefault": "Describe your project",
+    "titleRequesting": "Request this package",
+    "description": "No price is shown here — submit a brief and I'll reply with a price and timeline. If you'd rather talk it through first, book a call instead.",
+    "preferToTalk": "Prefer to talk first?"
+  },
+  "BriefForm": {
+    "fromYourScope": "From your project scope",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "packageLabel": "Which package? (optional)",
+    "packageNotListed": "Custom / not listed",
+    "problemLabel": "What are you trying to solve?",
+    "problemPlaceholder": "Describe the problem, the data/systems involved, and what a finished result looks like.",
+    "timelineLabel": "Timeline",
+    "timelinePlaceholder": "e.g. within 2 weeks",
+    "budgetLabel": "Budget range (optional)",
+    "budgetPlaceholder": "e.g. $500–$1,000",
+    "submit": "Send Request",
+    "sending": "Sending…",
+    "successTitle": "Request sent.",
+    "successBody": "I'll reply by email with a price and timeline. If you'd rather talk it through first, book a call below.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "nameError": "Enter your name.",
+    "emailError": "Enter a valid email address.",
+    "problemError": "Give a bit more detail — at least a couple of sentences.",
+    "timelineError": "Let me know your timeline, even roughly."
+  },
+  "ScheduleEmbed": {
+    "notConfigured": "Booking link not configured — set NEXT_PUBLIC_CALENDLY_URL.",
+    "iframeTitle": "Book a call"
+  },
+  "Contact": {
+    "title": "Contact",
+    "description": "If your question fits a package or a custom project, those paths get you a faster reply. For anything else, reach out directly.",
+    "browsePackages": "Browse Packages",
+    "describeCustomProject": "Describe a Custom Project"
+  },
+  "Estimator": {
+    "stepLabel": "Step {current} / {total}",
+    "back": "Back",
+    "step1Title": "What's the core problem?",
+    "step2Title": "How complex is the source data?",
+    "step3Title": "What should the handoff look like?",
+    "step4Title": "What's the turnaround priority?",
+    "bespokeLabel": "Bespoke Architecture",
+    "bespokeDescription": "Something else — doesn't fit the categories above.",
+    "bespokeTierName": "Bespoke Architecture",
+    "confirmedOnCall": "Confirmed on scoping call",
+    "matchedScope": "Matched scope",
+    "turnaroundLabel": "Turnaround",
+    "matchedCapability": "Matched capability",
+    "referenceNote": "Reference scope based on your answers. Final deliverables, timeline, and price are confirmed on a scoping call or in my reply to your brief.",
+    "bookCall": "Book Scoping Call",
+    "sendBrief": "Send Project Brief",
+    "complexity": {
+      "simple": { "label": "Simple", "description": "One clear source, static or well-structured." },
+      "moderate": { "label": "Moderate", "description": "A few variables — mixed formats or a handful of edge cases." },
+      "complex": { "label": "Complex", "description": "Multiple sources or systems, or a lot of edge-case handling." }
+    },
+    "deliverable": {
+      "dataset": { "label": "Clean dataset / CSV", "description": "A one-off structured export." },
+      "scheduled-script": { "label": "Automated script", "description": "Runs on a schedule (cron) without you." },
+      "webhook": { "label": "Webhook / real-time trigger", "description": "Fires the moment something changes." },
+      "model-api": { "label": "Containerized model / API", "description": "A standalone service you or your team call." }
+    },
+    "urgency": {
+      "express": { "label": "Express", "description": "2–3 days — priority turnaround." },
+      "standard": { "label": "Standard", "description": "3–6 days — the usual pace." },
+      "flexible": { "label": "Flexible", "description": "No rush — whenever it's ready." }
+    }
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "Metadata": {
+    "title": "IxMaOperations — Trabajo de Automatización por Contrato",
+    "description": "Elige un paquete de automatización con alcance definido o trae un proyecto a medida — envía tu solicitud y recibe un precio y un plazo. Extracción de datos, OCR de documentos, reutilización de contenido, auditoría de datos, integraciones por API y modelos de visión personalizados.",
+    "keywords": [
+      "paquetes de automatización",
+      "proyecto de automatización a medida",
+      "automatización de extracción de leads",
+      "OCR de recibos",
+      "automatización de contenido",
+      "script de auditoría de datos",
+      "integración de API",
+      "modelo de visión personalizado"
+    ]
+  },
+  "Header": {
+    "navExamples": "Ejemplos",
+    "navPackages": "Paquetes",
+    "navContact": "Contacto",
+    "getStarted": "Empezar"
+  },
+  "Footer": {
+    "tagline": "Automatización y herramientas de IA — dime qué necesitas y te respondo con el alcance y un horario para hablar.",
+    "startHere": "Empieza Aquí",
+    "examples": "Ejemplos",
+    "packages": "Paquetes",
+    "customProjects": "Proyectos a Medida",
+    "contact": "Contacto"
+  },
+  "Hero": {
+    "title": "Automatización y herramientas de IA, hechas a la medida de tu problema.",
+    "description": "Cuéntame qué estás tratando de resolver — extracción de datos, procesamiento de documentos, flujos de contenido, control de calidad de datos, integraciones o visión por computadora a medida. Responde unas preguntas y te contacto con el alcance real y un horario para hablar.",
+    "ctaPrimary": "Dime Qué Necesitas",
+    "ctaSecondary": "Ver Ejemplos",
+    "badge1": "Cinco preguntas, sin formularios complicados",
+    "badge2": "Respuesta real con alcance y plazo",
+    "badge3": "Agenda una llamada o envía un brief — tú eliges"
+  },
+  "HomeScoper": {
+    "badge": "Empieza Aquí",
+    "title": "Cinco preguntas rápidas sobre tu proyecto",
+    "description": "Obtén un alcance y un plazo estimado, luego agenda una llamada o envía el brief directamente — o, si prefieres saltarte esto, <emailLink>escríbeme directamente</emailLink>."
+  },
+  "Examples": {
+    "badge": "Ejemplos en Acción",
+    "title": "Así se ve cuando está terminado",
+    "description": "Demostraciones y gráficos de cada área de trabajo, que iré agregando aquí a medida que estén listos.",
+    "comingSoon": "Animación / gráfico — próximamente"
+  },
+  "ClosingCta": {
+    "badge": "Llamada Gratis de 15 Minutos",
+    "title": "¿Listo para hablarlo?",
+    "description": "Responde las cinco preguntas de arriba y recibirás un alcance, un plazo y un horario para hablar — sin presión de venta.",
+    "cta": "Dime Qué Necesitas"
+  },
+  "Capabilities": {
+    "lead-scraper-enrichment": {
+      "name": "Extracción y Enriquecimiento de Datos",
+      "description": "Extraer datos estructurados de fuentes web no estructuradas y enriquecerlos con el contexto que los hace útiles — empresa, cargo, actividad reciente — no solo filas de datos en bruto."
+    },
+    "invoice-ocr-pipeline": {
+      "name": "OCR de Documentos y Recibos",
+      "description": "Convertir fotos y PDFs de recibos, facturas y formularios en datos limpios, estructurados y exportables — sin volver a escribirlos a mano."
+    },
+    "content-repurposing": {
+      "name": "Automatización de Contenido",
+      "description": "Dividir una pieza de contenido extenso en borradores listos para cada plataforma, automáticamente — entra una transcripción, salen hilos y textos."
+    },
+    "data-qa-audit": {
+      "name": "Auditoría de Datos",
+      "description": "Verificaciones basadas en reglas y en modelos de lenguaje que detectan registros incorrectos a gran escala, con una puntuación de precisión medible en vez de una corazonada."
+    },
+    "api-workflow-integration": {
+      "name": "Integraciones de Sistemas",
+      "description": "Conectar las herramientas que ya usas para que la información se mueva entre ellas automáticamente en lugar de copiarse y pegarse a mano."
+    },
+    "custom-vision-model": {
+      "name": "Visión por Computadora",
+      "description": "Entrenar un modelo con tus propias imágenes cuando el OCR o la detección de objetos genéricos no son lo suficientemente precisos para el trabajo."
+    }
+  },
+  "Packages": {
+    "listBadge": "¿Ya Sabes Qué Necesitas?",
+    "listTitle": "Seis paquetes de automatización con alcance definido",
+    "listDescription": "Cada uno tiene un alcance y un plazo definidos. Aquí no se muestra ningún precio — elige el que se ajuste a lo que necesitas, envía una solicitud y te responderé con un precio y un plazo.",
+    "viewDetails": "Ver detalles",
+    "whatsIncludedHeading": "Qué Incluye",
+    "builtOn": "Basado en: {name}",
+    "noPriceNote": "Aquí no se muestra ningún precio — envía una solicitud y te responderé con un precio y un plazo.",
+    "requestThisPackage": "Solicitar Este Paquete",
+    "items": {
+      "lead-scraper-enrichment": {
+        "name": "Extractor de Leads + Lista Enriquecida a Medida",
+        "pitch": "Extraigo datos de una fuente definida, enriquezco los registros y te entrego una lista lista para usar.",
+        "whatItIs": "Me das una fuente definida y los criterios que importan — hago una extracción y enriquecimiento único y te entrego una lista limpia y lista para usar, no solo filas de datos en bruto.",
+        "whatsIncluded": [
+          "Extracción de una fuente claramente definida según tus criterios",
+          "Enriquecimiento de cada registro con el contexto que lo hace útil",
+          "Una exportación limpia y sin duplicados (hoja de cálculo o CSV)"
+        ],
+        "turnaround": "3–5 días"
+      },
+      "invoice-ocr-pipeline": {
+        "name": "Configuración de Pipeline OCR para Recibos/Facturas",
+        "pitch": "Subes recibos/facturas → obtienes datos estructurados y exportables.",
+        "whatItIs": "Una configuración única que convierte fotos o PDFs de recibos y facturas en líneas de datos estructuradas y exportables — se acabó volver a escribir totales a mano.",
+        "whatsIncluded": [
+          "Pipeline configurado para el formato de tus recibos/facturas",
+          "Salida estructurada (proveedor, monto, fecha, categoría)",
+          "Exportable a hoja de cálculo/CSV"
+        ],
+        "turnaround": "3–5 días"
+      },
+      "content-repurposing": {
+        "name": "Automatización de Reutilización de Contenido",
+        "pitch": "Un video/transcripción → borradores listos para varias plataformas.",
+        "whatItIs": "Entregas un video o transcripción sin editar y recibes un lote de borradores listos para cada plataforma — se acabó reformatear la misma idea cinco veces a mano.",
+        "whatsIncluded": [
+          "Transcripción y desglose de ideas clave de un video/grabación",
+          "Borradores listos para cada plataforma (hilos, textos, un fragmento de newsletter)",
+          "Una ronda de revisión sobre el conjunto de borradores"
+        ],
+        "turnaround": "2–4 días"
+      },
+      "data-qa-audit": {
+        "name": "Script de Auditoría/QA de Datos (Alcance Reducido)",
+        "pitch": "Verificación basada en reglas y en modelos de lenguaje de un dataset definido, con una puntuación de precisión medible.",
+        "whatItIs": "Un script que revisa un dataset definido con reglas y una pasada de revisión basada en modelos de lenguaje, para que obtengas una puntuación de precisión medible en vez de una corazonada sobre la calidad de tus datos.",
+        "whatsIncluded": [
+          "Verificaciones basadas en reglas y en modelos de lenguaje sobre tu dataset",
+          "Un reporte de registros marcados con una puntuación de precisión medible",
+          "El script mismo, para que puedas volver a ejecutarlo cuando quieras"
+        ],
+        "turnaround": "4–6 días"
+      },
+      "api-workflow-integration": {
+        "name": "Integración de API/Flujo de Trabajo a Medida",
+        "pitch": "Conecto 2 o más herramientas/sistemas con un script de automatización a medida.",
+        "whatItIs": "Conecto dos o más herramientas que ya usas con un script de automatización a medida, para que la información se mueva entre ellas sola en vez de copiarse y pegarse a mano.",
+        "whatsIncluded": [
+          "Script de integración que conecta las herramientas/sistemas que especifiques",
+          "Manejo básico de errores y un registro de ejecución",
+          "Notas de entrega sobre cómo funciona"
+        ],
+        "turnaround": "3–6 días"
+      },
+      "custom-vision-model": {
+        "name": "Modelo de Visión Entrenado a Medida (Alcance Reducido)",
+        "pitch": "Un modelo de visión por computadora a medida cuando el OCR/CV genérico no es lo suficientemente preciso.",
+        "whatItIs": "Cuando el OCR o la detección de objetos de propósito general no son lo suficientemente precisos para tus imágenes, entreno un modelo de visión a medida con tus propios datos.",
+        "whatsIncluded": [
+          "Modelo entrenado con una muestra de tus imágenes",
+          "Un reporte de precisión sobre un conjunto de prueba independiente",
+          "Notas de entrega sobre cómo ejecutarlo/integrarlo"
+        ],
+        "turnaround": "Varía según el alcance"
+      }
+    }
+  },
+  "CustomProjects": {
+    "badgeDefault": "Iniciar un Proyecto",
+    "badgeRequesting": "Solicitando: {name}",
+    "titleDefault": "Describe tu proyecto",
+    "titleRequesting": "Solicitar este paquete",
+    "description": "Aquí no se muestra ningún precio — envía un brief y te responderé con un precio y un plazo. Si prefieres hablarlo primero, agenda una llamada.",
+    "preferToTalk": "¿Prefieres hablarlo primero?"
+  },
+  "BriefForm": {
+    "fromYourScope": "Según el alcance de tu proyecto",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tucorreo@ejemplo.com",
+    "packageLabel": "¿Qué paquete? (opcional)",
+    "packageNotListed": "A medida / no listado",
+    "problemLabel": "¿Qué estás tratando de resolver?",
+    "problemPlaceholder": "Describe el problema, los datos/sistemas involucrados y cómo se ve un resultado terminado.",
+    "timelineLabel": "Plazo",
+    "timelinePlaceholder": "ej. en 2 semanas",
+    "budgetLabel": "Rango de presupuesto (opcional)",
+    "budgetPlaceholder": "ej. $500–$1,000",
+    "submit": "Enviar Solicitud",
+    "sending": "Enviando…",
+    "successTitle": "Solicitud enviada.",
+    "successBody": "Te responderé por correo con un precio y un plazo. Si prefieres hablarlo primero, agenda una llamada abajo.",
+    "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
+    "nameError": "Ingresa tu nombre.",
+    "emailError": "Ingresa un correo electrónico válido.",
+    "problemError": "Danos un poco más de detalle — al menos un par de oraciones.",
+    "timelineError": "Cuéntame tu plazo, aunque sea aproximado."
+  },
+  "ScheduleEmbed": {
+    "notConfigured": "El enlace para agendar no está configurado — define NEXT_PUBLIC_CALENDLY_URL.",
+    "iframeTitle": "Agendar una llamada"
+  },
+  "Contact": {
+    "title": "Contacto",
+    "description": "Si tu consulta encaja en un paquete o un proyecto a medida, esos caminos te dan una respuesta más rápida. Para cualquier otra cosa, escríbeme directamente.",
+    "browsePackages": "Ver Paquetes",
+    "describeCustomProject": "Describir un Proyecto a Medida"
+  },
+  "Estimator": {
+    "stepLabel": "Paso {current} / {total}",
+    "back": "Atrás",
+    "step1Title": "¿Cuál es el problema principal?",
+    "step2Title": "¿Qué tan compleja es la fuente de datos?",
+    "step3Title": "¿Cómo debería verse la entrega?",
+    "step4Title": "¿Cuál es la prioridad de plazo?",
+    "bespokeLabel": "Arquitectura a Medida",
+    "bespokeDescription": "Algo distinto — no encaja en las categorías de arriba.",
+    "bespokeTierName": "Arquitectura a Medida",
+    "confirmedOnCall": "Se confirma en la llamada de alcance",
+    "matchedScope": "Alcance sugerido",
+    "turnaroundLabel": "Plazo",
+    "matchedCapability": "Capacidad relacionada",
+    "referenceNote": "Alcance de referencia según tus respuestas. Los entregables finales, el plazo y el precio se confirman en una llamada de alcance o en mi respuesta a tu brief.",
+    "bookCall": "Agendar Llamada de Alcance",
+    "sendBrief": "Enviar Brief del Proyecto",
+    "complexity": {
+      "simple": { "label": "Simple", "description": "Una sola fuente clara, estática o bien estructurada." },
+      "moderate": { "label": "Moderada", "description": "Algunas variables — formatos mixtos o algunos casos particulares." },
+      "complex": { "label": "Compleja", "description": "Múltiples fuentes o sistemas, o muchos casos particulares que manejar." }
+    },
+    "deliverable": {
+      "dataset": { "label": "Dataset limpio / CSV", "description": "Una exportación estructurada única." },
+      "scheduled-script": { "label": "Script automatizado", "description": "Se ejecuta en un horario (cron) sin que tengas que hacer nada." },
+      "webhook": { "label": "Webhook / disparador en tiempo real", "description": "Se activa en el momento en que algo cambia." },
+      "model-api": { "label": "Modelo/API en contenedor", "description": "Un servicio independiente que tú o tu equipo pueden llamar." }
+    },
+    "urgency": {
+      "express": { "label": "Exprés", "description": "2–3 días — plazo prioritario." },
+      "standard": { "label": "Estándar", "description": "3–6 días — el ritmo habitual." },
+      "flexible": { "label": "Flexible", "description": "Sin apuro — cuando esté listo." }
+    }
+  }
+}

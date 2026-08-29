@@ -64,18 +64,19 @@ The color system relies on high-contrast neutrals, subtle hairline borders (`1px
 
 ## 4. Header & Navigation Constraints
 
-> **v3 update (Aug 2026):** This is a contract-work storefront with two real paths — pre-scoped packages (individuals/small teams) and custom projects (businesses). Both are request-first with **no public pricing anywhere**. The header stays minimal with one CTA; the **homepage hero is the one sanctioned place** for a second CTA, since it's genuinely two different audiences choosing a path, not a pricing-tier switcher. See `PROJECT_BLUEPRINT.md` for the full rationale.
+> **v4 update (Aug 29, 2026):** The site leads with one unified onboarding flow — a questionnaire that scopes the project and gets a meeting booked — instead of splitting visitors into two paths up front. `/packages` and `/custom-projects` still exist as a secondary reference route, not the hero's first choice. The site is also bilingual (English + Spanish via `next-intl`, locale-prefixed URLs) — see `PROJECT_BLUEPRINT.md` Section 0 for both pivots' full rationale.
 
 ```
-[ LOGO ]        Packages    Custom Projects    Contact          [ Get Started ]
+[ LOGO ]        Examples    Packages    Contact     [EN|ES]     [ Get Started ]
 ```
 
 ### Navigation Rules
 
 1. **Maximum 4 Links:** Navigation links must be plain text with subtle hover states (`text-zinc-400 hover:text-zinc-100`). No dropdown mega-menu.
 2. **No Pricing, Anywhere:** Do NOT render a price, price range, or "starting at" figure on any page — not in navigation, not on `/packages` or its detail pages, not on `/custom-projects`. Internal reference prices in `lib/packages.ts`/`PROJECT_BLUEPRINT.md` are for Emilio's quoting only and must never reach a rendered component.
-3. **Two-Path Hero, Not a Segmented Control:** The homepage hero may show two clear buttons ("I have a project to build" → `/packages`, "I'm a business with a custom need" → `/custom-projects`). Do not turn this into a pill/segmented switcher, and do not repeat it in the sticky header.
-4. **Single Header CTA:** Exactly ONE high-contrast primary button in the header (`Get Started`, routing to `/packages`). The hero's two-button pattern stays confined to the hero section.
+3. **One Hero CTA, Not a Segmented Control (v4):** The homepage hero leads with a single primary CTA ("Tell Me What You Need" → the on-page questionnaire). A secondary, lower-emphasis link to the Examples section is fine; do not reintroduce a two-button "pick your audience" switcher.
+4. **Single Header CTA:** Exactly ONE high-contrast primary button in the header (`Get Started`, routing into the homepage questionnaire). The EN/ES language toggle sits beside it and doesn't count against this — it's a locale switch, not a second call to action.
+5. **New copy needs both locales.** Any user-visible string goes in `messages/en.json` AND `messages/es.json` (same key) — never hardcode text in a component when a translation namespace already exists for that page/section.
 
 ---
 

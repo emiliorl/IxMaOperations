@@ -1,4 +1,6 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { Hero } from "@/components/home/Hero";
 import { ExamplesSection } from "@/components/home/ExamplesSection";
 import { ProjectEstimatorWizard } from "@/components/onboarding/ProjectEstimatorWizard";
@@ -16,8 +18,16 @@ import { ArrowRight } from "lucide-react";
  * The packages catalog (`/packages`) still exists as a reference for
  * people who already know what they want, but it's no longer a top-level
  * path from the homepage — see PROJECT_BLUEPRINT.md Section 0 v4.
+ *
+ * i18n pivot (same date): copy moved to messages/<locale>.json
+ * (HomeScoper/ClosingCta namespaces); `setRequestLocale` enables static
+ * rendering per next-intl's App Router pattern.
  */
-export default function HomePage() {
+export default function HomePage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
+  const t = useTranslations("HomeScoper");
+  const tCta = useTranslations("ClosingCta");
+
   return (
     <div>
       <Hero />
@@ -25,18 +35,19 @@ export default function HomePage() {
       <section id="project-scoper" className="py-16 md:py-20 border-b border-zinc-800 scroll-mt-16">
         <div className="container mx-auto px-6 max-w-3xl text-center space-y-3 mb-10">
           <Badge variant="default" className="text-[11px] font-mono">
-            Start Here
+            {t("badge")}
           </Badge>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white tracking-tight">
-            Five quick questions about your project
+            {t("title")}
           </h2>
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-xl mx-auto">
-            Get a matched scope and turnaround estimate, then book a call or send the brief straight
-            through — or, if you'd rather skip straight to it,{" "}
-            <Link href="/contact" className="text-zinc-300 underline underline-offset-4 hover:text-zinc-100">
-              email me directly
-            </Link>
-            .
+            {t.rich("description", {
+              emailLink: (chunks) => (
+                <Link href="/contact" className="text-zinc-300 underline underline-offset-4 hover:text-zinc-100">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         </div>
         <div className="container mx-auto px-6 max-w-2xl">
@@ -49,19 +60,18 @@ export default function HomePage() {
       <section className="py-16 md:py-20 border-b border-zinc-800 bg-zinc-950/80">
         <div className="container mx-auto px-6 max-w-4xl text-center space-y-6">
           <Badge variant="default" className="text-[11px] font-mono">
-            Free 15-Minute Call
+            {tCta("badge")}
           </Badge>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
-            Ready to talk it through?
+            {tCta("title")}
           </h2>
           <p className="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
-            Answer the five questions above and you'll hear back with a scope, a timeline, and a time to
-            talk — not a hard sell.
+            {tCta("description")}
           </p>
 
           <div className="flex items-center justify-center pt-2">
             <Link href="#project-scoper" className={buttonVariants({ size: "lg", variant: "default", className: "w-full sm:w-auto gap-2" })}>
-              Tell Me What You Need
+              {tCta("cta")}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
