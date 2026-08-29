@@ -50,6 +50,7 @@ const SAMPLES: Array<{ url: string; labelKey: "sampleCafe" | "sampleHardware" }>
 const AMOUNT_ORDER: AmountLabel[] = ["subtotal", "tax", "tip", "discount", "total"];
 
 interface EditableItem {
+  quantityText: string;
   description: string;
   amountText: string;
   currency: string;
@@ -90,7 +91,12 @@ export function OcrDemo() {
   React.useEffect(() => {
     setEditableItems(
       extraction
-        ? extraction.lineItems.map((li) => ({ description: li.description, amountText: li.amount.toFixed(2), currency: li.currency }))
+        ? extraction.lineItems.map((li) => ({
+            quantityText: li.quantity != null ? String(li.quantity) : "",
+            description: li.description,
+            amountText: li.amount.toFixed(2),
+            currency: li.currency,
+          }))
         : []
     );
   }, [extraction]);
@@ -174,14 +180,17 @@ export function OcrDemo() {
     multiple: false,
   });
 
-  const updateItem = (index: number, field: "description" | "amountText", value: string) => {
+  const updateItem = (index: number, field: keyof EditableItem, value: string) => {
     setEditableItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
   };
   const removeItem = (index: number) => {
     setEditableItems((prev) => prev.filter((_, i) => i !== index));
   };
   const addItem = () => {
-    setEditableItems((prev) => [...prev, { description: "", amountText: "0.00", currency: extraction?.lineItems[0]?.currency ?? "USD" }]);
+    setEditableItems((prev) => [
+      ...prev,
+      { quantityText: "", description: "", amountText: "0.00", currency: extraction?.lineItems[0]?.currency ?? "USD" },
+    ]);
   };
 
   const exportPayload = React.useCallback((): OcrExtraction => {
@@ -191,12 +200,16 @@ export function OcrDemo() {
       averageConfidence: extraction?.averageConfidence ?? 0,
       lineItems: editableItems
         .filter((it) => it.description.trim())
-        .map((it) => ({
-          description: it.description.trim(),
-          amount: Number(it.amountText) || 0,
-          currency: it.currency,
-          rawText: it.description.trim(),
-        })),
+        .map((it) => {
+          const quantity = Number(it.quantityText);
+          return {
+            quantity: it.quantityText.trim() && Number.isFinite(quantity) ? quantity : null,
+            description: it.description.trim(),
+            amount: Number(it.amountText) || 0,
+            currency: it.currency,
+            rawText: it.description.trim(),
+          };
+        }),
     };
   }, [extraction, editableItems]);
 
@@ -394,8 +407,27 @@ export function OcrDemo() {
                     <p className="text-xs text-zinc-600 italic">{t("noLineItems")}</p>
                   ) : (
                     <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 px-0.5">
+                        <span className="w-12 shrink-0 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
+                          {t("fieldQuantity")}
+                        </span>
+                        <span className="flex-1 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
+                          {t("descriptionPlaceholder")}
+                        </span>
+                        <span className="w-24 shrink-0 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
+                          {t("amountPlaceholder")}
+                        </span>
+                        <span className="w-8 shrink-0" />
+                      </div>
                       {editableItems.map((item, i) => (
                         <div key={i} className="flex items-center gap-1.5">
+                          <Input
+                            value={item.quantityText}
+                            onChange={(e) => updateItem(i, "quantityText", e.target.value)}
+                            placeholder="—"
+                            inputMode="numeric"
+                            className="h-8 w-12 text-xs font-mono border-zinc-800 bg-zinc-950 focus-visible:ring-zinc-500 shrink-0 text-center px-1"
+                          />
                           <Input
                             value={item.description}
                             onChange={(e) => updateItem(i, "description", e.target.value)}

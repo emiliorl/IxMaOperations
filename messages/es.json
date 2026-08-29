@@ -103,6 +103,7 @@
       "noneDetected": "No detectado.",
       "lineItemsHeading": "Artículos",
       "lineItemsHint": "(editable — corrige una lectura errónea, o agrega una fila a mano)",
+      "fieldQuantity": "Cant.",
       "descriptionPlaceholder": "Descripción",
       "amountPlaceholder": "0.00",
       "addRow": "+ Agregar Fila",

@@ -103,6 +103,7 @@
       "noneDetected": "Not detected.",
       "lineItemsHeading": "Line Items",
       "lineItemsHint": "(editable — fix a misread, or add a row by hand)",
+      "fieldQuantity": "Qty",
       "descriptionPlaceholder": "Description",
       "amountPlaceholder": "0.00",
       "addRow": "+ Add Row",

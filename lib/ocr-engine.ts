@@ -46,6 +46,8 @@ export interface OcrAmount {
 }
 
 export interface OcrLineItem {
+  /** Parsed count (from a leading "2x", "2 x", or "Qty: 2" token) — null when the line didn't carry one. */
+  quantity: number | null;
   description: string;
   amount: number;
   currency: string;
@@ -211,14 +213,39 @@ function labelForLine(text: string): AmountLabel | null {
   return null;
 }
 
+const LEADING_QTY_X_RE = /^(\d+)\s*[xX]\s+(.+)$/;
+const LEADING_QTY_KEYWORD_RE = /^qty\.?\s*:?\s*(\d+)\s+(.+)$/i;
+
+/**
+ * Splits a leading quantity token ("2x ", "2 x ", "Qty: 2 ") off an item
+ * description, when the line has one — a description shouldn't have to
+ * carry quantity as unstructured text glued to the item name.
+ *
+ * Deliberately conservative: no bare-leading-number pattern ("2 Widget"),
+ * since a numeric SKU or pack-size prefix already inside an item name
+ * ("100ct Screws") would otherwise get misread as a quantity. Only the
+ * "N x" / "Nx" / "Qty: N" conventions receipts actually use for quantity
+ * are recognized.
+ */
+function splitQuantity(text: string): { quantity: number | null; description: string } {
+  const m = text.match(LEADING_QTY_X_RE) ?? text.match(LEADING_QTY_KEYWORD_RE);
+  if (m) {
+    const quantity = Number(m[1]);
+    if (Number.isFinite(quantity) && quantity > 0) {
+      return { quantity, description: m[2].trim() };
+    }
+  }
+  return { quantity: null, description: text };
+}
+
 /**
  * Single pass over the receipt's lines: a line with a keyword (subtotal/
  * tax/tip/discount/total) and a trailing currency amount becomes a labeled
- * total; any other line with a trailing amount becomes a line item (its
- * text before the amount is the description). Lines with no currency-marked
- * figure at all (store name, address, "thank you") are skipped — this is
- * the plan's "line-item table builder", using each OCR line's own
- * already-clustered bbox rather than re-deriving columns from scratch.
+ * total; any other line with a trailing amount becomes a line item, split
+ * into quantity/description/amount. Lines with no currency-marked figure at
+ * all (store name, address, "thank you") are skipped — this is the plan's
+ * "line-item table builder", using each OCR line's own already-clustered
+ * bbox rather than re-deriving columns from scratch.
  */
 export function extractAmountsAndLineItems(lines: OcrLine[]): {
   amounts: Partial<Record<AmountLabel, OcrAmount>>;
@@ -239,9 +266,11 @@ export function extractAmountsAndLineItems(lines: OcrLine[]): {
       continue;
     }
 
-    const description = line.text.slice(0, last.index).trim().replace(/[.\-\s]+$/, "");
-    if (!description) continue; // a bare amount with no description isn't a usable line item
-    lineItems.push({ description, amount: last.value, currency: last.currency, rawText: line.text });
+    const rawDescription = line.text.slice(0, last.index).trim().replace(/[.\-\s]+$/, "");
+    if (!rawDescription) continue; // a bare amount with no description isn't a usable line item
+    const { quantity, description } = splitQuantity(rawDescription);
+    if (!description) continue; // guard: a quantity token with nothing after it
+    lineItems.push({ quantity, description, amount: last.value, currency: last.currency, rawText: line.text });
   }
 
   return { amounts, lineItems };
@@ -273,9 +302,11 @@ function csvCell(value: string | number): string {
 /** Builds a downloadable CSV from the extraction — line items plus a totals
  *  summary block, used by OcrDemo.tsx's "Download CSV" action. */
 export function extractionToCsv(extraction: OcrExtraction): string {
-  const rows: string[] = ["Description,Amount,Currency"];
+  const rows: string[] = ["Quantity,Description,Amount,Currency"];
   for (const item of extraction.lineItems) {
-    rows.push([csvCell(item.description), csvCell(item.amount.toFixed(2)), csvCell(item.currency)].join(","));
+    rows.push(
+      [csvCell(item.quantity ?? ""), csvCell(item.description), csvCell(item.amount.toFixed(2)), csvCell(item.currency)].join(",")
+    );
   }
   rows.push("");
   rows.push("Label,Amount,Currency");
