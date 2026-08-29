@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { CAPABILITIES } from "@/lib/capabilities";
 import { CAPABILITY_ICONS } from "@/lib/capability-icons";
+import { ScraperDemo } from "@/components/examples/ScraperDemo";
+import { OcrDemo } from "@/components/examples/OcrDemo";
 import { PlayCircle } from "lucide-react";
 
 /**
@@ -18,11 +20,25 @@ import { PlayCircle } from "lucide-react";
  * namespace, keyed by the same `packageSlug`.
  *
  * Each card gets a real animation/graph slot. Emilio hasn't dropped the
- * media in yet, so the slot renders a clearly labeled placeholder instead
- * of a working demo or simulated backend (Section 8 Rule 2 still stands —
- * a placeholder stays honest about being one). Swap the placeholder `div`
- * for the real embed/animation per card as it's built.
+ * media in yet for most cards, so those slots render a clearly labeled
+ * placeholder instead of a working demo or simulated backend (Section 8
+ * Rule 2 still stands — a placeholder stays honest about being one). Swap
+ * the placeholder `div` for the real embed/animation per card as it's
+ * built.
+ *
+ * CAPABILITY_DEMOS_PLAN.md phases (Aug 29, 2026 —): each phase gives one
+ * capability a real working engine, listed in LIVE_DEMOS below. That card
+ * renders full-width with its own component instead of the coming-soon
+ * placeholder. Phase 1: `lead-scraper-enrichment` -> ScraperDemo (a real
+ * POST /api/examples/scrape call). Phase 2: `invoice-ocr-pipeline` ->
+ * OcrDemo (real tesseract.js OCR in a Web Worker, no server round-trip).
+ * The rest stay placeholders until their own phase lands.
  */
+const LIVE_DEMOS: Partial<Record<string, React.ComponentType>> = {
+  "lead-scraper-enrichment": ScraperDemo,
+  "invoice-ocr-pipeline": OcrDemo,
+};
+
 export function ExamplesSection() {
   const t = useTranslations("Examples");
   const tCap = useTranslations("Capabilities");
@@ -45,6 +61,38 @@ export function ExamplesSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CAPABILITIES.map((capability) => {
             const Icon = CAPABILITY_ICONS[capability.icon];
+            const LiveDemo = LIVE_DEMOS[capability.packageSlug];
+
+            if (LiveDemo) {
+              return (
+                <Card
+                  key={capability.packageSlug}
+                  className="flex flex-col p-6 space-y-5 md:col-span-2 lg:col-span-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-md bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 w-fit shrink-0">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-semibold text-white leading-snug">
+                          {tCap(`${capability.packageSlug}.name`)}
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed max-w-lg">
+                          {tCap(`${capability.packageSlug}.description`)}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="active" className="shrink-0">
+                      {t("liveBadge")}
+                    </Badge>
+                  </div>
+
+                  <LiveDemo />
+                </Card>
+              );
+            }
+
             return (
               <Card key={capability.packageSlug} className="flex flex-col p-6 space-y-5">
                 <div className="flex flex-col items-center justify-center gap-2 aspect-video rounded-md border border-dashed border-zinc-800 bg-zinc-900/50 text-zinc-600">

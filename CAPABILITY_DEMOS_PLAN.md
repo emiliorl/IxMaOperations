@@ -25,23 +25,37 @@ To ensure maximum responsiveness, privacy, and zero reliance on fragile external
 ### Phase 1: Real Scraping & Enrichment Engine (`lead-scraper-enrichment`)
 
 #### 1.1 What the User Tests
-The visitor can type **any public URL** (e.g. their own company domain `https://stripe.com` or `https://github.com`) or pick one-click presets. The tool fetches the real page, inspects the markup, and extracts live structured data.
+The visitor can type **any public URL** or pick from curated **one-click presets**. The tool fetches the live page, parses the DOM and meta tags, and returns structured business intelligence in under 2 seconds.
 
-#### 1.2 Under the Hood (Real Pipeline)
+#### 1.2 Target Website Categories & Recommended Test Sites
+| Category | Recommended Examples | What Gets Extracted |
+|---|---|---|
+| **B2B SaaS & Tech Companies** | `https://linear.app`, `https://resend.com`, `https://stripe.com` | Brand identity, value prop, detected tech stack (`Next.js`, `Tailwind`, `React`), social handles (`@linear`), OpenGraph assets. |
+| **E-Commerce Storefronts** | `https://kith.com`, `https://allbirds.com` | Store platform (e.g., Shopify), JSON-LD `OnlineStore`/`Product` schema, support emails, localized currency. |
+| **Media & Publications** | `https://news.ycombinator.com`, Substack articles | Semantic headings (`H1`/`H2`), article publication dates, author metadata, top link lists. |
+| **Visitor's Own Website** | `https://yourcompany.com` | Live inspection of their own domain's public footprint, meta tags, and tech signatures. |
+
+#### 1.3 Under the Hood (Real Pipeline)
 * **API Handler (`app/api/examples/scrape/route.ts`):**
   * Accepts `{ url: string }` via `POST`.
-  * Validates URL format with Zod.
-  * Fetches the target page with standard headers and timeout guards.
+  * Validates URL format with Zod and enforces request timeouts (5s).
+  * Fetches the target page with standard browser headers.
   * Extracts:
     * **Page Identity:** Title, Meta Description, Favicon, Canonical URL.
     * **OpenGraph & Twitter Cards:** `og:image`, `og:site_name`, `og:type`.
-    * **Structured Data:** JSON-LD schema objects (e.g., `Organization`, `Product`).
-    * **Technology Fingerprints:** Detected frameworks/CMS (e.g., Next.js, WordPress, Shopify, Tailwind, React).
-    * **Contact & Social Leads:** Extracted Twitter/X handles, LinkedIn links, GitHub handles, and public contact emails.
-* **Frontend Component (`components/examples/ScraperDemo.tsx`):**
-  * Input bar with live URL submit and quick sample pills (`Stripe`, `Linear`, `Vercel`).
-  * Real loading stream with elapsed millisecond timer.
-  * Clean dual-tab view: **Structured Summary** (clean cards) vs. **Raw JSON Payload** (monospaced syntax-highlighted code).
+    * **Structured Data:** JSON-LD schema objects (`Organization`, `WebSite`, `Product`).
+    * **Technology Fingerprints:** Detected frameworks/CMS (`Next.js`, `React`, `Shopify`, `WordPress`, `Tailwind`).
+    * **Contact & Social Leads:** Extracted Twitter/X handles, LinkedIn links, GitHub handles, public contact emails.
+  * **Graceful Edge-Case Handling:** If a site blocks serverless IPs or requires CAPTCHA (e.g. Cloudflare Turnstile), returns a clean technical notice:  
+    `"Bot shield / CAPTCHA detected. Production scraper uses residential proxy rotation & stealth browser workers."` (demonstrating why client-tier packages are needed for protected targets).
+
+#### 1.4 Frontend Component (`components/examples/ScraperDemo.tsx`)
+* **Input Bar:** URL input with validation and a high-contrast `[ ⚡ Scrape ]` trigger.
+* **One-Click Preset Badges:** `[ Linear (SaaS) ]`, `[ Resend (API) ]`, `[ Hacker News (List) ]`.
+* **Telemetry Bar:** Displays response time (`~240ms`), status (`200 OK`), payload size (`14.2 KB`).
+* **Dual-View Output:**
+  * **Structured Summary:** Clean cards with company details, tech stack badges, and social links.
+  * **Raw JSON Payload:** Syntax-highlighted monospaced JSON for technical visitors.
 
 ---
 
