@@ -113,6 +113,29 @@
       "copyJson": "Copiar JSON",
       "copied": "Copiado",
       "downloadCsv": "Descargar CSV"
+    },
+    "content": {
+      "inputPlaceholder": "Pega un artículo, transcripción de video, o notas sueltas…",
+      "charactersLabel": "caracteres",
+      "samplesLabel": "O probar:",
+      "sampleLaunch": "Charla de Lanzamiento",
+      "sampleFocus": "Enfoque y Productividad",
+      "emptyState": "Pega algo de texto arriba, o elige un ejemplo, para ver el pipeline real convertirlo en borradores listos para cada plataforma.",
+      "truncatedNote": "El texto se recortó a los primeros 20,000 caracteres para esta demostración.",
+      "statWords": "Palabras",
+      "statReadingTime": "Tiempo de Lectura",
+      "statComplexity": "Complejidad",
+      "readingTimeValue": "{minutes} min de lectura",
+      "complexitySimple": "Simple",
+      "complexityModerate": "Moderada",
+      "complexityComplex": "Compleja",
+      "tabThread": "Hilo de X / Twitter",
+      "tabLinkedin": "Publicación de LinkedIn",
+      "tabTldr": "Resumen Ejecutivo",
+      "copyThread": "Copiar Hilo",
+      "copyPost": "Copiar Publicación",
+      "copyTldr": "Copiar Resumen",
+      "copied": "Copiado"
     }
   },
   "ClosingCta": {

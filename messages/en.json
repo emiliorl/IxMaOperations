@@ -113,6 +113,29 @@
       "copyJson": "Copy JSON",
       "copied": "Copied",
       "downloadCsv": "Download CSV"
+    },
+    "content": {
+      "inputPlaceholder": "Paste an article, video transcript, or raw notes…",
+      "charactersLabel": "characters",
+      "samplesLabel": "Or try:",
+      "sampleLaunch": "Product Launch Talk",
+      "sampleFocus": "Focus & Productivity",
+      "emptyState": "Paste some text above, or pick a sample, to see the real pipeline turn it into platform-ready drafts.",
+      "truncatedNote": "Input was trimmed to the first 20,000 characters for this demo.",
+      "statWords": "Words",
+      "statReadingTime": "Reading Time",
+      "statComplexity": "Complexity",
+      "readingTimeValue": "{minutes} min read",
+      "complexitySimple": "Simple",
+      "complexityModerate": "Moderate",
+      "complexityComplex": "Complex",
+      "tabThread": "X / Twitter Thread",
+      "tabLinkedin": "LinkedIn Post",
+      "tabTldr": "Executive TL;DR",
+      "copyThread": "Copy Thread",
+      "copyPost": "Copy Post",
+      "copyTldr": "Copy TL;DR",
+      "copied": "Copied"
     }
   },
   "ClosingCta": {
