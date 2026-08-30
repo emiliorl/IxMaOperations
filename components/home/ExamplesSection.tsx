@@ -7,6 +7,7 @@ import { CAPABILITY_ICONS } from "@/lib/capability-icons";
 import { ScraperDemo } from "@/components/examples/ScraperDemo";
 import { OcrDemo } from "@/components/examples/OcrDemo";
 import { ContentDemo } from "@/components/examples/ContentDemo";
+import { AuditDemo } from "@/components/examples/AuditDemo";
 import { PlayCircle } from "lucide-react";
 
 /**
@@ -35,12 +36,15 @@ import { PlayCircle } from "lucide-react";
  * OcrDemo (real tesseract.js OCR in a Web Worker, no server round-trip).
  * Phase 3: `content-repurposing` -> ContentDemo (a real synchronous
  * extractive-NLP pipeline, client-side only — no server round-trip, no
- * LLM). The rest stay placeholders until their own phase lands.
+ * LLM). Phase 4: `data-qa-audit` -> AuditDemo (real email/phone/date
+ * validation + dedup, same client-side-only architecture as Phase 3). The
+ * rest stay placeholders until their own phase lands.
  */
 const LIVE_DEMOS: Partial<Record<string, React.ComponentType>> = {
   "lead-scraper-enrichment": ScraperDemo,
   "invoice-ocr-pipeline": OcrDemo,
   "content-repurposing": ContentDemo,
+  "data-qa-audit": AuditDemo,
 };
 
 export function ExamplesSection() {
