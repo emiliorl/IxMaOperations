@@ -179,6 +179,47 @@
         "duplicatePhone": "Teléfono duplicado — coincide con la fila {row}",
         "duplicateName": "Posible duplicado (nombre similar) — coincide con la fila {row}"
       }
+    },
+    "integration": {
+      "inputPlaceholder": "Pega un payload JSON de webhook — Stripe, Shopify, o un lead de CRM personalizado…",
+      "samplesLabel": "O prueba:",
+      "sampleStripe": "Pago de Stripe",
+      "sampleShopify": "Pedido de Shopify",
+      "sampleCrm": "Lead de CRM",
+      "emptyState": "Pega un payload de webhook arriba, o elige un ejemplo, para ejecutarlo por el pipeline real — ingesta, mapeo de campos, enrutamiento por condiciones y generación de payloads de destino.",
+      "sourceLabel": "Fuente Detectada",
+      "sourceStripe": "Stripe",
+      "sourceShopify": "Shopify",
+      "sourceCrm": "CRM Personalizado",
+      "sourceUnknown": "Forma No Reconocida",
+      "totalLatency": "Tiempo Total de Procesamiento",
+      "sectionSteps": "Pasos del Pipeline",
+      "stepIngest": "Ingesta y Validación de Esquema",
+      "stepNormalize": "Mapeo y Normalización de Campos",
+      "stepRoute": "Filtrado por Condiciones",
+      "stepDispatch": "Envío a Destinos",
+      "sectionRoute": "Decisión de Enrutamiento",
+      "tierEnterprise": "Enterprise VIP",
+      "tierPriority": "Prioritario",
+      "tierStandard": "Estándar",
+      "sectionDispatch": "Envío de Payloads a Destinos (generado — no se envía nada realmente)",
+      "tabSql": "Inserción SQL",
+      "tabSlack": "Slack Block Kit",
+      "tabEmail": "HTML de Correo (Resend)",
+      "copyPayload": "Copiar",
+      "copied": "Copiado",
+      "step": {
+        "invalidJson": "Eso no es JSON válido.",
+        "notAnObject": "Se esperaba un objeto JSON, no un arreglo o valor primitivo.",
+        "ingestOk": "Reconocido como webhook de {source}.",
+        "ingestUnknown": "Forma no reconocida — usando detección genérica de campos.",
+        "normalizeOk": "Mapeado a {fieldCount} campos normalizados.",
+        "routeEnterprise": "El monto (${amount}) supera ${threshold} — enrutado a Enterprise VIP.",
+        "routePriority": "El monto (${amount}) supera ${threshold} — enrutado a Prioritario.",
+        "routeStandard": "Monto (${amount}) — enrutado a Estándar.",
+        "routeNoAmount": "No se detectó monto — enrutado a Estándar.",
+        "dispatchOk": "Se generaron {count} payloads de destino."
+      }
     }
   },
   "ClosingCta": {

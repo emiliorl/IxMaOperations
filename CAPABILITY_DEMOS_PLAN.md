@@ -159,11 +159,11 @@ Visitors can **upload their own photo / part image** (or choose from demo inspec
 We will build and integrate each working demo one at a time:
 
 ```
-[ ] Phase 1: Scraping & Enrichment -> Real API Route + Scraper UI (ScraperDemo.tsx)
-[ ] Phase 2: Document & Receipt OCR -> Real Tesseract.js WASM Engine (OcrDemo.tsx)
-[ ] Phase 3: Content Automation -> Real NLP Repurposing Engine (ContentDemo.tsx)
-[ ] Phase 4: Data Auditing & QA -> Real CSV/Data Linter & Export (AuditDemo.tsx)
-[ ] Phase 5: Backend Integrations -> Real Webhook & Transformer Engine (IntegrationDemo.tsx)
+[x] Phase 1: Scraping & Enrichment -> Real API Route + Scraper UI (ScraperDemo.tsx)
+[x] Phase 2: Document & Receipt OCR -> Real Tesseract.js WASM Engine (OcrDemo.tsx)
+[x] Phase 3: Content Automation -> Real NLP Repurposing Engine (ContentDemo.tsx)
+[x] Phase 4: Data Auditing & QA -> Real CSV/Data Linter & Export (AuditDemo.tsx)
+[x] Phase 5: Backend Integrations -> Real Webhook & Transformer Engine (IntegrationDemo.tsx)
 [ ] Phase 6: Computer Vision -> Real Client-Side Vision Engine (VisionDemo.tsx)
 ```
 

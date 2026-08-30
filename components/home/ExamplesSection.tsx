@@ -8,6 +8,7 @@ import { ScraperDemo } from "@/components/examples/ScraperDemo";
 import { OcrDemo } from "@/components/examples/OcrDemo";
 import { ContentDemo } from "@/components/examples/ContentDemo";
 import { AuditDemo } from "@/components/examples/AuditDemo";
+import { IntegrationDemo } from "@/components/examples/IntegrationDemo";
 import { PlayCircle } from "lucide-react";
 
 /**
@@ -37,14 +38,19 @@ import { PlayCircle } from "lucide-react";
  * Phase 3: `content-repurposing` -> ContentDemo (a real synchronous
  * extractive-NLP pipeline, client-side only — no server round-trip, no
  * LLM). Phase 4: `data-qa-audit` -> AuditDemo (real email/phone/date
- * validation + dedup, same client-side-only architecture as Phase 3). The
- * rest stay placeholders until their own phase lands.
+ * validation + dedup, same client-side-only architecture as Phase 3).
+ * Phase 5: `api-workflow-integration` -> IntegrationDemo (real ingestion,
+ * field mapping, and condition-routing over a pasted webhook payload;
+ * the downstream SQL/Slack/email payloads it renders are generated, not
+ * actually dispatched — same client-side-only architecture as Phases 3-4).
+ * The rest stay placeholders until their own phase lands.
  */
 const LIVE_DEMOS: Partial<Record<string, React.ComponentType>> = {
   "lead-scraper-enrichment": ScraperDemo,
   "invoice-ocr-pipeline": OcrDemo,
   "content-repurposing": ContentDemo,
   "data-qa-audit": AuditDemo,
+  "api-workflow-integration": IntegrationDemo,
 };
 
 export function ExamplesSection() {

@@ -179,6 +179,47 @@
         "duplicatePhone": "Duplicate phone number — matches row {row}",
         "duplicateName": "Possible duplicate (similar name) — matches row {row}"
       }
+    },
+    "integration": {
+      "inputPlaceholder": "Paste a webhook JSON payload — Stripe, Shopify, or a custom CRM lead…",
+      "samplesLabel": "Or try:",
+      "sampleStripe": "Stripe Payment",
+      "sampleShopify": "Shopify Order",
+      "sampleCrm": "CRM Lead",
+      "emptyState": "Paste a webhook payload above, or pick a sample, to run it through the real pipeline — ingestion, field mapping, condition routing, and downstream dispatch-payload generation.",
+      "sourceLabel": "Detected Source",
+      "sourceStripe": "Stripe",
+      "sourceShopify": "Shopify",
+      "sourceCrm": "Custom CRM",
+      "sourceUnknown": "Unrecognized Shape",
+      "totalLatency": "Total Processing Time",
+      "sectionSteps": "Pipeline Steps",
+      "stepIngest": "Ingestion & Schema Validation",
+      "stepNormalize": "Field Mapping & Normalization",
+      "stepRoute": "Condition Filtering",
+      "stepDispatch": "Downstream Dispatch",
+      "sectionRoute": "Routing Decision",
+      "tierEnterprise": "Enterprise VIP",
+      "tierPriority": "Priority",
+      "tierStandard": "Standard",
+      "sectionDispatch": "Downstream Payload Dispatch (generated — nothing is actually sent)",
+      "tabSql": "SQL Insert",
+      "tabSlack": "Slack Block Kit",
+      "tabEmail": "Resend Email HTML",
+      "copyPayload": "Copy",
+      "copied": "Copied",
+      "step": {
+        "invalidJson": "That's not valid JSON.",
+        "notAnObject": "Expected a JSON object, not an array or primitive.",
+        "ingestOk": "Recognized as a {source} webhook.",
+        "ingestUnknown": "Shape not recognized — falling back to generic field detection.",
+        "normalizeOk": "Mapped to {fieldCount} normalized fields.",
+        "routeEnterprise": "Amount (${amount}) exceeds ${threshold} — routed to Enterprise VIP.",
+        "routePriority": "Amount (${amount}) exceeds ${threshold} — routed to Priority.",
+        "routeStandard": "Amount (${amount}) — routed to Standard.",
+        "routeNoAmount": "No amount detected — routed to Standard.",
+        "dispatchOk": "Generated {count} downstream payloads."
+      }
     }
   },
   "ClosingCta": {
