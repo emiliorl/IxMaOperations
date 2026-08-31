@@ -16,8 +16,20 @@
  * underlying pipeline a bespoke inspection model would run (image in,
  * boxes + classes + confidence out) — not a claim that this pretrained
  * model itself does defect detection (STANDARDS.md / PROJECT_BLUEPRINT.md
- * Section 8 Rule 2). Both tfjs and the ~7MB `lite_mobilenet_v2` weights
- * load lazily via dynamic import on first use, never in the main bundle.
+ * Section 8 Rule 2). Both tfjs and the ~26MB `mobilenet_v1` weights load
+ * lazily via dynamic import on first use, never in the main bundle.
+ *
+ * Base model choice (Aug 30, 2026): an in-browser A/B test against
+ * `lite_mobilenet_v2` (17MB) and `mobilenet_v2` (64MB) found all three
+ * scored 87-98% on ordinary single/multi-dog photos — the base model isn't
+ * what makes or breaks accuracy here. `mobilenet_v1` is used as a modest,
+ * low-risk step up in documented accuracy for a fair size cost, not a claim
+ * that it fixes hard scenes. What actually breaks any of the three: many
+ * overlapping same-class objects, occlusion (props/costumes hiding the
+ * features that distinguish e.g. a dog from a teddy bear), and heavy visual
+ * clutter — a structural limitation of SSD-style detectors, not a config
+ * problem. See VisionDemo.tsx's low-confidence advisory and caption, which
+ * disclose this rather than silently presenting a shaky guess as reliable.
  */
 
 export interface Detection {
@@ -30,8 +42,12 @@ export type ConfidenceTier = "high" | "medium" | "low";
 
 const HIGH_CONFIDENCE = 0.75;
 const MEDIUM_CONFIDENCE = 0.5;
-const MIN_SCORE = 0.45;
+const MIN_SCORE = 0.5; // coco-ssd's own default — 0.45 let through noise the tier coloring didn't earn
 const MAX_DETECTIONS = 20;
+// Below this, the model's own best guess on the whole image is weak enough
+// that the result is more "here's its least-bad guess" than a confident
+// read — worth flagging rather than presenting silently as reliable.
+const LOW_CONFIDENCE_SCENE_THRESHOLD = 0.7;
 
 export function confidenceTier(score: number): ConfidenceTier {
   if (score >= HIGH_CONFIDENCE) return "high";
@@ -69,7 +85,7 @@ async function getModel(): Promise<CocoSsdModel> {
       const [tf, cocoSsd] = await Promise.all([import("@tensorflow/tfjs"), import("@tensorflow-models/coco-ssd")]);
       await tf.ready();
       tfBackend = tf.getBackend();
-      return (await cocoSsd.load({ base: "lite_mobilenet_v2" })) as unknown as CocoSsdModel;
+      return (await cocoSsd.load({ base: "mobilenet_v1" })) as unknown as CocoSsdModel;
     })();
   }
   return modelPromise;
@@ -95,6 +111,12 @@ export interface DetectionResult {
    *  load as if it were this image's own inference cost. */
   modelLoadMs: number | null;
   inferenceMs: number;
+  /** True when even the model's single best guess on this image scored
+   *  below LOW_CONFIDENCE_SCENE_THRESHOLD — a real signal (from the model's
+   *  own output, not a heuristic on image content) that this scene is
+   *  harder than usual, surfaced by the UI as an honest advisory rather
+   *  than silently showing shaky boxes as if they were reliable. */
+  lowConfidenceScene: boolean;
 }
 
 export async function detectObjects(image: HTMLImageElement): Promise<DetectionResult> {
@@ -107,9 +129,13 @@ export async function detectObjects(image: HTMLImageElement): Promise<DetectionR
   const raw = await model.detect(image, MAX_DETECTIONS, MIN_SCORE);
   const inferenceMs = Math.round((performance.now() - inferStart) * 10) / 10;
 
+  const detections = raw.map((d) => ({ class: d.class, score: d.score, bbox: d.bbox }));
+  const bestScore = detections.reduce((max, d) => Math.max(max, d.score), 0);
+
   return {
-    detections: raw.map((d) => ({ class: d.class, score: d.score, bbox: d.bbox })),
+    detections,
     modelLoadMs,
     inferenceMs,
+    lowConfidenceScene: detections.length === 0 || bestScore < LOW_CONFIDENCE_SCENE_THRESHOLD,
   };
 }

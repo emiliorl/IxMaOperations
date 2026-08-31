@@ -8,7 +8,7 @@
  * (components/home/ExamplesSection.tsx). A visitor drops in a photo (or
  * picks a sample), and lib/vision-engine.ts runs a real pretrained
  * COCO-SSD object-detection model — via `@tensorflow/tfjs`'s WebGL
- * backend, dynamically imported so its ~7MB of weights never touch the
+ * backend, dynamically imported so its ~26MB of weights never touch the
  * main bundle — entirely in the browser.
  *
  * This is general-purpose 80-class object detection (people, vehicles,
@@ -20,6 +20,14 @@
  * spec — crisp 1px vectors, a monospaced label anchored to the box's
  * top-left corner — colored by the model's own confidence tier rather
  * than a fixed color, so a visitor can see where it's least sure.
+ *
+ * Reliability note (Aug 30, 2026): a visitor uploaded a photo of many dogs
+ * in party hats packed together, and the model called several of them
+ * "teddy bear" at 63-66% confidence. lib/vision-engine.ts's header explains
+ * why (a structural limitation of this class of model on crowded/occluded
+ * scenes, not a fixable bug) — this component surfaces that honestly via
+ * `lowConfidenceScene` (an inline advisory when even the model's best guess
+ * on the image is weak) instead of presenting shaky boxes as reliable.
  */
 import * as React from "react";
 import { useTranslations } from "next-intl";
@@ -52,6 +60,7 @@ export function VisionDemo() {
   const [inferenceMs, setInferenceMs] = React.useState<number | null>(null);
   const [modelLoadMs, setModelLoadMs] = React.useState<number | null>(null);
   const [backend, setBackend] = React.useState<string | null>(null);
+  const [lowConfidenceScene, setLowConfidenceScene] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   const runIdRef = React.useRef(0);
@@ -72,6 +81,7 @@ export function VisionDemo() {
       setDetections([]);
       setNaturalSize(null);
       setInferenceMs(null);
+      setLowConfidenceScene(false);
       setLoadingLabel(isModelLoadStarted() ? t("statusRunning") : t("statusLoadingModel"));
 
       // The previous run's blob URL (if any) is safe to free now — a new
@@ -94,6 +104,7 @@ export function VisionDemo() {
         setInferenceMs(result.inferenceMs);
         setModelLoadMs(result.modelLoadMs);
         setBackend(getBackendName());
+        setLowConfidenceScene(result.lowConfidenceScene);
         setStatus("done");
       } catch (err) {
         if (runIdRef.current !== runId) return;
@@ -218,6 +229,12 @@ export function VisionDemo() {
                   <span className="h-2 w-2 rounded-sm" style={{ background: "#ef4444" }} /> {t("legendLow")}
                 </span>
               </div>
+            )}
+
+            {status === "done" && detections.length > 0 && lowConfidenceScene && (
+              <p className="text-[11px] text-amber-400 leading-relaxed rounded-md border border-amber-900/60 bg-amber-950/40 px-2.5 py-2">
+                {t("lowConfidenceAdvisory")}
+              </p>
             )}
 
             <p className="text-[10px] text-zinc-600 leading-relaxed">{t("modelNote")}</p>
