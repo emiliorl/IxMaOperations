@@ -220,6 +220,33 @@
         "routeNoAmount": "No se detectó monto — enrutado a Estándar.",
         "dispatchOk": "Se generaron {count} payloads de destino."
       }
+    },
+    "vision": {
+      "dropHint": "Arrastra una foto aquí",
+      "dropActiveHint": "Suéltala",
+      "browseHint": "o haz clic para elegir — PNG o JPEG",
+      "samplesLabel": "O prueba:",
+      "sampleStreet": "Escena Callejera",
+      "sampleWorkspace": "Espacio de Trabajo",
+      "sampleDog": "Perro (Playa)",
+      "emptyState": "Sube una foto, o elige un ejemplo, para ejecutar detección de objetos real — un modelo COCO-SSD preentrenado, directo en tu navegador.",
+      "errorPrefix": "No se pudo procesar esa imagen",
+      "statusLoadingModel": "Cargando modelo de visión (solo la primera vez)…",
+      "statusRunning": "Ejecutando inferencia…",
+      "legendHigh": "≥75%",
+      "legendMid": "50–75%",
+      "legendLow": "<50%",
+      "modelNote": "Detección de objetos de propósito general (80 clases COCO: personas, vehículos, animales, muebles, objetos cotidianos) — no es un modelo de inspección entrenado a medida.",
+      "sectionTelemetry": "Telemetría de Inferencia",
+      "statLatency": "Latencia de Inferencia",
+      "statObjects": "Objetos Detectados",
+      "statFps": "FPS Estimados",
+      "statBackend": "Backend",
+      "statModelLoad": "Tiempo de Carga del Modelo",
+      "fpsHint": "Los FPS estimados son una proyección de rendimiento basada en el tiempo de inferencia de esta imagen, no un benchmark de video sostenido.",
+      "modelLoadHint": "El Tiempo de Carga del Modelo es un costo único (descarga + inicialización del modelo) — no se incluye en la Latencia de Inferencia y solo se muestra en la primera ejecución.",
+      "sectionDetections": "Detecciones",
+      "noneDetected": "No se detectaron objetos por encima del umbral de confianza — prueba con otra imagen."
     }
   },
   "ClosingCta": {

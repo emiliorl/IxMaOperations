@@ -9,6 +9,7 @@ import { OcrDemo } from "@/components/examples/OcrDemo";
 import { ContentDemo } from "@/components/examples/ContentDemo";
 import { AuditDemo } from "@/components/examples/AuditDemo";
 import { IntegrationDemo } from "@/components/examples/IntegrationDemo";
+import { VisionDemo } from "@/components/examples/VisionDemo";
 import { PlayCircle } from "lucide-react";
 
 /**
@@ -43,7 +44,11 @@ import { PlayCircle } from "lucide-react";
  * field mapping, and condition-routing over a pasted webhook payload;
  * the downstream SQL/Slack/email payloads it renders are generated, not
  * actually dispatched — same client-side-only architecture as Phases 3-4).
- * The rest stay placeholders until their own phase lands.
+ * Phase 6: `custom-vision-model` -> VisionDemo (a real pretrained COCO-SSD
+ * object-detection model running on tfjs's WebGL backend, entirely
+ * client-side — a stand-in for the pipeline a custom-trained inspection
+ * model would run, not a claim that this pretrained model does defect
+ * inspection itself; see the component's own header comment).
  */
 const LIVE_DEMOS: Partial<Record<string, React.ComponentType>> = {
   "lead-scraper-enrichment": ScraperDemo,
@@ -51,6 +56,7 @@ const LIVE_DEMOS: Partial<Record<string, React.ComponentType>> = {
   "content-repurposing": ContentDemo,
   "data-qa-audit": AuditDemo,
   "api-workflow-integration": IntegrationDemo,
+  "custom-vision-model": VisionDemo,
 };
 
 export function ExamplesSection() {

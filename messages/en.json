@@ -220,6 +220,33 @@
         "routeNoAmount": "No amount detected — routed to Standard.",
         "dispatchOk": "Generated {count} downstream payloads."
       }
+    },
+    "vision": {
+      "dropHint": "Drop a photo here",
+      "dropActiveHint": "Drop it",
+      "browseHint": "or click to browse — PNG or JPEG",
+      "samplesLabel": "Or try:",
+      "sampleStreet": "Street Scene",
+      "sampleWorkspace": "Workspace",
+      "sampleDog": "Dog (Beach)",
+      "emptyState": "Upload a photo, or pick a sample, to run real object detection — a pretrained COCO-SSD model, right in your browser.",
+      "errorPrefix": "Couldn't process that image",
+      "statusLoadingModel": "Loading vision model (first run only)…",
+      "statusRunning": "Running inference…",
+      "legendHigh": "≥75%",
+      "legendMid": "50–75%",
+      "legendLow": "<50%",
+      "modelNote": "General-purpose object detection (80 COCO classes: people, vehicles, animals, furniture, everyday objects) — not a custom-trained inspection model.",
+      "sectionTelemetry": "Inference Telemetry",
+      "statLatency": "Inference Latency",
+      "statObjects": "Detected Objects",
+      "statFps": "Est. FPS",
+      "statBackend": "Backend",
+      "statModelLoad": "Model Load Time",
+      "fpsHint": "Est. FPS is a throughput estimate from this image's own inference time, not a sustained video benchmark.",
+      "modelLoadHint": "Model Load Time is a one-time cost (downloading + initializing the model) — excluded from Inference Latency and shown only on the first run.",
+      "sectionDetections": "Detections",
+      "noneDetected": "No objects detected above the confidence threshold — try another image."
     }
   },
   "ClosingCta": {
