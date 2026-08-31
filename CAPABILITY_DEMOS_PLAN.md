@@ -144,8 +144,8 @@ Visitors can **upload their own photo / part image** (or choose from demo inspec
 
 #### 6.2 Under the Hood (Real Pipeline)
 * **Vision Model Engine:**
-  * Uses lightweight client-side COCO-SSD / MobileNet via `@tensorflow/tfjs` or custom ONNX runtime.
-  * Runs inference on the browser's WebGL / WebGPU canvas.
+  * ~~Uses lightweight client-side COCO-SSD / MobileNet via `@tensorflow/tfjs`~~ — shipped, then replaced (Aug 30, 2026) with **YOLOX-Nano** (Megvii, Apache-2.0) via **ONNX Runtime Web**'s WASM execution provider, for better accuracy at a smaller download and to demonstrate a hand-rolled inference pipeline (custom letterboxing, anchor-free grid decode, and NMS — not a wrapped `.detect()` call). See `lib/vision-engine.ts`'s header for the full pipeline and a real preprocessing bug the switch caught (BGR vs RGB channel order).
+  * Runs inference on the browser's WASM backend (no WebGL/WebGPU dependency).
   * Computes bounding box coordinates, class labels, and confidence probabilities in milliseconds.
 * **Frontend Component (`components/examples/VisionDemo.tsx`):**
   * Interactive canvas with image upload and sample selection.

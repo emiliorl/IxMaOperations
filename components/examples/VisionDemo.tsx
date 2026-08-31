@@ -7,9 +7,14 @@
  * renderer for the "Custom Vision Model" capability card
  * (components/home/ExamplesSection.tsx). A visitor drops in a photo (or
  * picks a sample), and lib/vision-engine.ts runs a real pretrained
- * COCO-SSD object-detection model — via `@tensorflow/tfjs`'s WebGL
- * backend, dynamically imported so its ~26MB of weights never touch the
- * main bundle — entirely in the browser.
+ * YOLOX-Nano object-detection model — ONNX Runtime Web's WASM execution
+ * provider, dynamically imported so the ~13MB runtime and ~3.5MB model
+ * never touch the main bundle — entirely in the browser. Unlike a wrapped
+ * library's `.detect()` call, ONNX Runtime only runs the raw network here:
+ * the image letterboxing, grid decoding, and non-max suppression around it
+ * are this app's own code (see lib/vision-engine.ts's header for the full
+ * pipeline and a real preprocessing bug that write-up caught before this
+ * ever ran in a browser).
  *
  * This is general-purpose 80-class object detection (people, vehicles,
  * furniture, animals, everyday objects), not a custom-trained defect
@@ -22,12 +27,13 @@
  * than a fixed color, so a visitor can see where it's least sure.
  *
  * Reliability note (Aug 30, 2026): a visitor uploaded a photo of many dogs
- * in party hats packed together, and the model called several of them
- * "teddy bear" at 63-66% confidence. lib/vision-engine.ts's header explains
- * why (a structural limitation of this class of model on crowded/occluded
- * scenes, not a fixable bug) — this component surfaces that honestly via
- * `lowConfidenceScene` (an inline advisory when even the model's best guess
- * on the image is weak) instead of presenting shaky boxes as reliable.
+ * in party hats packed together, and the prior COCO-SSD engine called
+ * several of them "teddy bear" at 63-66% confidence — a structural
+ * limitation of lightweight detectors on crowded/occluded scenes, not a
+ * fixable bug, and one YOLOX doesn't categorically solve either. This
+ * component still surfaces that honestly via `lowConfidenceScene` (an
+ * inline advisory when even the model's best guess on the image is weak)
+ * instead of presenting shaky boxes as reliable.
  */
 import * as React from "react";
 import { useTranslations } from "next-intl";
@@ -253,6 +259,10 @@ export function VisionDemo() {
                 <section className="rounded-md border border-zinc-800/80 bg-zinc-900/30 p-4 space-y-2">
                   <h4 className="text-[11px] font-mono uppercase tracking-wider text-zinc-500">{t("sectionTelemetry")}</h4>
                   <dl className="grid grid-cols-2 gap-3">
+                    <div>
+                      <dt className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{t("statModel")}</dt>
+                      <dd className="text-xs text-zinc-300 mt-0.5 font-mono">YOLOX-Nano</dd>
+                    </div>
                     <div>
                       <dt className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{t("statLatency")}</dt>
                       <dd className="text-xs text-zinc-300 mt-0.5 font-mono">{inferenceMs}ms</dd>
