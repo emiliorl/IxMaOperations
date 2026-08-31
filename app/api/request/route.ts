@@ -13,8 +13,20 @@ import { requestSchema } from "@/lib/schemas";
 import { getPackageBySlug } from "@/lib/packages";
 import { sendRequestEmail } from "@/lib/email";
 import { computeInternalPriceRange, matchScopeTier, parseSurveyAnswers } from "@/lib/estimator-logic";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  // Stricter and longer-windowed than the scrape route — this one sends a
+  // real email to Emilio's inbox via Resend on every success, so the cost
+  // of abuse is spam/quota exhaustion, not just compute.
+  const rateLimit = await checkRateLimit("request", clientIp(req), 5, 3600);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests — please wait before submitting again." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();

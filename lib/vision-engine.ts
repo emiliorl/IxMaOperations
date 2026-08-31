@@ -1,3 +1,13 @@
+"use client";
+// Required, not stylistic: without this, Next.js's production build tries to
+// include onnxruntime-web's ESM bundle (which uses `import.meta`) in the
+// *server* webpack graph too, and fails with "'import.meta' cannot be used
+// outside of module code" — even though every actual use of it here is
+// behind a dynamic import() inside browser-only function bodies. The
+// dynamic import alone isn't enough; the module itself needs to be marked
+// client-only so it's excluded from the server bundle entirely. Caught by
+// running a real `next build` (not `next dev`, which never hit this).
+
 /**
  * lib/vision-engine.ts
  *
@@ -128,7 +138,16 @@ let backendLabel: string | null = null;
 async function getSession(): Promise<{ ort: OrtModule; session: OrtSession }> {
   if (!ortModulePromise) {
     ortModulePromise = (async () => {
-      const ort = (await import("onnxruntime-web/wasm")) as unknown as OrtModule;
+      // A bare `import("onnxruntime-web/wasm")` resolves to a pre-bundled
+      // ESM file (dist/ort.wasm.bundle.min.mjs) that webpack tries to
+      // re-bundle and fails on ("'import.meta' cannot be used outside of
+      // module code") — it's meant to be loaded as-is by the browser, not
+      // fed through a second bundler. `webpackIgnore` tells webpack to
+      // leave this as a genuine runtime import() of a URL, exactly like
+      // tesseract.js already does internally for its own CDN assets.
+      const ort = (await import(
+        /* webpackIgnore: true */ `${ORT_WASM_CDN}ort.wasm.bundle.min.mjs`
+      )) as unknown as OrtModule;
       ort.env.wasm.wasmPaths = ORT_WASM_CDN;
       // Multi-threaded WASM needs cross-origin isolation (SharedArrayBuffer)
       // this site doesn't opt into — force single-threaded so it reliably

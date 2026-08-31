@@ -33,6 +33,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { assertPublicHttpUrl, UnsafeUrlError } from "@/lib/url-safety";
 import { buildScrapeResult, extractEmails, extractSocialLeads, mergeLeads, type ScrapeLeads } from "@/lib/scraper-engine";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const bodySchema = z.object({ url: z.string().trim().min(1, "Enter a URL.") });
 
@@ -161,6 +162,18 @@ async function tryEnrichLeadsFromContactPage(baseUrl: URL): Promise<ScrapeLeads 
 }
 
 export async function POST(req: Request) {
+  // Cheapest possible rejection first — before parsing the body or making
+  // any outbound fetch — since this route's whole job is fetching
+  // arbitrary URLs on the visitor's behalf and is the more expensive/
+  // abusable of this app's two public routes.
+  const rateLimit = await checkRateLimit("scrape", clientIp(req), 10, 60);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many scrape requests — wait a bit and try again." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
