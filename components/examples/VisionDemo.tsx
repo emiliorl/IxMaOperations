@@ -7,8 +7,8 @@
  * renderer for the "Custom Vision Model" capability card
  * (components/home/ExamplesSection.tsx). A visitor drops in a photo (or
  * picks a sample), and lib/vision-engine.ts runs a real pretrained
- * YOLOX-Nano object-detection model — ONNX Runtime Web's WASM execution
- * provider, dynamically imported so the ~13MB runtime and ~3.5MB model
+ * YOLOX-S object-detection model — ONNX Runtime Web's WASM execution
+ * provider, dynamically imported so the ~13MB runtime and ~34MB model
  * never touch the main bundle — entirely in the browser. Unlike a wrapped
  * library's `.detect()` call, ONNX Runtime only runs the raw network here:
  * the image letterboxing, grid decoding, and non-max suppression around it
@@ -261,7 +261,7 @@ export function VisionDemo() {
                   <dl className="grid grid-cols-2 gap-3">
                     <div>
                       <dt className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{t("statModel")}</dt>
-                      <dd className="text-xs text-zinc-300 mt-0.5 font-mono">YOLOX-Nano</dd>
+                      <dd className="text-xs text-zinc-300 mt-0.5 font-mono">YOLOX-S</dd>
                     </div>
                     <div>
                       <dt className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{t("statLatency")}</dt>

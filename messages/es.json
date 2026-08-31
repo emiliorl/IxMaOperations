@@ -236,7 +236,7 @@
       "legendHigh": "≥75%",
       "legendMid": "50–75%",
       "legendLow": "<50%",
-      "modelNote": "Detección de objetos de propósito general — YOLOX-Nano (Apache-2.0, Megvii), 80 clases COCO: personas, vehículos, animales, muebles, objetos cotidianos — no es un modelo de inspección entrenado a medida. Las escenas concurridas, los objetos superpuestos y los disfraces/accesorios que ocultan rasgos identificativos son el caso más difícil para este tipo de modelo, y ahí las clasificaciones incorrectas son más probables.",
+      "modelNote": "Detección de objetos de propósito general — YOLOX-S (Apache-2.0, Megvii), 80 clases COCO: personas, vehículos, animales, muebles, objetos cotidianos — no es un modelo de inspección entrenado a medida. Las escenas concurridas, los objetos superpuestos y los disfraces/accesorios que ocultan rasgos identificativos son el caso más difícil para este tipo de modelo, y ahí las clasificaciones incorrectas son más probables.",
       "lowConfidenceAdvisory": "Incluso la mejor conjetura del modelo para esta imagen quedó por debajo del 70% — esta escena es más difícil de lo habitual (aglomeración, oclusión o desorden visual). Trata estos resultados como provisionales, o prueba con una foto más simple.",
       "statModel": "Modelo",
       "sectionTelemetry": "Telemetría de Inferencia",

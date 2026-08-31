@@ -3,7 +3,7 @@
  *
  * Phase 6 of CAPABILITY_DEMOS_PLAN.md — the model wrapper behind
  * components/examples/VisionDemo.tsx (the "Custom Vision Model" capability
- * card). Runs YOLOX-Nano (Megvii, Apache-2.0 — see
+ * card). Runs YOLOX-S (Megvii, Apache-2.0 — see
  * public/models/YOLOX-LICENSE.txt) via ONNX Runtime Web's WASM execution
  * provider, entirely client-side. No server round-trip, no simulated
  * detections; every box, class, and confidence score comes straight out of
@@ -14,10 +14,10 @@
  * implemented here from scratch, matching Megvii's own reference
  * ONNXRuntime demo (`demo/ONNXRuntime/onnx_inference.py` in the YOLOX repo)
  * step for step:
- *   1. Letterbox the image onto a 416x416 canvas (scale to fit, pad the
+ *   1. Letterbox the image onto a 640x640 canvas (scale to fit, pad the
  *      remainder with mid-gray 114/114/114, origin at top-left — not
- *      centered) and convert to a [1,3,416,416] CHW float32 tensor.
- *   2. Run the network, which returns one raw [1,3549,85] tensor: 3549
+ *      centered) and convert to a [1,3,640,640] CHW float32 tensor.
+ *   2. Run the network, which returns one raw [1,8400,85] tensor: 8400
  *      anchor-free grid cells across three feature-map strides (8/16/32),
  *      each row [cx, cy, w, h, objectness, ...80 class scores].
  *   3. Decode each cell's box from its own grid position and stride, then
@@ -32,17 +32,28 @@
  * duplicate low-confidence boxes on a street scene, well before this ever
  * touched a browser or a visitor's image.
  *
+ * Model size (Aug 30, 2026): started on YOLOX-Nano (3.5MB, 416x416) for
+ * the fastest possible load. A visitor's photo of many dogs surfaced a
+ * genuine accuracy ceiling — a same-model A/B in Python across nano/tiny/s
+ * on this app's own three sample photos showed a clear, consistent gain at
+ * every step (e.g. the street scene's top "car" confidence: nano 73% ->
+ * tiny 86% -> s 90%, and s alone also caught real objects the smaller two
+ * missed entirely — a dining table, a book, extra cups). YOLOX-S (34MB,
+ * 640x640) is the result: still a one-time cached download, materially
+ * more accurate on every sample. See CAPABILITY_DEMOS_PLAN.md Phase 6 for
+ * the numbers behind that call.
+ *
  * The ~13MB onnxruntime-web WASM runtime is fetched from jsdelivr (not
  * bundled — same reasoning as the model weights previously being fetched
  * from Google's CDN: a multi-MB binary has no business in the app's own
- * bundle) and the ~3.5MB model from this app's own /public/models/, both
+ * bundle) and the ~34MB model from this app's own /public/models/, both
  * lazily on first use via dynamic import.
  */
 
-const MODEL_URL = "/models/yolox-nano.onnx";
+const MODEL_URL = "/models/yolox-s.onnx";
 const ORT_VERSION = "1.29.0"; // pinned to match the installed onnxruntime-web version
 const ORT_WASM_CDN = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`;
-const INPUT_SIZE = 416; // yolox_nano's own trained test_size (exps/default/yolox_nano.py)
+const INPUT_SIZE = 640; // yolox_s's own trained test_size (exps/default/yolox_s.py)
 const STRIDES = [8, 16, 32];
 const NMS_IOU_THRESHOLD = 0.45; // matches Megvii's own demo default
 const PRE_NMS_SCORE_THRESHOLD = 0.1; // candidate floor before NMS, matches Megvii's own demo
