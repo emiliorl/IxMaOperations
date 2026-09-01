@@ -382,7 +382,8 @@
     "titleDefault": "Describe tu proyecto",
     "titleRequesting": "Solicitar este paquete",
     "description": "Aquí no se muestra ningún precio — envía un brief y te responderé con un precio y un plazo. Si prefieres hablarlo primero, agenda una llamada.",
-    "preferToTalk": "¿Prefieres hablarlo primero?"
+    "preferToTalk": "¿Prefieres hablarlo primero?",
+    "orDivider": "O"
   },
   "BriefForm": {
     "fromYourScope": "Según el alcance de tu proyecto",
@@ -414,9 +415,11 @@
   },
   "Contact": {
     "title": "Contacto",
-    "description": "Si tu consulta encaja en un paquete o un proyecto a medida, esos caminos te dan una respuesta más rápida. Para cualquier otra cosa, escríbeme directamente.",
-    "browsePackages": "Ver Paquetes",
-    "describeCustomProject": "Describir un Proyecto a Medida"
+    "description": "Escríbeme directamente — leo cada mensaje personalmente y respondo con los próximos pasos.",
+    "bridgeHeading": "¿Ya sabes lo que necesitas?",
+    "bridgeDescription": "Obtén una respuesta con alcance definido — envía un brief rápido o agenda una llamada, y te responderé con un precio y un horario para hablar.",
+    "startProject": "Iniciar un Proyecto",
+    "browsePackages": "Ver paquetes primero"
   },
   "Estimator": {
     "stepLabel": "Paso {current} / {total}",

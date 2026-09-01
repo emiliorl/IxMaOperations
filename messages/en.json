@@ -382,7 +382,8 @@
     "titleDefault": "Describe your project",
     "titleRequesting": "Request this package",
     "description": "No price is shown here — submit a brief and I'll reply with a price and timeline. If you'd rather talk it through first, book a call instead.",
-    "preferToTalk": "Prefer to talk first?"
+    "preferToTalk": "Prefer to talk first?",
+    "orDivider": "Or"
   },
   "BriefForm": {
     "fromYourScope": "From your project scope",
@@ -414,9 +415,11 @@
   },
   "Contact": {
     "title": "Contact",
-    "description": "If your question fits a package or a custom project, those paths get you a faster reply. For anything else, reach out directly.",
-    "browsePackages": "Browse Packages",
-    "describeCustomProject": "Describe a Custom Project"
+    "description": "Email me directly — I read every message myself and reply with next steps.",
+    "bridgeHeading": "Already know what you need?",
+    "bridgeDescription": "Get a scoped answer instead — submit a quick brief or book a call, and I'll reply with a price and a time to talk.",
+    "startProject": "Start a Project",
+    "browsePackages": "Browse packages first"
   },
   "Estimator": {
     "stepLabel": "Step {current} / {total}",

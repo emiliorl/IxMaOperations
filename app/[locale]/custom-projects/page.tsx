@@ -60,11 +60,23 @@ export default async function CustomProjectsPage({
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">{t("description")}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 lg:gap-6">
           <BriefForm initialPackageSlug={searchParams.package || ""} initialSurveyAnswers={surveyAnswers} />
+
+          {/* Sep 1, 2026 (client-journey review): the copy already frames the
+              form and the call as alternatives ("Prefer to talk first?"), but
+              rendering both at equal weight with nothing between them read as
+              "fill out both" rather than "pick one" — this divider makes that
+              framing visible, not just readable. */}
+          <div className="flex lg:flex-col items-center justify-center gap-3 text-[11px] font-mono uppercase tracking-wider text-zinc-600" aria-hidden="true">
+            <div className="flex-1 h-px lg:h-auto lg:w-px bg-zinc-800" />
+            <span>{t("orDivider")}</span>
+            <div className="flex-1 h-px lg:h-auto lg:w-px bg-zinc-800" />
+          </div>
+
           <div id="call" className="space-y-3 scroll-mt-16">
             <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400">{t("preferToTalk")}</h2>
-            <ScheduleEmbed />
+            <ScheduleEmbed locale={params.locale} />
           </div>
         </div>
       </div>

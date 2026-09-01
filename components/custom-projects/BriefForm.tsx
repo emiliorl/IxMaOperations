@@ -24,6 +24,14 @@ import { cn } from "@/lib/utils";
  * four survey* fields ride along as hidden inputs — the visible summary
  * card shows the same qualitative tier the wizard showed, never a price.
  *
+ * Sep 1, 2026 (client-journey review): the wizard's `urgency` answer is the
+ * one field that genuinely overlaps this form's free-text `timeline` — so
+ * when the hand-off is present, `timeline` starts pre-filled from the
+ * matching `Estimator.urgency.<value>.description` string instead of blank
+ * (still editable). `problem` stays required and `budgetRange` stays
+ * optional either way — the wizard never asks either, so neither is
+ * actually redundant.
+ *
  * i18n pivot (Aug 29, 2026): labels/placeholders/validation messages come
  * from messages/<locale>.json's `BriefForm` namespace; the package <select>
  * shows each package's translated name via the `Packages.items` namespace.
@@ -58,7 +66,7 @@ export function BriefForm({
       email: "",
       packageSlug: initialPackageSlug,
       problem: "",
-      timeline: "",
+      timeline: initialSurveyAnswers ? tEstimator(`urgency.${initialSurveyAnswers.urgency}.description`) : "",
       budgetRange: "",
       surveyCategory: initialSurveyAnswers?.category ?? "",
       surveyComplexity: initialSurveyAnswers?.complexity ?? "",
@@ -134,7 +142,7 @@ export function BriefForm({
       <Field label={t("packageLabel")} error={errors.packageSlug?.message}>
         <select
           {...register("packageSlug")}
-          className="flex h-10 w-full rounded-md border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
         >
           <option value="">{t("packageNotListed")}</option>
           {PACKAGES.map((pkg) => (

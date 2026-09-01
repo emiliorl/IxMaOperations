@@ -17,10 +17,20 @@ export async function generateMetadata({
 }
 
 /**
- * General fallback contact page (PROJECT_BLUEPRINT.md Section 6) — for
- * anything that doesn't fit the two main paths. Most visitors should land
- * on /packages or /custom-projects instead; this exists so the header/
- * footer "Contact" link isn't a dead end.
+ * Direct-contact page (PROJECT_BLUEPRINT.md Section 6). This is the
+ * "direct line" — its first job is the email CTA, for anyone who wants to
+ * reach a person rather than fill out a structured request.
+ *
+ * Sep 1, 2026 (client-journey review): previously described itself as a
+ * fallback and offered two flat, equal-weight buttons out to /packages and
+ * /custom-projects — a weak hand-off for the page's real second job. Per
+ * Emilio's own framing (contact = direct, custom-projects = the form +
+ * call-booking intake engine — see the antigravity implementation plan's
+ * "DECIDED" note), the two pages stay separate URLs; this page now leads
+ * with the direct email, then a single clear "Start a Project" bridge into
+ * /custom-projects for anyone who arrived here first but actually wants a
+ * structured request, with browsing packages demoted to a plain secondary
+ * link for the visitor who isn't sure yet.
  */
 export default async function ContactPage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
@@ -42,15 +52,21 @@ export default async function ContactPage({ params }: { params: { locale: string
           eramirez@ixmaoperations.com
         </a>
 
-        <div className="pt-6 border-t border-zinc-800 flex flex-col sm:flex-row gap-3">
-          <Link href="/packages" className={buttonVariants({ size: "default", variant: "secondary", className: "gap-2" })}>
-            {t("browsePackages")}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link href="/custom-projects" className={buttonVariants({ size: "default", variant: "secondary", className: "gap-2" })}>
-            {t("describeCustomProject")}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+        <div className="pt-6 border-t border-zinc-800 space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400">{t("bridgeHeading")}</h2>
+            <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">{t("bridgeDescription")}</p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <Link href="/custom-projects" className={buttonVariants({ size: "default", variant: "secondary", className: "gap-2 w-fit" })}>
+              {t("startProject")}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/packages" className="text-xs text-zinc-500 hover:text-zinc-300 underline underline-offset-4 w-fit">
+              {t("browsePackages")}
+            </Link>
+          </div>
         </div>
       </div>
     </div>
