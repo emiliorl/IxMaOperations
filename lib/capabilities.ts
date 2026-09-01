@@ -8,10 +8,14 @@
  *
  * v4 note: this content now lives and is demonstrated directly on this
  * site (no more external portfolio hand-off — PROJECT_BLUEPRINT.md Section
- * 0 v4). Each entry gets a real animation/graph slot in ExamplesSection;
- * until Emilio drops the actual media in, the card renders a labeled
- * "coming soon" placeholder instead of a working demo (still no faked
- * backends — Section 8 Rule 2 stands).
+ * 0 v4).
+ *
+ * v5 note (Sep 1, 2026): each entry's homepage card renders a lightweight
+ * animated preview (`components/home/CapabilityPreview.tsx`, steps sourced
+ * from messages/<locale>.json's `Capabilities.<slug>.steps`) plus a link
+ * into `/packages/[slug]`, where the real working engine renders if one
+ * exists (`lib/capability-demos.tsx`'s `CAPABILITY_DEMOS` map — still no
+ * faked backends, Section 8 Rule 2 stands).
  *
  * Content rules (STANDARDS.md, PROJECT_BLUEPRINT.md Section 5 & 8):
  * - One capability per package (open item #5, resolved — all 6, 1:1).

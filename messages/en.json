@@ -46,9 +46,10 @@
   "Examples": {
     "badge": "See It In Action",
     "title": "What this looks like when it's built",
-    "description": "Live walkthroughs and graphs for each skill area, going up here as they're ready.",
-    "comingSoon": "Animation / graph — coming soon",
+    "description": "A quick look at each skill area — click through for the real, working pipeline.",
     "liveBadge": "Live — Real Pipeline",
+    "viewLiveDemo": "Live Demo",
+    "viewMoreInfo": "More Info",
     "scraper": {
       "inputLabel": "Public URL",
       "inputPlaceholder": "https://example.com",
@@ -267,27 +268,33 @@
   "Capabilities": {
     "lead-scraper-enrichment": {
       "name": "Scraping & Enrichment",
-      "description": "Pulling structured data out of unstructured web sources and enriching it with the context that makes it usable — company, role, recent activity — not just raw scraped rows."
+      "description": "Pulling structured data out of unstructured web sources and enriching it with the context that makes it usable — company, role, recent activity — not just raw scraped rows.",
+      "steps": ["URL", "Extract & Enrich", "Structured List"]
     },
     "invoice-ocr-pipeline": {
       "name": "Document & Receipt OCR",
-      "description": "Turning photos and PDFs of receipts, invoices, and forms into clean, structured, exportable data — no manual retyping."
+      "description": "Turning photos and PDFs of receipts, invoices, and forms into clean, structured, exportable data — no manual retyping.",
+      "steps": ["Receipt Photo", "OCR Read", "Line Items"]
     },
     "content-repurposing": {
       "name": "Content Automation",
-      "description": "Breaking one piece of long-form content into platform-ready drafts automatically — transcript in, threads and captions out."
+      "description": "Breaking one piece of long-form content into platform-ready drafts automatically — transcript in, threads and captions out.",
+      "steps": ["Transcript", "Repurpose", "Platform Drafts"]
     },
     "data-qa-audit": {
       "name": "Data Auditing",
-      "description": "Rule-based and LLM-based checks that catch bad records at scale, with a measurable accuracy score instead of a gut feeling."
+      "description": "Rule-based and LLM-based checks that catch bad records at scale, with a measurable accuracy score instead of a gut feeling.",
+      "steps": ["Raw Records", "Validate", "Clean Data"]
     },
     "api-workflow-integration": {
       "name": "Backend Integrations",
-      "description": "Connecting the tools you already use so information moves between them automatically instead of being copy-pasted by hand."
+      "description": "Connecting the tools you already use so information moves between them automatically instead of being copy-pasted by hand.",
+      "steps": ["Webhook", "Transform", "Route & Dispatch"]
     },
     "custom-vision-model": {
       "name": "Computer Vision",
-      "description": "Training a model on your specific images when off-the-shelf OCR or object detection isn't accurate enough for the job."
+      "description": "Training a model on your specific images when off-the-shelf OCR or object detection isn't accurate enough for the job.",
+      "steps": ["Image", "Detect", "Bounding Boxes"]
     }
   },
   "Packages": {
@@ -296,6 +303,7 @@
     "listDescription": "Each one has a defined scope and turnaround. No price is shown here — pick the one that matches what you need, submit a request, and you'll hear back with a price and a timeline.",
     "viewDetails": "View details",
     "whatsIncludedHeading": "What's Included",
+    "tryItHeading": "Try It Yourself",
     "builtOn": "Built on: {name}",
     "noPriceNote": "No price is shown here — submit a request and I'll reply with a price and timeline.",
     "requestThisPackage": "Request This Package",

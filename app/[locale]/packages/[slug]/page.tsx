@@ -4,10 +4,12 @@ import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { PACKAGES, getPackageBySlug } from "@/lib/packages";
 import { getCapabilityByPackageSlug } from "@/lib/capabilities";
+import { CAPABILITY_DEMOS } from "@/lib/capability-demos";
 import { buttonVariants } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowRight, Check, Clock } from "lucide-react";
 import { routing } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) => PACKAGES.map((pkg) => ({ locale, slug: pkg.slug })));
@@ -36,6 +38,12 @@ export async function generateMetadata({
  * i18n pivot (Aug 29, 2026): `pkg`/`capability` still resolve the canonical
  * slug-keyed records; every rendered string comes from
  * messages/<locale>.json (`Packages.items.<slug>` / `Capabilities.<slug>`).
+ *
+ * v5 pivot (Sep 1, 2026): this is now where a capability's real working
+ * demo lives (`lib/capability-demos.tsx`'s `CAPABILITY_DEMOS` map), reached
+ * via a "Live Demo" link from that capability's card on the homepage
+ * (`components/home/ExamplesSection.tsx`), which only shows a lightweight
+ * animated preview now. See `PROJECT_BLUEPRINT.md` Section 4.
  */
 export default async function PackageDetailPage({
   params,
@@ -50,10 +58,12 @@ export default async function PackageDetailPage({
   const t = await getTranslations("Packages");
   const tItem = await getTranslations(`Packages.items.${pkg.slug}`);
   const tCap = capability ? await getTranslations(`Capabilities.${capability.packageSlug}`) : undefined;
+  const tEx = await getTranslations("Examples");
+  const LiveDemo = CAPABILITY_DEMOS[pkg.slug];
 
   return (
     <div className="py-16 md:py-24">
-      <div className="container mx-auto px-6 max-w-3xl space-y-10">
+      <div className={cn("container mx-auto px-6 space-y-10", LiveDemo ? "max-w-4xl" : "max-w-3xl")}>
         <div className="space-y-4">
           <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-zinc-400">
             <Clock className="h-3.5 w-3.5" />
@@ -76,6 +86,16 @@ export default async function PackageDetailPage({
             ))}
           </ul>
         </div>
+
+        {LiveDemo && (
+          <div className="pt-2 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400">{t("tryItHeading")}</h2>
+              <Badge variant="active">{tEx("liveBadge")}</Badge>
+            </div>
+            <LiveDemo />
+          </div>
+        )}
 
         {capability && tCap && (
           <div className="space-y-2">

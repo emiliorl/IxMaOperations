@@ -1,64 +1,37 @@
 import React from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { buttonVariants } from "@/components/ui/Button";
 import { CAPABILITIES } from "@/lib/capabilities";
 import { CAPABILITY_ICONS } from "@/lib/capability-icons";
-import { ScraperDemo } from "@/components/examples/ScraperDemo";
-import { OcrDemo } from "@/components/examples/OcrDemo";
-import { ContentDemo } from "@/components/examples/ContentDemo";
-import { AuditDemo } from "@/components/examples/AuditDemo";
-import { IntegrationDemo } from "@/components/examples/IntegrationDemo";
-import { VisionDemo } from "@/components/examples/VisionDemo";
-import { PlayCircle } from "lucide-react";
+import { CAPABILITY_DEMOS } from "@/lib/capability-demos";
+import { CapabilityPreview } from "@/components/home/CapabilityPreview";
+import { ArrowRight } from "lucide-react";
 
 /**
- * Homepage "See It In Action" section (v4 pivot, Aug 29, 2026 — replaces
- * `CapabilityStrip.tsx`). This site now shows skill demos directly instead
- * of shallow cards that link out to a separate portfolio (superseded
- * PROJECT_BLUEPRINT.md Section 4 — see Section 0 v4 for the pivot).
+ * Homepage "See It In Action" section.
  *
- * i18n pivot (same date): `lib/capabilities.ts` stays the canonical
- * slug/id list (also consumed server-side), but the display name/
- * description shown here come from messages/<locale>.json's `Capabilities`
- * namespace, keyed by the same `packageSlug`.
+ * v4 pivot (Aug 29, 2026, superseded below): replaced `CapabilityStrip.tsx`
+ * with cards that embedded each capability's full working engine
+ * (ScraperDemo, OcrDemo, ...) directly on the homepage.
  *
- * Each card gets a real animation/graph slot. Emilio hasn't dropped the
- * media in yet for most cards, so those slots render a clearly labeled
- * placeholder instead of a working demo or simulated backend (Section 8
- * Rule 2 still stands — a placeholder stays honest about being one). Swap
- * the placeholder `div` for the real embed/animation per card as it's
- * built.
+ * v5 pivot (Sep 1, 2026 — current): the full engines made this section
+ * heavy and turned the homepage into a second copy of the package detail
+ * pages. Each card now shows a lightweight, always-looping animated
+ * preview (`CapabilityPreview.tsx`) that sketches the general shape of the
+ * pipeline (input -> processing -> output) — a "general idea" card, not a
+ * working demo — plus a link into `/packages/[slug]`. The real interactive
+ * engine (`lib/capability-demos.tsx`'s `CAPABILITY_DEMOS` map) now renders
+ * on that package's detail page instead (`app/[locale]/packages/[slug]/
+ * page.tsx`). See `PROJECT_BLUEPRINT.md` Section 4.
  *
- * CAPABILITY_DEMOS_PLAN.md phases (Aug 29, 2026 —): each phase gives one
- * capability a real working engine, listed in LIVE_DEMOS below. That card
- * renders full-width with its own component instead of the coming-soon
- * placeholder. Phase 1: `lead-scraper-enrichment` -> ScraperDemo (a real
- * POST /api/examples/scrape call). Phase 2: `invoice-ocr-pipeline` ->
- * OcrDemo (real tesseract.js OCR in a Web Worker, no server round-trip).
- * Phase 3: `content-repurposing` -> ContentDemo (a real synchronous
- * extractive-NLP pipeline, client-side only — no server round-trip, no
- * LLM). Phase 4: `data-qa-audit` -> AuditDemo (real email/phone/date
- * validation + dedup, same client-side-only architecture as Phase 3).
- * Phase 5: `api-workflow-integration` -> IntegrationDemo (real ingestion,
- * field mapping, and condition-routing over a pasted webhook payload;
- * the downstream SQL/Slack/email payloads it renders are generated, not
- * actually dispatched — same client-side-only architecture as Phases 3-4).
- * Phase 6: `custom-vision-model` -> VisionDemo (a real pretrained COCO-SSD
- * object-detection model running on tfjs's WebGL backend, entirely
- * client-side — a stand-in for the pipeline a custom-trained inspection
- * model would run, not a claim that this pretrained model does defect
- * inspection itself; see the component's own header comment).
+ * `lib/capabilities.ts` stays the canonical slug/id/icon list (also
+ * consumed server-side); the display name/description/preview steps come
+ * from messages/<locale>.json's `Capabilities` namespace, keyed by the
+ * same `packageSlug`.
  */
-const LIVE_DEMOS: Partial<Record<string, React.ComponentType>> = {
-  "lead-scraper-enrichment": ScraperDemo,
-  "invoice-ocr-pipeline": OcrDemo,
-  "content-repurposing": ContentDemo,
-  "data-qa-audit": AuditDemo,
-  "api-workflow-integration": IntegrationDemo,
-  "custom-vision-model": VisionDemo,
-};
-
 export function ExamplesSection() {
   const t = useTranslations("Examples");
   const tCap = useTranslations("Capabilities");
@@ -81,51 +54,19 @@ export function ExamplesSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CAPABILITIES.map((capability) => {
             const Icon = CAPABILITY_ICONS[capability.icon];
-            const LiveDemo = LIVE_DEMOS[capability.packageSlug];
-
-            if (LiveDemo) {
-              return (
-                <Card
-                  key={capability.packageSlug}
-                  className="flex flex-col p-6 space-y-5 md:col-span-2 lg:col-span-3"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-md bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 w-fit shrink-0">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-white leading-snug">
-                          {tCap(`${capability.packageSlug}.name`)}
-                        </h3>
-                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed max-w-lg">
-                          {tCap(`${capability.packageSlug}.description`)}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="active" className="shrink-0">
-                      {t("liveBadge")}
-                    </Badge>
-                  </div>
-
-                  <LiveDemo />
-                </Card>
-              );
-            }
+            const hasLiveDemo = Boolean(CAPABILITY_DEMOS[capability.packageSlug]);
+            const steps = tCap.raw(`${capability.packageSlug}.steps`) as [string, string, string];
 
             return (
               <Card key={capability.packageSlug} className="flex flex-col p-6 space-y-5">
-                <div className="flex flex-col items-center justify-center gap-2 aspect-video rounded-md border border-dashed border-zinc-800 bg-zinc-900/50 text-zinc-600">
-                  <PlayCircle className="h-6 w-6" />
-                  <span className="text-[11px] font-mono uppercase tracking-wider">{t("comingSoon")}</span>
-                </div>
+                <CapabilityPreview icon={<Icon className="h-3.5 w-3.5" />} steps={steps} />
 
-                <div className="space-y-4">
+                <div className="flex flex-col flex-1 space-y-4">
                   <div className="p-2 rounded-md bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 w-fit">
                     <Icon className="h-5 w-5" />
                   </div>
 
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-base font-semibold text-white leading-snug">
                       {tCap(`${capability.packageSlug}.name`)}
                     </h3>
@@ -133,6 +74,18 @@ export function ExamplesSection() {
                       {tCap(`${capability.packageSlug}.description`)}
                     </p>
                   </div>
+
+                  <Link
+                    href={`/packages/${capability.packageSlug}`}
+                    className={buttonVariants({
+                      variant: hasLiveDemo ? "secondary" : "outline",
+                      size: "sm",
+                      className: "gap-1.5 w-fit",
+                    })}
+                  >
+                    {hasLiveDemo ? t("viewLiveDemo") : t("viewMoreInfo")}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
               </Card>
             );

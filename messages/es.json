@@ -46,9 +46,10 @@
   "Examples": {
     "badge": "Ejemplos en Acción",
     "title": "Así se ve cuando está terminado",
-    "description": "Demostraciones y gráficos de cada área de trabajo, que iré agregando aquí a medida que estén listos.",
-    "comingSoon": "Animación / gráfico — próximamente",
+    "description": "Un vistazo rápido a cada área de trabajo — entra para ver el pipeline real y funcional.",
     "liveBadge": "En Vivo — Pipeline Real",
+    "viewLiveDemo": "Demo en Vivo",
+    "viewMoreInfo": "Más Información",
     "scraper": {
       "inputLabel": "URL pública",
       "inputPlaceholder": "https://ejemplo.com",
@@ -267,27 +268,33 @@
   "Capabilities": {
     "lead-scraper-enrichment": {
       "name": "Extracción y Enriquecimiento de Datos",
-      "description": "Extraer datos estructurados de fuentes web no estructuradas y enriquecerlos con el contexto que los hace útiles — empresa, cargo, actividad reciente — no solo filas de datos en bruto."
+      "description": "Extraer datos estructurados de fuentes web no estructuradas y enriquecerlos con el contexto que los hace útiles — empresa, cargo, actividad reciente — no solo filas de datos en bruto.",
+      "steps": ["URL", "Extraer y Enriquecer", "Lista Estructurada"]
     },
     "invoice-ocr-pipeline": {
       "name": "OCR de Documentos y Recibos",
-      "description": "Convertir fotos y PDFs de recibos, facturas y formularios en datos limpios, estructurados y exportables — sin volver a escribirlos a mano."
+      "description": "Convertir fotos y PDFs de recibos, facturas y formularios en datos limpios, estructurados y exportables — sin volver a escribirlos a mano.",
+      "steps": ["Foto de Recibo", "Lectura OCR", "Líneas de Detalle"]
     },
     "content-repurposing": {
       "name": "Automatización de Contenido",
-      "description": "Dividir una pieza de contenido extenso en borradores listos para cada plataforma, automáticamente — entra una transcripción, salen hilos y textos."
+      "description": "Dividir una pieza de contenido extenso en borradores listos para cada plataforma, automáticamente — entra una transcripción, salen hilos y textos.",
+      "steps": ["Transcripción", "Reutilizar", "Borradores por Plataforma"]
     },
     "data-qa-audit": {
       "name": "Auditoría de Datos",
-      "description": "Verificaciones basadas en reglas y en modelos de lenguaje que detectan registros incorrectos a gran escala, con una puntuación de precisión medible en vez de una corazonada."
+      "description": "Verificaciones basadas en reglas y en modelos de lenguaje que detectan registros incorrectos a gran escala, con una puntuación de precisión medible en vez de una corazonada.",
+      "steps": ["Registros en Bruto", "Validar", "Datos Limpios"]
     },
     "api-workflow-integration": {
       "name": "Integraciones de Sistemas",
-      "description": "Conectar las herramientas que ya usas para que la información se mueva entre ellas automáticamente en lugar de copiarse y pegarse a mano."
+      "description": "Conectar las herramientas que ya usas para que la información se mueva entre ellas automáticamente en lugar de copiarse y pegarse a mano.",
+      "steps": ["Webhook", "Transformar", "Enrutar y Enviar"]
     },
     "custom-vision-model": {
       "name": "Visión por Computadora",
-      "description": "Entrenar un modelo con tus propias imágenes cuando el OCR o la detección de objetos genéricos no son lo suficientemente precisos para el trabajo."
+      "description": "Entrenar un modelo con tus propias imágenes cuando el OCR o la detección de objetos genéricos no son lo suficientemente precisos para el trabajo.",
+      "steps": ["Imagen", "Detectar", "Cajas Delimitadoras"]
     }
   },
   "Packages": {
@@ -296,6 +303,7 @@
     "listDescription": "Cada uno tiene un alcance y un plazo definidos. Aquí no se muestra ningún precio — elige el que se ajuste a lo que necesitas, envía una solicitud y te responderé con un precio y un plazo.",
     "viewDetails": "Ver detalles",
     "whatsIncludedHeading": "Qué Incluye",
+    "tryItHeading": "Pruébalo Tú Mismo",
     "builtOn": "Basado en: {name}",
     "noPriceNote": "Aquí no se muestra ningún precio — envía una solicitud y te responderé con un precio y un plazo.",
     "requestThisPackage": "Solicitar Este Paquete",

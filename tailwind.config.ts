@@ -54,10 +54,17 @@ const config: Config = {
           "0%": { transform: "translateY(-100%)" },
           "100%": { transform: "translateY(1000%)" },
         },
+        flowPulse: {
+          "0%": { left: "0%", opacity: "0" },
+          "12%": { opacity: "1" },
+          "88%": { opacity: "1" },
+          "100%": { left: "100%", opacity: "0" },
+        },
       },
       animation: {
         "pulse-glow": "pulseGlow 3s ease-in-out infinite",
         scanline: "scanline 8s linear infinite",
+        "flow-pulse": "flowPulse 2.6s ease-in-out infinite",
       },
     },
   },

@@ -70,12 +70,15 @@ No public pricing. Flow: short brief form (what they're trying to solve, timelin
 
 ---
 
-## 4. Examples in Action Section (Shared, v4)
+## 4. Examples in Action Section (Shared, v5)
 
-**Superseded Aug 29, 2026 (Section 0 v4):** this section used to describe a shallow strip that linked out to a separate portfolio site. It now describes `components/home/ExamplesSection.tsx` — a homepage section showing the skill areas behind the packages (multi-agent LLM systems, computer vision/OCR, data auditing, backend integrations) with a real animation/graph slot per capability, demonstrated directly on this site:
+**Superseded Aug 29, 2026 (Section 0 v4):** this section used to describe a shallow strip that linked out to a separate portfolio site. It then described `components/home/ExamplesSection.tsx` embedding each capability's real, working engine (Phases 1–6 of `CAPABILITY_DEMOS_PLAN.md`, all shipped) directly and fully on the homepage.
 
-- **Placeholder media, not a placeholder site.** No live backend, no simulated data, no `/api/sandbox/*` routes — each card's media slot renders a clearly labeled "coming soon" placeholder until Emilio drops the real animation/graph in. The distinction that still matters (Section 8 Rule 2): the placeholder must stay honest about being one, never fake a working demo.
-- Emilio is building the real, working versions of these himself; this codebase's job is to leave clean, obviously-labeled slots for him to drop the actual media into later.
+**Superseded again Sep 1, 2026 (v5):** embedding the full engines made the homepage a heavy second copy of the package detail pages. Current shape:
+
+- Each capability's homepage card shows a small, always-looping **animated preview** (`components/home/CapabilityPreview.tsx`) — a 3-stage input→processing→output sketch, honest about being a decorative "general idea" and not a working demo — plus a "Live Demo" / "More Info" link.
+- That link goes to the capability's package detail page (`app/[locale]/packages/[slug]/page.tsx`), which renders the real engine from `lib/capability-demos.tsx`'s `CAPABILITY_DEMOS` map when one exists for that slug.
+- Section 8 Rule 2 still stands: a preview must stay honest about being a sketch, never fake a working demo; a capability with no entry in `CAPABILITY_DEMOS` gets no live-demo claim anywhere.
 
 ---
 
@@ -114,7 +117,7 @@ IxMaOperations/
 │   │   ├── page.tsx                      # Home: hero → onboarding wizard → examples in action (v4)
 │   │   ├── packages/
 │   │   │   ├── page.tsx                  # Catalog: 6 pre-scoped packages, no price shown
-│   │   │   └── [slug]/page.tsx           # Package detail (what's included, turnaround) + "Request This" CTA
+│   │   │   └── [slug]/page.tsx           # Package detail (what's included, turnaround, real live demo if any) + "Request This" CTA
 │   │   ├── custom-projects/page.tsx      # Shared request path: brief form (works for both a picked package and an open-ended brief) + Calendly embed
 │   │   ├── contact/page.tsx              # General fallback contact (doesn't fit the two paths above)
 │   │   └── layout.tsx                    # Root layout (owns <html>/<body>) — single nav, locale switcher, no track switcher
@@ -124,7 +127,8 @@ IxMaOperations/
 ├── components/
 │   ├── home/
 │   │   ├── Hero.tsx                      # Single-flow hero (v4) — "Tell Me What You Need" is the one primary CTA
-│   │   └── ExamplesSection.tsx           # "See It In Action" — real animation/graph slot per capability (v4, replaces CapabilityStrip)
+│   │   ├── ExamplesSection.tsx           # "See It In Action" — animated preview + link per capability (v5), real engine lives on /packages/[slug]
+│   │   └── CapabilityPreview.tsx         # v5: the small looping input→processing→output preview each card shows
 │   ├── packages/
 │   │   └── PackageCard.tsx               # Catalog grid item — name, description, turnaround, "Request This" link into /custom-projects?package=slug
 │   ├── custom-projects/
@@ -136,6 +140,7 @@ IxMaOperations/
 ├── lib/
 │   ├── packages.ts                       # Canonical array of the 6 packages (source of truth for catalog; prices stay internal-only, not rendered)
 │   ├── capabilities.ts                   # Written (Stage 7 Task 7.4) — 6 shallow capability entries, 1:1 with packages.ts slugs
+│   ├── capability-demos.tsx              # v5: CAPABILITY_DEMOS map (slug -> real engine component), shared by ExamplesSection and packages/[slug]
 │   ├── schemas.ts                        # Zod schema factory for the request form — createRequestSchema(t) for BriefForm.tsx (localized), requestSchema (fixed English) for api/request/route.ts
 │   ├── email.ts                          # Resend client for request emails
 │   └── utils.ts                          # KEEP
