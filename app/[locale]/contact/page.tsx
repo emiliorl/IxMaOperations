@@ -35,11 +35,11 @@ export default async function ContactPage({ params }: { params: { locale: string
         </div>
 
         <a
-          href="mailto:emilio.a.ramirezl@gmail.com"
+          href="mailto:eramirez@ixmaoperations.com"
           className={buttonVariants({ size: "lg", variant: "default", className: "gap-2 w-fit" })}
         >
           <Mail className="h-4 w-4" />
-          emilio.a.ramirezl@gmail.com
+          eramirez@ixmaoperations.com
         </a>
 
         <div className="pt-6 border-t border-zinc-800 flex flex-col sm:flex-row gap-3">

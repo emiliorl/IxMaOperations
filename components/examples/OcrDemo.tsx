@@ -50,6 +50,14 @@ const SAMPLES: Array<{ url: string; labelKey: "sampleCafe" | "sampleHardware" | 
 
 const AMOUNT_ORDER: AmountLabel[] = ["subtotal", "tax", "tip", "discount", "total"];
 
+const AMOUNT_KEY_MAP: Record<AmountLabel, "amountSubtotal" | "amountTax" | "amountTip" | "amountDiscount" | "amountTotal"> = {
+  subtotal: "amountSubtotal",
+  tax: "amountTax",
+  tip: "amountTip",
+  discount: "amountDiscount",
+  total: "amountTotal",
+};
+
 interface EditableItem {
   quantityText: string;
   description: string;
@@ -393,7 +401,9 @@ export function OcrDemo() {
                     </div>
                     {AMOUNT_ORDER.filter((label) => extraction.amounts[label]).map((label) => (
                       <div key={label}>
-                        <dt className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{label}</dt>
+                        <dt className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+                          {t(AMOUNT_KEY_MAP[label])}
+                        </dt>
                         <dd className="text-xs text-zinc-300 mt-0.5 font-mono">
                           {extraction.amounts[label]!.currency ? `${extraction.amounts[label]!.currency} ` : ""}
                           {extraction.amounts[label]!.value.toFixed(2)}

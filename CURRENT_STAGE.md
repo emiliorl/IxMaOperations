@@ -48,5 +48,5 @@ Full detail in `PLAN_PROGRESS.md`.
 
 ### Still Needed
 - [ ] Portfolio site URL (`lib/capabilities.ts`'s `portfolioUrl` field) — pending.
-- [ ] Swap `lib/email.ts`'s `from` address off Resend's shared sandbox sender (`onboarding@resend.dev`) to a verified domain — sandbox mode can only ever reach `emilio.a.ramirezl@gmail.com`, not real client emails.
+- [ ] Swap `lib/email.ts`'s `from` address off Resend's shared sandbox sender (`onboarding@resend.dev`) to a verified domain — sandbox mode can only ever reach `eramirez@ixmaoperations.com`, not real client emails.
 - [ ] **`npm audit`: 2 vulnerabilities (1 high, 1 critical) — in Next.js 14.2.15 itself** (a long list of Server Actions DoS / middleware SSRF / cache-poisoning CVEs), not in any unused dep. Only fix is `next@16.3.3` (`npm audit fix --force` would apply it) — a breaking major-version jump: Next 15+ made `params`/`searchParams` `Promise`-wrapped in Server Components, which would break `app/packages/[slug]/page.tsx` and `app/custom-projects/page.tsx` as currently written, among other likely changes. **Deliberately not done** — needs a real upgrade pass (migrate the async-params API, retest everything), not a `--force` before deploy. Decide before Task 13.4 (Vercel deploy) whether to do this now or ship on 14 and schedule it after.

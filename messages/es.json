@@ -17,6 +17,7 @@
     "navExamples": "Ejemplos",
     "navPackages": "Paquetes",
     "navContact": "Contacto",
+    "navAbout": "Nosotros",
     "getStarted": "Empezar"
   },
   "Footer": {
@@ -25,6 +26,7 @@
     "examples": "Ejemplos",
     "packages": "Paquetes",
     "customProjects": "Proyectos a Medida",
+    "about": "Nosotros",
     "contact": "Contacto"
   },
   "Hero": {
@@ -112,7 +114,12 @@
       "noLineItems": "No se detectaron artículos — agrega uno a mano, o prueba otra imagen.",
       "copyJson": "Copiar JSON",
       "copied": "Copiado",
-      "downloadCsv": "Descargar CSV"
+      "downloadCsv": "Descargar CSV",
+      "amountSubtotal": "Subtotal",
+      "amountTax": "Impuestos",
+      "amountTip": "Propina",
+      "amountDiscount": "Descuento",
+      "amountTotal": "Total"
     },
     "content": {
       "inputPlaceholder": "Pega un artículo, transcripción de video, o notas sueltas…",
@@ -421,20 +428,138 @@
     "bookCall": "Agendar Llamada de Alcance",
     "sendBrief": "Enviar Brief del Proyecto",
     "complexity": {
-      "simple": { "label": "Simple", "description": "Una sola fuente clara, estática o bien estructurada." },
-      "moderate": { "label": "Moderada", "description": "Algunas variables — formatos mixtos o algunos casos particulares." },
-      "complex": { "label": "Compleja", "description": "Múltiples fuentes o sistemas, o muchos casos particulares que manejar." }
+      "simple": {
+        "label": "Simple",
+        "description": "Una sola fuente clara, estática o bien estructurada."
+      },
+      "moderate": {
+        "label": "Moderada",
+        "description": "Algunas variables — formatos mixtos o algunos casos particulares."
+      },
+      "complex": {
+        "label": "Compleja",
+        "description": "Múltiples fuentes o sistemas, o muchos casos particulares que manejar."
+      }
     },
     "deliverable": {
-      "dataset": { "label": "Dataset limpio / CSV", "description": "Una exportación estructurada única." },
-      "scheduled-script": { "label": "Script automatizado", "description": "Se ejecuta en un horario (cron) sin que tengas que hacer nada." },
-      "webhook": { "label": "Webhook / disparador en tiempo real", "description": "Se activa en el momento en que algo cambia." },
-      "model-api": { "label": "Modelo/API en contenedor", "description": "Un servicio independiente que tú o tu equipo pueden llamar." }
+      "dataset": {
+        "label": "Dataset limpio / CSV",
+        "description": "Una exportación estructurada única."
+      },
+      "scheduled-script": {
+        "label": "Script automatizado",
+        "description": "Se ejecuta en un horario (cron) sin que tengas que hacer nada."
+      },
+      "webhook": {
+        "label": "Webhook / disparador en tiempo real",
+        "description": "Se activa en el momento en que algo cambia."
+      },
+      "model-api": {
+        "label": "Modelo/API en contenedor",
+        "description": "Un servicio independiente que tú o tu equipo pueden llamar."
+      }
     },
     "urgency": {
-      "express": { "label": "Exprés", "description": "2–3 días — plazo prioritario." },
-      "standard": { "label": "Estándar", "description": "3–6 días — el ritmo habitual." },
-      "flexible": { "label": "Flexible", "description": "Sin apuro — cuando esté listo." }
+      "express": {
+        "label": "Exprés",
+        "description": "2–3 días — plazo prioritario."
+      },
+      "standard": {
+        "label": "Estándar",
+        "description": "3–6 días — el ritmo habitual."
+      },
+      "flexible": {
+        "label": "Flexible",
+        "description": "Sin apuro — cuando esté listo."
+      }
     }
+  },
+  "About": {
+    "metaTitle": "Sobre Nosotros",
+    "metaDescription": "Conoce IxMa Operations, nuestra filosofía de ingeniería y cómo construimos pipelines de automatización deterministas, modelos de visión por computadora y sistemas backend a medida.",
+    "badge": "Sobre IxMa Operations",
+    "title": "Ingeniería de automatización e inteligencia a medida con precisión.",
+    "description": "IxMa Operations es una práctica de ingeniería fundada por Emilio Ramirez. Construimos pipelines de automatización deterministas, modelos de visión/OCR a medida, motores de extracción de datos e integraciones de API robustas para particulares, equipos pequeños y empresas en crecimiento.",
+    "specs": {
+      "turnaround": "Plazo",
+      "turnaroundValue": "2–6 Días Prom.",
+      "architecture": "Arquitectura",
+      "architectureValue": "Lista para Producción",
+      "ownership": "Propiedad",
+      "ownershipValue": "100% Código y Modelos",
+      "engagement": "Interacción",
+      "engagementValue": "Acceso Directo con el Ingeniero"
+    },
+    "philosophyBadge": "Estándares de Ingeniería",
+    "philosophyTitle": "Cómo Construimos Software",
+    "philosophyDescription": "Rechazamos las automatizaciones frágiles y la burocracia de agencia tradicional. Todo lo que entregamos está diseñado para ejecutarse de manera determinista en producción.",
+    "principles": {
+      "deterministic": {
+        "title": "Determinista y Listo para Producción",
+        "description": "Sin scripts frágiles ni prompts alucinatorios. Diseñamos pipelines verificables con validación estricta de tipos, pruebas automatizadas y manejo estructurado de errores."
+      },
+      "direct": {
+        "title": "Acceso Directo con el Ingeniero",
+        "description": "Trabajas directamente con el ingeniero que diseña y construye tus sistemas. Ciclos rápidos de retroalimentación, alcance transparente y cero capas de intermediarios."
+      },
+      "turnaround": {
+        "title": "Tiempos de Entrega Predecibles y Rápidos",
+        "description": "Alcance transparente desde el primer día con entregas típicas en 2–6 días para paquetes predefinidos, y fases claras para arquitecturas a medida."
+      },
+      "ownership": {
+        "title": "100% Propiedad del Código y Activos",
+        "description": "Eres dueño total del código, pesos de modelos, scripts y documentación. Contenerizado y limpio, listo para correr sin complicaciones en tu infraestructura."
+      }
+    },
+    "focusBadge": "Capacidades Clave",
+    "focusTitle": "Áreas de Especialización",
+    "focusDescription": "Nos concentramos en áreas técnicas donde la precisión, la velocidad y la exactitud generan impacto operativo inmediato.",
+    "domains": {
+      "scraping": {
+        "title": "Extracción y Enriquecimiento Web",
+        "description": "Extracción de datos estructurados de fuentes complejas con resistencia antibot, validación de esquemas y enriquecimiento inteligente."
+      },
+      "ocr": {
+        "title": "Visión e Inteligencia Documental",
+        "description": "Conversión de recibos, facturas y documentos legados en datos limpios y estructurados usando modelos OCR y de análisis visual."
+      },
+      "workflow": {
+        "title": "Integraciones Backend a Medida",
+        "description": "Conexión de APIs, bases de datos, webhooks y tareas programadas para que tus operaciones fluyan automáticamente sin trabajo manual."
+      },
+      "auditing": {
+        "title": "Auditoría y Control de Calidad de Datos",
+        "description": "Puntuación de salud de datos, deduplicación, normalización de formatos y validación basada en reglas a escala."
+      }
+    },
+    "lifecycleBadge": "Ciclo de Ejecución",
+    "lifecycleTitle": "Cómo Trabajamos Juntos",
+    "lifecycleDescription": "Un flujo de trabajo directo y basado en hitos, diseñado para pasar de la definición del problema a software funcional rápidamente.",
+    "steps": {
+      "step1": {
+        "number": "01",
+        "title": "Evaluación y Alcance",
+        "description": "Envía tus requerimientos a través de nuestro evaluador de proyectos o formulario. Aclaramos esquemas, casos límite, plazos estimados y entregables."
+      },
+      "step2": {
+        "number": "02",
+        "title": "Ingeniería y Validación",
+        "description": "Construimos y refinamos el pipeline o modelo, probándolo contra casos límite reales, datos ruidosos y métricas de rendimiento."
+      },
+      "step3": {
+        "number": "03",
+        "title": "Entrega y Despliegue",
+        "description": "Entregamos la base de código completa, configuraciones de entorno y documentación — con soporte directo durante el despliegue."
+      }
+    },
+    "founderBadge": "Liderazgo de Ingeniería",
+    "founderTitle": "Construido por Emilio Ramirez",
+    "founderBio": "Ingeniero de software y automatización full-stack especializado en pipelines de datos robustos, aprendizaje automático aplicado/visión por computadora y arquitecturas de API. Enfocado en crear herramientas confiables que eliminan la fricción operativa.",
+    "availableForContracts": "Disponible para Contratos",
+    "ctaTitle": "¿Tienes un proyecto de automatización en mente?",
+    "ctaDescription": "Cuéntame qué estás intentando resolver. Te responderé con un alcance real, tiempos de entrega y los siguientes pasos.",
+    "ctaScoper": "Dime Qué Necesitas",
+    "ctaPackages": "Ver Paquetes",
+    "ctaContact": "Contactar Directamente"
   }
 }

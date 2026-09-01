@@ -17,6 +17,7 @@
     "navExamples": "Examples",
     "navPackages": "Packages",
     "navContact": "Contact",
+    "navAbout": "About",
     "getStarted": "Get Started"
   },
   "Footer": {
@@ -25,6 +26,7 @@
     "examples": "Examples",
     "packages": "Packages",
     "customProjects": "Custom Projects",
+    "about": "About",
     "contact": "Contact"
   },
   "Hero": {
@@ -112,7 +114,12 @@
       "noLineItems": "No line items detected — add one manually, or try another image.",
       "copyJson": "Copy JSON",
       "copied": "Copied",
-      "downloadCsv": "Download CSV"
+      "downloadCsv": "Download CSV",
+      "amountSubtotal": "Subtotal",
+      "amountTax": "Tax",
+      "amountTip": "Tip",
+      "amountDiscount": "Discount",
+      "amountTotal": "Total"
     },
     "content": {
       "inputPlaceholder": "Paste an article, video transcript, or raw notes…",
@@ -421,20 +428,138 @@
     "bookCall": "Book Scoping Call",
     "sendBrief": "Send Project Brief",
     "complexity": {
-      "simple": { "label": "Simple", "description": "One clear source, static or well-structured." },
-      "moderate": { "label": "Moderate", "description": "A few variables — mixed formats or a handful of edge cases." },
-      "complex": { "label": "Complex", "description": "Multiple sources or systems, or a lot of edge-case handling." }
+      "simple": {
+        "label": "Simple",
+        "description": "One clear source, static or well-structured."
+      },
+      "moderate": {
+        "label": "Moderate",
+        "description": "A few variables — mixed formats or a handful of edge cases."
+      },
+      "complex": {
+        "label": "Complex",
+        "description": "Multiple sources or systems, or a lot of edge-case handling."
+      }
     },
     "deliverable": {
-      "dataset": { "label": "Clean dataset / CSV", "description": "A one-off structured export." },
-      "scheduled-script": { "label": "Automated script", "description": "Runs on a schedule (cron) without you." },
-      "webhook": { "label": "Webhook / real-time trigger", "description": "Fires the moment something changes." },
-      "model-api": { "label": "Containerized model / API", "description": "A standalone service you or your team call." }
+      "dataset": {
+        "label": "Clean dataset / CSV",
+        "description": "A one-off structured export."
+      },
+      "scheduled-script": {
+        "label": "Automated script",
+        "description": "Runs on a schedule (cron) without you."
+      },
+      "webhook": {
+        "label": "Webhook / real-time trigger",
+        "description": "Fires the moment something changes."
+      },
+      "model-api": {
+        "label": "Containerized model / API",
+        "description": "A standalone service you or your team call."
+      }
     },
     "urgency": {
-      "express": { "label": "Express", "description": "2–3 days — priority turnaround." },
-      "standard": { "label": "Standard", "description": "3–6 days — the usual pace." },
-      "flexible": { "label": "Flexible", "description": "No rush — whenever it's ready." }
+      "express": {
+        "label": "Express",
+        "description": "2–3 days — priority turnaround."
+      },
+      "standard": {
+        "label": "Standard",
+        "description": "3–6 days — the usual pace."
+      },
+      "flexible": {
+        "label": "Flexible",
+        "description": "No rush — whenever it's ready."
+      }
     }
+  },
+  "About": {
+    "metaTitle": "About Us",
+    "metaDescription": "Learn about IxMa Operations, our engineering philosophy, and how we build deterministic automation pipelines, computer vision models, and custom backend systems.",
+    "badge": "About IxMa Operations",
+    "title": "Engineering custom automation & intelligence systems with precision.",
+    "description": "IxMa Operations is an engineering practice founded by Emilio Ramirez. We build deterministic automation pipelines, bespoke computer vision / OCR models, data extraction engines, and robust API workflows for individuals, small teams, and growing businesses.",
+    "specs": {
+      "turnaround": "Turnaround",
+      "turnaroundValue": "2–6 Days Avg",
+      "architecture": "Architecture",
+      "architectureValue": "Production-Ready",
+      "ownership": "Ownership",
+      "ownershipValue": "100% Code & Weights",
+      "engagement": "Engagement",
+      "engagementValue": "Direct Engineer Access"
+    },
+    "philosophyBadge": "Engineering Standards",
+    "philosophyTitle": "How We Build Software",
+    "philosophyDescription": "We reject fragile automations and bloated agency overhead. Everything we deliver is built to run deterministically in production.",
+    "principles": {
+      "deterministic": {
+        "title": "Deterministic & Production-Grade",
+        "description": "No brittle scripts or hallucinating prompts. We engineer verifiable pipelines with strict type validation, automated tests, and structured error handling."
+      },
+      "direct": {
+        "title": "Direct Engineer Access",
+        "description": "Work directly with the engineer designing and building your systems. Fast feedback loops, transparent scoping, and zero account-manager layers."
+      },
+      "turnaround": {
+        "title": "Predictable & Fast Turnaround",
+        "description": "Transparent scope from day one with typical delivery in 2–6 days for pre-scoped packages, and clear milestones for custom architectures."
+      },
+      "ownership": {
+        "title": "100% Code & Asset Ownership",
+        "description": "You own all code, trained weights, scripts, and documentation. Containerized and clean, designed to run effortlessly on your infrastructure."
+      }
+    },
+    "focusBadge": "Core Capabilities",
+    "focusTitle": "Specialized Domains",
+    "focusDescription": "We concentrate on technical areas where precision, speed, and accuracy create immediate operational leverage.",
+    "domains": {
+      "scraping": {
+        "title": "Web Extraction & Enrichment",
+        "description": "Extracting structured data from complex sources with anti-bot resilience, schema validation, and intelligent entity enrichment."
+      },
+      "ocr": {
+        "title": "Vision & Document Intelligence",
+        "description": "Converting receipts, invoices, and legacy documents into structured data using fine-tuned OCR and layout-aware models."
+      },
+      "workflow": {
+        "title": "Custom Backend Integrations",
+        "description": "Bridging disparate APIs, databases, webhooks, and cron workers so your operations flow automatically without manual glue."
+      },
+      "auditing": {
+        "title": "Data Auditing & Quality QA",
+        "description": "Automated data health scoring, duplicate deduplication, format normalization, and rule-based validation at scale."
+      }
+    },
+    "lifecycleBadge": "Execution Lifecycle",
+    "lifecycleTitle": "How We Work Together",
+    "lifecycleDescription": "A straightforward, milestone-driven workflow designed to get from problem definition to working software fast.",
+    "steps": {
+      "step1": {
+        "number": "01",
+        "title": "Intake & Scoping",
+        "description": "Share your requirements via our project scoper or brief form. We clarify schemas, edge cases, expected turnaround, and deliverables."
+      },
+      "step2": {
+        "number": "02",
+        "title": "Engineering & Validation",
+        "description": "We construct the pipeline or model, testing against real edge cases, noisy data, and performance benchmarks."
+      },
+      "step3": {
+        "number": "03",
+        "title": "Handoff & Deployment",
+        "description": "We deliver the complete codebase, environment configurations, and documentation — with direct support during deployment."
+      }
+    },
+    "founderBadge": "Engineering Leadership",
+    "founderTitle": "Built by Emilio Ramirez",
+    "founderBio": "Full-stack software and automation engineer specializing in robust data pipelines, applied machine learning/computer vision, and API architectures. Dedicated to building reliable, high-leverage tools that eliminate operational friction.",
+    "availableForContracts": "Available for Contracts",
+    "ctaTitle": "Ready to automate your workflow?",
+    "ctaDescription": "Tell me what you're trying to solve. I'll get back to you with real scope, timeline, and next steps.",
+    "ctaScoper": "Tell Me What You Need",
+    "ctaPackages": "Browse Packages",
+    "ctaContact": "Contact Directly"
   }
 }

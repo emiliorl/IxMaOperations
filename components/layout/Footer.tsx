@@ -31,6 +31,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-5 text-zinc-400 text-xs">
+          <Link href="/about" className="hover:text-zinc-200">{t("about")}</Link>
           <Link href="/#project-scoper" className="hover:text-zinc-200">{t("startHere")}</Link>
           <Link href="/#examples" className="hover:text-zinc-200">{t("examples")}</Link>
           <Link href="/packages" className="hover:text-zinc-200">{t("packages")}</Link>

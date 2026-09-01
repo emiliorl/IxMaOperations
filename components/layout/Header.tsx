@@ -27,6 +27,7 @@ export function Header() {
   const NAV_LINKS = [
     { href: "/#examples", label: t("navExamples") },
     { href: "/packages", label: t("navPackages") },
+    { href: "/about", label: t("navAbout") },
     { href: "/contact", label: t("navContact") },
   ];
 
@@ -54,9 +55,8 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`transition-colors hover:text-zinc-100 ${
-                  isActive ? "text-zinc-100 font-medium" : ""
-                }`}
+                className={`transition-colors hover:text-zinc-100 ${isActive ? "text-zinc-100 font-medium" : ""
+                  }`}
               >
                 {link.label}
               </Link>
