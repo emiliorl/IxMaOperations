@@ -33,9 +33,17 @@ export async function generateMetadata({
     description: t("description"),
     keywords: t.raw("keywords") as string[],
     icons: {
-      icon: "/logo-icon.svg",
-      shortcut: "/logo-icon.svg",
-      apple: "/logo-icon.svg",
+      // PNG first: Google Search's favicon crawler only supports raster
+      // formats (BMP/GIF/ICO/PNG/JPEG/PPM/TIFF), not SVG — see
+      // https://developers.google.com/search/docs/appearance/favicon-in-search.
+      // SVG stays listed for browsers that prefer a crisp vector icon.
+      icon: [
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/logo-icon.svg", type: "image/svg+xml" },
+      ],
+      shortcut: "/icon-192.png",
+      apple: "/apple-icon.png",
     },
   };
 }
