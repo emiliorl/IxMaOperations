@@ -3,6 +3,7 @@
 import React from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
+import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/Button";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
@@ -32,8 +33,16 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-800">
       <div className="container mx-auto px-6 h-14 flex items-center justify-between max-w-6xl">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="font-semibold text-sm tracking-tight text-white">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <Image
+            src="/logo-icon.svg"
+            alt="IxMa Operations"
+            width={24}
+            height={24}
+            className="w-6 h-6 object-contain"
+            priority
+          />
+          <span className="font-semibold text-sm tracking-tight text-white group-hover:text-zinc-200 transition-colors">
             IxMa Operations
           </span>
         </Link>

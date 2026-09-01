@@ -32,6 +32,11 @@ export async function generateMetadata({
     title: t("title"),
     description: t("description"),
     keywords: t.raw("keywords") as string[],
+    icons: {
+      icon: "/logo-icon.svg",
+      shortcut: "/logo-icon.svg",
+      apple: "/logo-icon.svg",
+    },
   };
 }
 

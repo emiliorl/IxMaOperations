@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -16,7 +17,16 @@ export function Footer() {
     <footer className="border-t border-zinc-800 bg-[#09090b] py-10 text-zinc-500 text-xs">
       <div className="container mx-auto px-6 max-w-6xl flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="text-center md:text-left space-y-1">
-          <div className="font-medium text-zinc-300">IxMa Operations</div>
+          <div className="flex items-center justify-center md:justify-start gap-2 font-medium text-zinc-300">
+            <Image
+              src="/logo-icon.svg"
+              alt="IxMa Operations"
+              width={18}
+              height={18}
+              className="w-4.5 h-4.5 object-contain"
+            />
+            <span>IxMa Operations</span>
+          </div>
           <p className="text-zinc-500">{t("tagline")}</p>
         </div>
 
