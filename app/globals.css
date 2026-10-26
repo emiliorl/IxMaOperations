@@ -52,6 +52,12 @@
     --ring: 240 4.9% 83.9%;
 
     --radius: 0.5rem;
+
+    /* Loaded via the Google Fonts <link> in app/[locale]/layout.tsx. Tailwind's
+       fontFamily config reads these vars; without them the whole declaration
+       is invalid and the browser falls back to its default serif. */
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   }
 }
 
@@ -96,4 +102,57 @@
 
 .hairline-border {
   border: 1px solid #27272a;
+}
+
+/* Blueprint accents (design revamp, Milestone 1). Hairline guides only — no
+   glows, no gradients on type (STANDARDS.md Section 1). */
+.blueprint-grid {
+  background-image:
+    linear-gradient(to right, rgba(63, 63, 70, 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(63, 63, 70, 0.22) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+
+/* Fades the grid out toward the bottom so it never fights with content. */
+.blueprint-grid-fade {
+  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+}
+
+/* Corner crosshair marks on a surface — see `components/ui/Card.tsx`'s `marks` prop. */
+.corner-mark {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  color: #52525b;
+  transition: color 200ms;
+}
+.corner-mark::before,
+.corner-mark::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+.corner-mark::before {
+  left: 4px;
+  top: 0;
+  width: 1px;
+  height: 9px;
+}
+.corner-mark::after {
+  left: 0;
+  top: 4px;
+  width: 9px;
+  height: 1px;
+}
+.group-marks:hover .corner-mark {
+  color: #a1a1aa;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe-anim {
+    animation: none !important;
+  }
 }

@@ -30,18 +30,38 @@
     "contact": "Contact"
   },
   "Hero": {
-    "title": "Automation and AI tooling, built around your problem.",
-    "description": "Tell me what you're trying to solve — scraping, document processing, content workflows, data QA, integrations, or custom vision. Answer a few questions and I'll get back to you with real scope and a time to talk.",
+    "statusAvailable": "Available for contract work",
+    "statusTurnaround": "Avg. turnaround 2–5 days",
+    "title": "Custom automation and vision pipelines, built by the engineer you'll actually talk to.",
+    "description": "I'm Emilio Ramirez. Tell me what's eating your team's time — scraping, documents, data QA, integrations, custom vision — and I'll reply with real scope and a time to talk. You own the code, the docs, and any model I train.",
     "ctaPrimary": "Tell Me What You Need",
     "ctaSecondary": "See It In Action",
-    "badge1": "Five questions, no forms to decode",
-    "badge2": "Real reply with scope + timeline",
-    "badge3": "Book a call or send a brief — you pick"
+    "commitmentsLabel": "How I work",
+    "commitments": {
+      "access": {
+        "label": "Access",
+        "value": "Direct to Emilio"
+      },
+      "reply": {
+        "label": "Reply",
+        "value": "Within 24 hours"
+      },
+      "ownership": {
+        "label": "Ownership",
+        "value": "100% code + docs"
+      },
+      "layers": {
+        "label": "Middlemen",
+        "value": "None"
+      }
+    },
+    "copyEmail": "Copy",
+    "copiedEmail": "Copied"
   },
   "HomeScoper": {
-    "badge": "Start Here",
-    "title": "Five quick questions about your project",
-    "description": "Get a matched scope and turnaround estimate, then book a call or send the brief straight through — or, if you'd rather skip straight to it, <emailLink>email me directly</emailLink>."
+    "badge": "Project Scoper",
+    "title": "Describe the job, see the scope",
+    "description": "Pick the problem and how you want it handed off. The scope sheet fills in as you go — then send the brief or book a call. Or, if you'd rather skip this, <emailLink>email me directly</emailLink>."
   },
   "Examples": {
     "badge": "See It In Action",
@@ -50,6 +70,7 @@
     "liveBadge": "Live — Real Pipeline",
     "viewLiveDemo": "Live Demo",
     "viewMoreInfo": "More Info",
+    "sampleLabel": "Sample output",
     "scraper": {
       "inputLabel": "Public URL",
       "inputPlaceholder": "https://example.com",
@@ -261,8 +282,8 @@
   },
   "ClosingCta": {
     "badge": "Free 15-Minute Call",
-    "title": "Ready to talk it through?",
-    "description": "Answer the five questions above and you'll hear back with a scope, a timeline, and a time to talk — not a hard sell.",
+    "title": "Not sure it fits? Let's talk it through.",
+    "description": "Fill in the scoper above and I'll reply personally with a scope, a timeline, and a time to talk. No sales team, no hard sell.",
     "cta": "Tell Me What You Need"
   },
   "Capabilities": {
@@ -307,6 +328,9 @@
     "builtOn": "Built on: {name}",
     "noPriceNote": "No price is shown here — submit a request and I'll reply with a price and timeline.",
     "requestThisPackage": "Request This Package",
+    "specInput": "Input",
+    "specOutput": "Output",
+    "specTurnaround": "Turnaround",
     "items": {
       "lead-scraper-enrichment": {
         "name": "Custom Lead Scraper + Enrichment List",
@@ -317,7 +341,9 @@
           "Enrichment of each record with the context that makes it usable",
           "A clean, deduplicated export (spreadsheet or CSV)"
         ],
-        "turnaround": "3–5 days"
+        "turnaround": "3–5 days",
+        "input": "A defined source (URLs or a site) plus your criteria",
+        "output": "Clean, deduplicated CSV or spreadsheet"
       },
       "invoice-ocr-pipeline": {
         "name": "Receipt/Invoice OCR Pipeline Setup",
@@ -328,7 +354,9 @@
           "Structured output (vendor, amount, date, category)",
           "Exportable to spreadsheet/CSV"
         ],
-        "turnaround": "3–5 days"
+        "turnaround": "3–5 days",
+        "input": "Receipt or invoice photos and PDFs",
+        "output": "Structured line items (vendor, amount, date, category) as CSV"
       },
       "content-repurposing": {
         "name": "Content Repurposing Automation",
@@ -339,7 +367,9 @@
           "Platform-ready drafts (threads, captions, a newsletter blurb)",
           "One round of revisions on the draft set"
         ],
-        "turnaround": "2–4 days"
+        "turnaround": "2–4 days",
+        "input": "One video, recording, or transcript",
+        "output": "Platform-ready drafts: threads, captions, newsletter blurb"
       },
       "data-qa-audit": {
         "name": "Small-Scope Data QA/Audit Script",
@@ -350,7 +380,9 @@
           "A flagged-records report with a measurable accuracy score",
           "The script itself, so you can re-run it later"
         ],
-        "turnaround": "4–6 days"
+        "turnaround": "4–6 days",
+        "input": "A dataset plus your validation rules",
+        "output": "Flagged-records report with accuracy score, and the re-runnable script"
       },
       "api-workflow-integration": {
         "name": "Custom API/Workflow Integration",
@@ -361,7 +393,9 @@
           "Basic error handling and a run log",
           "Handoff notes on how it works"
         ],
-        "turnaround": "3–6 days"
+        "turnaround": "3–6 days",
+        "input": "The tools or systems to connect, and what should move between them",
+        "output": "Integration script with error handling, run log, and handoff notes"
       },
       "custom-vision-model": {
         "name": "Custom-Trained Vision Model (small scope)",
@@ -372,7 +406,9 @@
           "An accuracy report against a held-out test set",
           "Delivery notes on how to run/integrate it"
         ],
-        "turnaround": "Varies with scope"
+        "turnaround": "Varies with scope",
+        "input": "A sample set of your images",
+        "output": "Trained model, accuracy report on held-out images, and run/integrate notes"
       }
     }
   },
@@ -381,7 +417,7 @@
     "badgeRequesting": "Requesting: {name}",
     "titleDefault": "Describe your project",
     "titleRequesting": "Request this package",
-    "description": "No price is shown here — submit a brief and I'll reply with a price and timeline. If you'd rather talk it through first, book a call instead.",
+    "description": "I'll reply personally with a price and timeline — none is shown here. If you'd rather talk it through first, book a call instead.",
     "preferToTalk": "Prefer to talk first?",
     "orDivider": "Or"
   },
@@ -407,7 +443,15 @@
     "nameError": "Enter your name.",
     "emailError": "Enter a valid email address.",
     "problemError": "Give a bit more detail — at least a couple of sentences.",
-    "timelineError": "Let me know your timeline, even roughly."
+    "timelineError": "Let me know your timeline, even roughly.",
+    "formLabel": "Project brief",
+    "personalNote": "I review every submission personally and reply within 24 hours with scope and a time to talk.",
+    "nameHelp": "So I know who I'm writing back to.",
+    "emailHelp": "I reply here, not through a ticketing system.",
+    "packageHelp": "Leave as-is if it doesn't fit a package.",
+    "problemHelp": "The data or systems involved, and what \"done\" looks like. Rough is fine.",
+    "timelineHelp": "A date, or just how urgent it is.",
+    "budgetHelp": "Helps me suggest the right shape of solution. Skip if unsure."
   },
   "ScheduleEmbed": {
     "notConfigured": "Booking link not configured — set NEXT_PUBLIC_CALENDLY_URL.",
@@ -422,12 +466,6 @@
     "browsePackages": "Browse packages first"
   },
   "Estimator": {
-    "stepLabel": "Step {current} / {total}",
-    "back": "Back",
-    "step1Title": "What's the core problem?",
-    "step2Title": "How complex is the source data?",
-    "step3Title": "What should the handoff look like?",
-    "step4Title": "What's the turnaround priority?",
     "bespokeLabel": "Bespoke Architecture",
     "bespokeDescription": "Something else — doesn't fit the categories above.",
     "bespokeTierName": "Bespoke Architecture",
@@ -436,8 +474,8 @@
     "turnaroundLabel": "Turnaround",
     "matchedCapability": "Matched capability",
     "referenceNote": "Reference scope based on your answers. Final deliverables, timeline, and price are confirmed on a scoping call or in my reply to your brief.",
-    "bookCall": "Book Scoping Call",
-    "sendBrief": "Send Project Brief",
+    "bookCall": "Book 15-Min Scoping Call",
+    "sendBrief": "Send Brief with this Scope",
     "complexity": {
       "simple": {
         "label": "Simple",
@@ -483,48 +521,88 @@
         "label": "Flexible",
         "description": "No rush — whenever it's ready."
       }
-    }
+    },
+    "challengeTitle": "What's the core problem?",
+    "handoffTitle": "How should it be handed off?",
+    "refineTitle": "Refine",
+    "refineHint": "Optional — the defaults are fine",
+    "complexityLabel": "Source complexity",
+    "urgencyLabel": "Priority",
+    "handoffLabel": "Handoff",
+    "accessLabel": "Access",
+    "accessValue": "Direct to Emilio",
+    "ownershipLabel": "Ownership",
+    "ownershipValue": "100% code + docs",
+    "specSheet": "Scope sheet",
+    "statusReady": "Matched",
+    "statusWaiting": "Waiting for input",
+    "emptyState": "Pick a problem and a handoff — your matched scope and turnaround appear here."
   },
   "About": {
-    "metaTitle": "About Us",
-    "metaDescription": "Learn about IxMa Operations, our engineering philosophy, and how we build deterministic automation pipelines, computer vision models, and custom backend systems.",
-    "badge": "About IxMa Operations",
-    "title": "Engineering custom automation & intelligence systems with precision.",
-    "description": "IxMa Operations is an engineering practice founded by Emilio Ramirez. We build deterministic automation pipelines, bespoke computer vision / OCR models, data extraction engines, and robust API workflows for individuals, small teams, and growing businesses.",
+    "metaTitle": "About",
+    "metaDescription": "IxMa Operations is a one-engineer practice run by Emilio Ramirez: scraping pipelines, document and vision models, data QA, and API integrations, handed off with full code ownership.",
+    "badge": "About",
+    "title": "One engineer. No agency layers.",
+    "description": "IxMa Operations is my practice — I'm Emilio Ramirez. I build scraping pipelines, document and vision models, data QA, and API integrations for individuals, small teams, and growing businesses. The person who scopes your project is the person who builds it.",
     "specs": {
       "turnaround": "Turnaround",
-      "turnaroundValue": "2–6 Days Avg",
+      "turnaroundValue": "2–5 Days Avg",
       "architecture": "Architecture",
       "architectureValue": "Production-Ready",
       "ownership": "Ownership",
-      "ownershipValue": "100% Code & Weights",
+      "ownershipValue": "100% Code + Docs",
       "engagement": "Engagement",
       "engagementValue": "Direct Engineer Access"
     },
-    "philosophyBadge": "Engineering Standards",
-    "philosophyTitle": "How We Build Software",
-    "philosophyDescription": "We reject fragile automations and bloated agency overhead. Everything we deliver is built to run deterministically in production.",
+    "storyBadge": "Why IxMa exists",
+    "storyTitle": "Built because the usual options kept breaking",
+    "storyP1": "Most automation work I saw fell into two camps: buried under agency layers where the person selling it never touched the code, or held together with no-code glue that broke the first time a source changed its layout.",
+    "storyP2": "I started IxMa Operations to do it the other way. I build the pipeline once, test it against messy real data, and hand over the full codebase so it keeps running without me. You talk to me from the first email to the last commit.",
+    "philosophyBadge": "Standards",
+    "philosophyTitle": "How I build software",
+    "philosophyDescription": "I avoid fragile automations and agency overhead. Everything I deliver is meant to run deterministically in production, on your infrastructure.",
     "principles": {
       "deterministic": {
         "title": "Deterministic & Production-Grade",
-        "description": "No brittle scripts or hallucinating prompts. We engineer verifiable pipelines with strict type validation, automated tests, and structured error handling."
+        "description": "No brittle scripts or hallucinating prompts. I build verifiable pipelines with strict type validation, automated tests, and structured error handling."
       },
       "direct": {
         "title": "Direct Engineer Access",
-        "description": "Work directly with the engineer designing and building your systems. Fast feedback loops, transparent scoping, and zero account-manager layers."
+        "description": "You work with me, the engineer designing and building your system. Fast feedback loops, transparent scoping, and no account managers."
       },
       "turnaround": {
         "title": "Predictable & Fast Turnaround",
-        "description": "Transparent scope from day one with typical delivery in 2–6 days for pre-scoped packages, and clear milestones for custom architectures."
+        "description": "Scope is clear from day one, with typical delivery in 2–5 days for pre-scoped packages and clear milestones for custom architectures."
       },
       "ownership": {
         "title": "100% Code & Asset Ownership",
-        "description": "You own all code, trained weights, scripts, and documentation. Containerized and clean, designed to run effortlessly on your infrastructure."
+        "description": "You own all code, trained weights, scripts, and documentation. Containerized and clean, designed to run on your infrastructure."
       }
     },
-    "focusBadge": "Core Capabilities",
-    "focusTitle": "Specialized Domains",
-    "focusDescription": "We concentrate on technical areas where precision, speed, and accuracy create immediate operational leverage.",
+    "stackBadge": "Stack",
+    "stackTitle": "What I build with",
+    "stackDescription": "Proven, maintainable tools — nothing exotic that you'd struggle to hand to your own team later.",
+    "stack": {
+      "backend": {
+        "label": "Data & backend",
+        "items": "Python · FastAPI · Playwright"
+      },
+      "vision": {
+        "label": "Vision & ML",
+        "items": "PyTorch · ONNX"
+      },
+      "delivery": {
+        "label": "Delivery",
+        "items": "Docker"
+      },
+      "web": {
+        "label": "Web",
+        "items": "TypeScript · Next.js"
+      }
+    },
+    "focusBadge": "Capabilities",
+    "focusTitle": "Where I focus",
+    "focusDescription": "The technical areas where precision, speed, and accuracy create immediate operational leverage.",
     "domains": {
       "scraping": {
         "title": "Web Extraction & Enrichment",
@@ -543,29 +621,29 @@
         "description": "Automated data health scoring, duplicate deduplication, format normalization, and rule-based validation at scale."
       }
     },
-    "lifecycleBadge": "Execution Lifecycle",
-    "lifecycleTitle": "How We Work Together",
-    "lifecycleDescription": "A straightforward, milestone-driven workflow designed to get from problem definition to working software fast.",
+    "lifecycleBadge": "Process",
+    "lifecycleTitle": "How we work together",
+    "lifecycleDescription": "Three steps from problem definition to working software in your hands.",
     "steps": {
       "step1": {
         "number": "01",
-        "title": "Intake & Scoping",
-        "description": "Share your requirements via our project scoper or brief form. We clarify schemas, edge cases, expected turnaround, and deliverables."
+        "title": "Intake & Spec",
+        "description": "You share the problem through the scoper or the brief form. I clarify schemas, edge cases, turnaround, and deliverables, and write them down as the spec."
       },
       "step2": {
         "number": "02",
-        "title": "Engineering & Validation",
-        "description": "We construct the pipeline or model, testing against real edge cases, noisy data, and performance benchmarks."
+        "title": "Engineering & Benchmark",
+        "description": "I build the pipeline or model and test it against real edge cases, noisy data, and performance benchmarks before you see it."
       },
       "step3": {
         "number": "03",
-        "title": "Handoff & Deployment",
-        "description": "We deliver the complete codebase, environment configurations, and documentation — with direct support during deployment."
+        "title": "Complete Codebase Handoff",
+        "description": "You receive the full codebase, environment configuration, and documentation, with direct support from me while you deploy."
       }
     },
-    "founderBadge": "Engineering Leadership",
-    "founderTitle": "Built by Emilio Ramirez",
-    "founderBio": "Full-stack software and automation engineer specializing in robust data pipelines, applied machine learning/computer vision, and API architectures. Dedicated to building reliable, high-leverage tools that eliminate operational friction.",
+    "founderBadge": "The engineer",
+    "founderTitle": "Emilio Ramirez",
+    "founderBio": "I'm a full-stack software and automation engineer focused on dependable data pipelines, applied machine learning and computer vision, and API architectures. I read every request myself, so the person who answers your first email is the one who writes the code.",
     "availableForContracts": "Available for Contracts",
     "ctaTitle": "Ready to automate your workflow?",
     "ctaDescription": "Tell me what you're trying to solve. I'll get back to you with real scope, timeline, and next steps.",

@@ -4,7 +4,7 @@ import { BriefForm } from "@/components/custom-projects/BriefForm";
 import { ScheduleEmbed } from "@/components/custom-projects/ScheduleEmbed";
 import { getPackageBySlug } from "@/lib/packages";
 import { parseSurveyAnswers } from "@/lib/estimator-logic";
-import { Badge } from "@/components/ui/Badge";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 export async function generateMetadata({
   params,
@@ -50,15 +50,14 @@ export default async function CustomProjectsPage({
   return (
     <div className="py-16 md:py-24">
       <div className="container mx-auto px-6 max-w-5xl">
-        <div className="max-w-2xl mb-12 space-y-2">
-          <Badge variant="default" className="mb-1 text-[11px] font-mono">
-            {preselected ? t("badgeRequesting", { name: tPkg(`${preselected.slug}.name`) }) : t("badgeDefault")}
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
-            {preselected ? t("titleRequesting") : t("titleDefault")}
-          </h1>
-          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">{t("description")}</p>
-        </div>
+        <SectionHeader
+          as="h1"
+          index="00"
+          label={preselected ? t("badgeRequesting", { name: tPkg(`${preselected.slug}.name`) }) : t("badgeDefault")}
+          title={preselected ? t("titleRequesting") : t("titleDefault")}
+          description={t("description")}
+          className="mb-12"
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 lg:gap-6">
           <BriefForm initialPackageSlug={searchParams.package || ""} initialSurveyAnswers={surveyAnswers} />

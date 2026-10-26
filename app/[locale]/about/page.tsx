@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { Badge } from "@/components/ui/Badge";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/Button";
 import {
@@ -29,10 +29,13 @@ export async function generateMetadata({
 }
 
 /**
- * About Us Page — IxMaOperations
+ * About Page — IxMaOperations
  *
- * Communicates the engineering philosophy, technical capabilities, execution
- * lifecycle, and direct engineer-led model of IxMa Operations.
+ * Design revamp (Phase 2): rewritten from corporate third-person into
+ * Emilio's own account — why the practice exists, the standards he holds
+ * himself to, the actual tool stack, and a three-step collaboration path
+ * ending in a full codebase handoff. Sections open with `// 0N LABEL`
+ * eyebrows (`SectionHeader`) rather than a pill badge on every heading.
  *
  * Adheres strictly to STANDARDS.md / .agents/rules/website-style.md:
  * - Sober engineering aesthetic (Zinc 950 bg, Zinc 800 hairline borders, Zinc 100 text)
@@ -100,6 +103,18 @@ export default async function AboutPage({ params }: { params: { locale: string }
     },
   ];
 
+  const SPECS = (["turnaround", "architecture", "ownership", "engagement"] as const).map((key) => ({
+    key,
+    label: t(`specs.${key}`),
+    value: t(`specs.${key}Value`),
+  }));
+
+  const STACK = (["backend", "vision", "delivery", "web"] as const).map((key) => ({
+    key,
+    label: t(`stack.${key}.label`),
+    items: t(`stack.${key}.items`),
+  }));
+
   const STEPS = [
     {
       number: t("steps.step1.number"),
@@ -123,9 +138,10 @@ export default async function AboutPage({ params }: { params: { locale: string }
       {/* Hero Section */}
       <section className="container mx-auto px-6 max-w-5xl">
         <div className="space-y-6 max-w-3xl">
-          <Badge variant="default" className="font-mono text-[11px] text-zinc-400">
+          <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">
+            <span className="text-zinc-600">{"// "}</span>
             {t("badge")}
-          </Badge>
+          </div>
           <h1 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight">
             {t("title")}
           </h1>
@@ -134,63 +150,43 @@ export default async function AboutPage({ params }: { params: { locale: string }
           </p>
 
           {/* Technical Specs Strip */}
-          <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-md border border-zinc-800/80 bg-zinc-900/30 p-3">
-              <span className="block font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                {t("specs.turnaround")}
-              </span>
-              <span className="font-mono text-xs font-medium text-zinc-200">
-                {t("specs.turnaroundValue")}
-              </span>
-            </div>
-            <div className="rounded-md border border-zinc-800/80 bg-zinc-900/30 p-3">
-              <span className="block font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                {t("specs.architecture")}
-              </span>
-              <span className="font-mono text-xs font-medium text-zinc-200">
-                {t("specs.architectureValue")}
-              </span>
-            </div>
-            <div className="rounded-md border border-zinc-800/80 bg-zinc-900/30 p-3">
-              <span className="block font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                {t("specs.ownership")}
-              </span>
-              <span className="font-mono text-xs font-medium text-zinc-200">
-                {t("specs.ownershipValue")}
-              </span>
-            </div>
-            <div className="rounded-md border border-zinc-800/80 bg-zinc-900/30 p-3">
-              <span className="block font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                {t("specs.engagement")}
-              </span>
-              <span className="font-mono text-xs font-medium text-zinc-200">
-                {t("specs.engagementValue")}
-              </span>
-            </div>
+          <dl className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {SPECS.map((spec) => (
+              <div key={spec.key} className="rounded-md border border-zinc-800/80 bg-zinc-900/30 p-3">
+                <dt className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">{spec.label}</dt>
+                <dd className="font-mono text-xs font-medium text-zinc-200">{spec.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* Story Section */}
+      <section className="container mx-auto px-6 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr] gap-8 md:gap-14">
+          <SectionHeader index="01" label={t("storyBadge")} title={t("storyTitle")} />
+          <div className="space-y-4 text-sm sm:text-base text-zinc-300 leading-relaxed md:pt-10">
+            <p>{t("storyP1")}</p>
+            <p>{t("storyP2")}</p>
           </div>
         </div>
       </section>
 
-      {/* Engineering Philosophy Section */}
+      {/* Engineering Standards Section */}
       <section className="container mx-auto px-6 max-w-5xl">
         <div className="space-y-8">
-          <div className="space-y-2 max-w-2xl">
-            <Badge variant="default" className="font-mono text-[11px] text-zinc-400">
-              {t("philosophyBadge")}
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
-              {t("philosophyTitle")}
-            </h2>
-            <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-              {t("philosophyDescription")}
-            </p>
-          </div>
+          <SectionHeader
+            index="02"
+            label={t("philosophyBadge")}
+            title={t("philosophyTitle")}
+            description={t("philosophyDescription")}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {PRINCIPLES.map((p) => {
               const Icon = p.icon;
               return (
-                <Card key={p.key} className="bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700">
+                <Card key={p.key} marks className="bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700">
                   <CardHeader className="space-y-2 p-6">
                     <div className="w-8 h-8 rounded-md bg-zinc-800/60 border border-zinc-700/60 flex items-center justify-center text-zinc-200">
                       <Icon className="w-4 h-4" />
@@ -209,20 +205,36 @@ export default async function AboutPage({ params }: { params: { locale: string }
         </div>
       </section>
 
+      {/* Stack Section */}
+      <section className="container mx-auto px-6 max-w-5xl">
+        <div className="space-y-8">
+          <SectionHeader
+            index="03"
+            label={t("stackBadge")}
+            title={t("stackTitle")}
+            description={t("stackDescription")}
+          />
+
+          <dl className="rounded-lg border border-zinc-800 bg-zinc-900/30 divide-y divide-zinc-800">
+            {STACK.map((row) => (
+              <div key={row.key} className="grid grid-cols-1 sm:grid-cols-[14rem_1fr] gap-1 sm:gap-6 px-5 py-4">
+                <dt className="font-mono text-[11px] uppercase tracking-wider text-zinc-500 sm:pt-0.5">{row.label}</dt>
+                <dd className="font-mono text-sm text-zinc-200">{row.items}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
       {/* Core Capabilities Section */}
       <section className="container mx-auto px-6 max-w-5xl">
         <div className="space-y-8">
-          <div className="space-y-2 max-w-2xl">
-            <Badge variant="default" className="font-mono text-[11px] text-zinc-400">
-              {t("focusBadge")}
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
-              {t("focusTitle")}
-            </h2>
-            <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-              {t("focusDescription")}
-            </p>
-          </div>
+          <SectionHeader
+            index="04"
+            label={t("focusBadge")}
+            title={t("focusTitle")}
+            description={t("focusDescription")}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {DOMAINS.map((d) => {
@@ -247,29 +259,25 @@ export default async function AboutPage({ params }: { params: { locale: string }
         </div>
       </section>
 
-      {/* Execution Lifecycle Section */}
+      {/* Collaboration Roadmap Section */}
       <section className="container mx-auto px-6 max-w-5xl">
         <div className="space-y-8">
-          <div className="space-y-2 max-w-2xl">
-            <Badge variant="default" className="font-mono text-[11px] text-zinc-400">
-              {t("lifecycleBadge")}
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
-              {t("lifecycleTitle")}
-            </h2>
-            <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-              {t("lifecycleDescription")}
-            </p>
-          </div>
+          <SectionHeader
+            index="05"
+            label={t("lifecycleBadge")}
+            title={t("lifecycleTitle")}
+            description={t("lifecycleDescription")}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ol className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {STEPS.map((step) => (
-              <div
+              <li
                 key={step.number}
                 className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-6 space-y-3 transition-colors hover:border-zinc-700"
               >
-                <div className="font-mono text-xs font-semibold text-zinc-500">
-                  {step.number}
+                <div className="flex items-center gap-3 font-mono text-xs font-semibold text-zinc-500">
+                  <span>{step.number}</span>
+                  <span className="h-px flex-1 bg-zinc-800" aria-hidden="true" />
                 </div>
                 <h3 className="text-base font-semibold text-zinc-100">
                   {step.title}
@@ -277,9 +285,9 @@ export default async function AboutPage({ params }: { params: { locale: string }
                 <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
                   {step.description}
                 </p>
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
@@ -288,9 +296,9 @@ export default async function AboutPage({ params }: { params: { locale: string }
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-6 sm:p-8 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
             <div className="space-y-1">
-              <Badge variant="default" className="font-mono text-[11px] text-zinc-400">
+              <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">
                 {t("founderBadge")}
-              </Badge>
+              </div>
               <h3 className="text-lg sm:text-xl font-semibold text-white">
                 {t("founderTitle")}
               </h3>
@@ -308,7 +316,7 @@ export default async function AboutPage({ params }: { params: { locale: string }
 
       {/* Final CTA Section */}
       <section className="container mx-auto px-6 max-w-5xl">
-        <div className="rounded-xl border border-zinc-800 bg-[#121215] p-8 sm:p-12 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="rounded-xl border border-zinc-800 bg-[#121215] p-8 sm:p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="space-y-2 max-w-xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
               {t("ctaTitle")}

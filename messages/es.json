@@ -30,18 +30,38 @@
     "contact": "Contacto"
   },
   "Hero": {
-    "title": "Automatización y herramientas de IA, hechas a la medida de tu problema.",
-    "description": "Cuéntame qué estás tratando de resolver — extracción de datos, procesamiento de documentos, flujos de contenido, control de calidad de datos, integraciones o visión por computadora a medida. Responde unas preguntas y te contacto con el alcance real y un horario para hablar.",
+    "statusAvailable": "Disponible para proyectos",
+    "statusTurnaround": "Entrega promedio 2–5 días",
+    "title": "Automatización y pipelines de visión a medida, hechos por el ingeniero con quien realmente vas a hablar.",
+    "description": "Soy Emilio Ramirez. Cuéntame qué le está quitando tiempo a tu equipo — extracción de datos, documentos, control de calidad de datos, integraciones, visión por computadora — y te respondo con un alcance real y un horario para hablar. El código, la documentación y cualquier modelo que entrene son tuyos.",
     "ctaPrimary": "Dime Qué Necesitas",
     "ctaSecondary": "Ver Ejemplos",
-    "badge1": "Cinco preguntas, sin formularios complicados",
-    "badge2": "Respuesta real con alcance y plazo",
-    "badge3": "Agenda una llamada o envía un brief — tú eliges"
+    "commitmentsLabel": "Cómo trabajo",
+    "commitments": {
+      "access": {
+        "label": "Acceso",
+        "value": "Directo con Emilio"
+      },
+      "reply": {
+        "label": "Respuesta",
+        "value": "En menos de 24 horas"
+      },
+      "ownership": {
+        "label": "Propiedad",
+        "value": "100% código + docs"
+      },
+      "layers": {
+        "label": "Intermediarios",
+        "value": "Ninguno"
+      }
+    },
+    "copyEmail": "Copiar",
+    "copiedEmail": "Copiado"
   },
   "HomeScoper": {
-    "badge": "Empieza Aquí",
-    "title": "Cinco preguntas rápidas sobre tu proyecto",
-    "description": "Obtén un alcance y un plazo estimado, luego agenda una llamada o envía el brief directamente — o, si prefieres saltarte esto, <emailLink>escríbeme directamente</emailLink>."
+    "badge": "Definir Alcance",
+    "title": "Describe el trabajo, mira el alcance",
+    "description": "Elige el problema y cómo quieres recibir la entrega. La ficha de alcance se completa sobre la marcha — luego envía el brief o agenda una llamada. O, si prefieres saltarte esto, <emailLink>escríbeme directamente</emailLink>."
   },
   "Examples": {
     "badge": "Ejemplos en Acción",
@@ -50,6 +70,7 @@
     "liveBadge": "En Vivo — Pipeline Real",
     "viewLiveDemo": "Demo en Vivo",
     "viewMoreInfo": "Más Información",
+    "sampleLabel": "Salida de ejemplo",
     "scraper": {
       "inputLabel": "URL pública",
       "inputPlaceholder": "https://ejemplo.com",
@@ -261,8 +282,8 @@
   },
   "ClosingCta": {
     "badge": "Llamada Gratis de 15 Minutos",
-    "title": "¿Listo para hablarlo?",
-    "description": "Responde las cinco preguntas de arriba y recibirás un alcance, un plazo y un horario para hablar — sin presión de venta.",
+    "title": "¿No estás seguro de si encaja? Hablémoslo.",
+    "description": "Completa el definidor de alcance de arriba y te respondo personalmente con un alcance, un plazo y un horario para hablar. Sin equipo de ventas, sin presión.",
     "cta": "Dime Qué Necesitas"
   },
   "Capabilities": {
@@ -307,6 +328,9 @@
     "builtOn": "Basado en: {name}",
     "noPriceNote": "Aquí no se muestra ningún precio — envía una solicitud y te responderé con un precio y un plazo.",
     "requestThisPackage": "Solicitar Este Paquete",
+    "specInput": "Entrada",
+    "specOutput": "Salida",
+    "specTurnaround": "Plazo",
     "items": {
       "lead-scraper-enrichment": {
         "name": "Extractor de Leads + Lista Enriquecida a Medida",
@@ -317,7 +341,9 @@
           "Enriquecimiento de cada registro con el contexto que lo hace útil",
           "Una exportación limpia y sin duplicados (hoja de cálculo o CSV)"
         ],
-        "turnaround": "3–5 días"
+        "turnaround": "3–5 días",
+        "input": "Una fuente definida (URLs o un sitio) y tus criterios",
+        "output": "CSV u hoja de cálculo limpia y sin duplicados"
       },
       "invoice-ocr-pipeline": {
         "name": "Configuración de Pipeline OCR para Recibos/Facturas",
@@ -328,7 +354,9 @@
           "Salida estructurada (proveedor, monto, fecha, categoría)",
           "Exportable a hoja de cálculo/CSV"
         ],
-        "turnaround": "3–5 días"
+        "turnaround": "3–5 días",
+        "input": "Fotos o PDFs de recibos o facturas",
+        "output": "Líneas estructuradas (proveedor, monto, fecha, categoría) en CSV"
       },
       "content-repurposing": {
         "name": "Automatización de Reutilización de Contenido",
@@ -339,7 +367,9 @@
           "Borradores listos para cada plataforma (hilos, textos, un fragmento de newsletter)",
           "Una ronda de revisión sobre el conjunto de borradores"
         ],
-        "turnaround": "2–4 días"
+        "turnaround": "2–4 días",
+        "input": "Un video, grabación o transcripción",
+        "output": "Borradores listos por plataforma: hilos, captions y texto de newsletter"
       },
       "data-qa-audit": {
         "name": "Script de Auditoría/QA de Datos (Alcance Reducido)",
@@ -350,7 +380,9 @@
           "Un reporte de registros marcados con una puntuación de precisión medible",
           "El script mismo, para que puedas volver a ejecutarlo cuando quieras"
         ],
-        "turnaround": "4–6 días"
+        "turnaround": "4–6 días",
+        "input": "Un conjunto de datos y tus reglas de validación",
+        "output": "Reporte de registros marcados con puntaje de exactitud, y el script para volver a correrlo"
       },
       "api-workflow-integration": {
         "name": "Integración de API/Flujo de Trabajo a Medida",
@@ -361,7 +393,9 @@
           "Manejo básico de errores y un registro de ejecución",
           "Notas de entrega sobre cómo funciona"
         ],
-        "turnaround": "3–6 días"
+        "turnaround": "3–6 días",
+        "input": "Las herramientas o sistemas a conectar y qué debe moverse entre ellos",
+        "output": "Script de integración con manejo de errores, registro de ejecución y notas de entrega"
       },
       "custom-vision-model": {
         "name": "Modelo de Visión Entrenado a Medida (Alcance Reducido)",
@@ -372,7 +406,9 @@
           "Un reporte de precisión sobre un conjunto de prueba independiente",
           "Notas de entrega sobre cómo ejecutarlo/integrarlo"
         ],
-        "turnaround": "Varía según el alcance"
+        "turnaround": "Varía según el alcance",
+        "input": "Un conjunto de muestra de tus imágenes",
+        "output": "Modelo entrenado, reporte de exactitud en imágenes reservadas y notas para ejecutarlo/integrarlo"
       }
     }
   },
@@ -381,7 +417,7 @@
     "badgeRequesting": "Solicitando: {name}",
     "titleDefault": "Describe tu proyecto",
     "titleRequesting": "Solicitar este paquete",
-    "description": "Aquí no se muestra ningún precio — envía un brief y te responderé con un precio y un plazo. Si prefieres hablarlo primero, agenda una llamada.",
+    "description": "Te responderé personalmente con precio y plazo — aquí no se muestra ninguno. Si prefieres hablarlo primero, agenda una llamada.",
     "preferToTalk": "¿Prefieres hablarlo primero?",
     "orDivider": "O"
   },
@@ -407,7 +443,15 @@
     "nameError": "Ingresa tu nombre.",
     "emailError": "Ingresa un correo electrónico válido.",
     "problemError": "Danos un poco más de detalle — al menos un par de oraciones.",
-    "timelineError": "Cuéntame tu plazo, aunque sea aproximado."
+    "timelineError": "Cuéntame tu plazo, aunque sea aproximado.",
+    "formLabel": "Brief del proyecto",
+    "personalNote": "Reviso cada solicitud personalmente y respondo en menos de 24 horas con el alcance y un horario para hablar.",
+    "nameHelp": "Para saber a quién le respondo.",
+    "emailHelp": "Te respondo aquí, no a través de un sistema de tickets.",
+    "packageHelp": "Déjalo como está si no encaja en un paquete.",
+    "problemHelp": "Los datos o sistemas involucrados y cómo luce \"terminado\". Algo aproximado basta.",
+    "timelineHelp": "Una fecha, o simplemente qué tan urgente es.",
+    "budgetHelp": "Me ayuda a proponer la solución adecuada. Omítelo si no estás seguro."
   },
   "ScheduleEmbed": {
     "notConfigured": "El enlace para agendar no está configurado — define NEXT_PUBLIC_CALENDLY_URL.",
@@ -422,12 +466,6 @@
     "browsePackages": "Ver paquetes primero"
   },
   "Estimator": {
-    "stepLabel": "Paso {current} / {total}",
-    "back": "Atrás",
-    "step1Title": "¿Cuál es el problema principal?",
-    "step2Title": "¿Qué tan compleja es la fuente de datos?",
-    "step3Title": "¿Cómo debería verse la entrega?",
-    "step4Title": "¿Cuál es la prioridad de plazo?",
     "bespokeLabel": "Arquitectura a Medida",
     "bespokeDescription": "Algo distinto — no encaja en las categorías de arriba.",
     "bespokeTierName": "Arquitectura a Medida",
@@ -436,8 +474,8 @@
     "turnaroundLabel": "Plazo",
     "matchedCapability": "Capacidad relacionada",
     "referenceNote": "Alcance de referencia según tus respuestas. Los entregables finales, el plazo y el precio se confirman en una llamada de alcance o en mi respuesta a tu brief.",
-    "bookCall": "Agendar Llamada de Alcance",
-    "sendBrief": "Enviar Brief del Proyecto",
+    "bookCall": "Agendar Llamada de 15 Min",
+    "sendBrief": "Enviar Brief con este Alcance",
     "complexity": {
       "simple": {
         "label": "Simple",
@@ -483,92 +521,132 @@
         "label": "Flexible",
         "description": "Sin apuro — cuando esté listo."
       }
-    }
+    },
+    "challengeTitle": "¿Cuál es el problema principal?",
+    "handoffTitle": "¿Cómo quieres recibir la entrega?",
+    "refineTitle": "Afinar",
+    "refineHint": "Opcional — los valores por defecto sirven",
+    "complexityLabel": "Complejidad de la fuente",
+    "urgencyLabel": "Prioridad",
+    "handoffLabel": "Entrega",
+    "accessLabel": "Acceso",
+    "accessValue": "Directo con Emilio",
+    "ownershipLabel": "Propiedad",
+    "ownershipValue": "100% código + docs",
+    "specSheet": "Ficha de alcance",
+    "statusReady": "Definido",
+    "statusWaiting": "Esperando datos",
+    "emptyState": "Elige un problema y una entrega — aquí aparecen tu alcance y plazo."
   },
   "About": {
-    "metaTitle": "Sobre Nosotros",
-    "metaDescription": "Conoce IxMa Operations, nuestra filosofía de ingeniería y cómo construimos pipelines de automatización deterministas, modelos de visión por computadora y sistemas backend a medida.",
-    "badge": "Sobre IxMa Operations",
-    "title": "Ingeniería de automatización e inteligencia a medida con precisión.",
-    "description": "IxMa Operations es una práctica de ingeniería fundada por Emilio Ramirez. Construimos pipelines de automatización deterministas, modelos de visión/OCR a medida, motores de extracción de datos e integraciones de API robustas para particulares, equipos pequeños y empresas en crecimiento.",
+    "metaTitle": "Acerca de",
+    "metaDescription": "IxMa Operations es la práctica de un solo ingeniero, Emilio Ramirez: pipelines de extracción de datos, modelos de documentos y visión, control de calidad de datos e integraciones de API, entregados con propiedad total del código.",
+    "badge": "Acerca de",
+    "title": "Un ingeniero. Sin capas de agencia.",
+    "description": "IxMa Operations es mi práctica — soy Emilio Ramirez. Construyo pipelines de extracción de datos, modelos de documentos y visión, control de calidad de datos e integraciones de API para personas, equipos pequeños y negocios en crecimiento. Quien define el alcance de tu proyecto es quien lo construye.",
     "specs": {
-      "turnaround": "Plazo",
-      "turnaroundValue": "2–6 Días Prom.",
+      "turnaround": "Entrega",
+      "turnaroundValue": "2–5 Días en Promedio",
       "architecture": "Arquitectura",
-      "architectureValue": "Lista para Producción",
+      "architectureValue": "Listo para Producción",
       "ownership": "Propiedad",
-      "ownershipValue": "100% Código y Modelos",
-      "engagement": "Interacción",
-      "engagementValue": "Acceso Directo con el Ingeniero"
+      "ownershipValue": "100% Código + Docs",
+      "engagement": "Trato",
+      "engagementValue": "Acceso Directo al Ingeniero"
     },
-    "philosophyBadge": "Estándares de Ingeniería",
-    "philosophyTitle": "Cómo Construimos Software",
-    "philosophyDescription": "Rechazamos las automatizaciones frágiles y la burocracia de agencia tradicional. Todo lo que entregamos está diseñado para ejecutarse de manera determinista en producción.",
+    "storyBadge": "Por qué existe IxMa",
+    "storyTitle": "Nació porque las opciones habituales se rompían",
+    "storyP1": "La mayoría del trabajo de automatización que veía caía en dos grupos: enterrado bajo capas de agencia donde quien lo vendía nunca tocaba el código, o sostenido con pegamento no-code que se rompía la primera vez que una fuente cambiaba su diseño.",
+    "storyP2": "Fundé IxMa Operations para hacerlo al revés. Construyo el pipeline una vez, lo pruebo con datos reales y desordenados, y entrego el código completo para que siga funcionando sin mí. Hablas conmigo desde el primer correo hasta el último commit.",
+    "philosophyBadge": "Estándares",
+    "philosophyTitle": "Cómo construyo software",
+    "philosophyDescription": "Evito las automatizaciones frágiles y el exceso de intermediarios. Todo lo que entrego está pensado para correr de forma determinista en producción, en tu infraestructura.",
     "principles": {
       "deterministic": {
         "title": "Determinista y Listo para Producción",
-        "description": "Sin scripts frágiles ni prompts alucinatorios. Diseñamos pipelines verificables con validación estricta de tipos, pruebas automatizadas y manejo estructurado de errores."
+        "description": "Sin scripts frágiles ni prompts que alucinan. Construyo pipelines verificables con validación estricta de tipos, pruebas automatizadas y manejo estructurado de errores."
       },
       "direct": {
-        "title": "Acceso Directo con el Ingeniero",
-        "description": "Trabajas directamente con el ingeniero que diseña y construye tus sistemas. Ciclos rápidos de retroalimentación, alcance transparente y cero capas de intermediarios."
+        "title": "Acceso Directo al Ingeniero",
+        "description": "Trabajas conmigo, el ingeniero que diseña y construye tu sistema. Retroalimentación rápida, alcance transparente y cero gerentes de cuenta."
       },
       "turnaround": {
-        "title": "Tiempos de Entrega Predecibles y Rápidos",
-        "description": "Alcance transparente desde el primer día con entregas típicas en 2–6 días para paquetes predefinidos, y fases claras para arquitecturas a medida."
+        "title": "Entrega Rápida y Predecible",
+        "description": "El alcance queda claro desde el primer día, con entregas típicas de 2–5 días en paquetes predefinidos e hitos claros en arquitecturas a medida."
       },
       "ownership": {
-        "title": "100% Propiedad del Código y Activos",
-        "description": "Eres dueño total del código, pesos de modelos, scripts y documentación. Contenerizado y limpio, listo para correr sin complicaciones en tu infraestructura."
+        "title": "100% de Propiedad del Código y los Activos",
+        "description": "Todo el código, los pesos entrenados, los scripts y la documentación son tuyos. Contenerizado y limpio, diseñado para correr en tu infraestructura."
       }
     },
-    "focusBadge": "Capacidades Clave",
-    "focusTitle": "Áreas de Especialización",
-    "focusDescription": "Nos concentramos en áreas técnicas donde la precisión, la velocidad y la exactitud generan impacto operativo inmediato.",
+    "stackBadge": "Stack",
+    "stackTitle": "Con qué construyo",
+    "stackDescription": "Herramientas probadas y mantenibles — nada exótico que luego te cueste pasar a tu propio equipo.",
+    "stack": {
+      "backend": {
+        "label": "Datos y backend",
+        "items": "Python · FastAPI · Playwright"
+      },
+      "vision": {
+        "label": "Visión y ML",
+        "items": "PyTorch · ONNX"
+      },
+      "delivery": {
+        "label": "Entrega",
+        "items": "Docker"
+      },
+      "web": {
+        "label": "Web",
+        "items": "TypeScript · Next.js"
+      }
+    },
+    "focusBadge": "Capacidades",
+    "focusTitle": "En qué me enfoco",
+    "focusDescription": "Las áreas técnicas donde la precisión, la velocidad y la exactitud generan ventaja operativa inmediata.",
     "domains": {
       "scraping": {
         "title": "Extracción y Enriquecimiento Web",
-        "description": "Extracción de datos estructurados de fuentes complejas con resistencia antibot, validación de esquemas y enriquecimiento inteligente."
+        "description": "Extracción de datos estructurados desde fuentes complejas con resistencia anti-bot, validación de esquemas y enriquecimiento inteligente de entidades."
       },
       "ocr": {
-        "title": "Visión e Inteligencia Documental",
-        "description": "Conversión de recibos, facturas y documentos legados en datos limpios y estructurados usando modelos OCR y de análisis visual."
+        "title": "Visión e Inteligencia de Documentos",
+        "description": "Conversión de recibos, facturas y documentos heredados en datos estructurados con OCR ajustado y modelos que entienden el diseño del documento."
       },
       "workflow": {
-        "title": "Integraciones Backend a Medida",
-        "description": "Conexión de APIs, bases de datos, webhooks y tareas programadas para que tus operaciones fluyan automáticamente sin trabajo manual."
+        "title": "Integraciones de Backend a Medida",
+        "description": "Conecto APIs, bases de datos, webhooks y tareas programadas para que tus operaciones fluyan solas, sin pegamento manual."
       },
       "auditing": {
-        "title": "Auditoría y Control de Calidad de Datos",
-        "description": "Puntuación de salud de datos, deduplicación, normalización de formatos y validación basada en reglas a escala."
+        "title": "Auditoría y Calidad de Datos",
+        "description": "Puntuación automática de la salud de los datos, eliminación de duplicados, normalización de formatos y validación por reglas a escala."
       }
     },
-    "lifecycleBadge": "Ciclo de Ejecución",
-    "lifecycleTitle": "Cómo Trabajamos Juntos",
-    "lifecycleDescription": "Un flujo de trabajo directo y basado en hitos, diseñado para pasar de la definición del problema a software funcional rápidamente.",
+    "lifecycleBadge": "Proceso",
+    "lifecycleTitle": "Cómo trabajamos juntos",
+    "lifecycleDescription": "Tres pasos desde la definición del problema hasta tener software funcionando en tus manos.",
     "steps": {
       "step1": {
         "number": "01",
-        "title": "Evaluación y Alcance",
-        "description": "Envía tus requerimientos a través de nuestro evaluador de proyectos o formulario. Aclaramos esquemas, casos límite, plazos estimados y entregables."
+        "title": "Recepción y Especificación",
+        "description": "Me cuentas el problema con el definidor de alcance o el formulario de brief. Aclaro esquemas, casos límite, plazo y entregables, y los dejo escritos como especificación."
       },
       "step2": {
         "number": "02",
-        "title": "Ingeniería y Validación",
-        "description": "Construimos y refinamos el pipeline o modelo, probándolo contra casos límite reales, datos ruidosos y métricas de rendimiento."
+        "title": "Ingeniería y Pruebas de Rendimiento",
+        "description": "Construyo el pipeline o modelo y lo pruebo con casos límite reales, datos con ruido y pruebas de rendimiento antes de que lo veas."
       },
       "step3": {
         "number": "03",
-        "title": "Entrega y Despliegue",
-        "description": "Entregamos la base de código completa, configuraciones de entorno y documentación — con soporte directo durante el despliegue."
+        "title": "Entrega Completa del Código",
+        "description": "Recibes el código completo, la configuración del entorno y la documentación, con mi apoyo directo mientras lo despliegas."
       }
     },
-    "founderBadge": "Liderazgo de Ingeniería",
-    "founderTitle": "Construido por Emilio Ramirez",
-    "founderBio": "Ingeniero de software y automatización full-stack especializado en pipelines de datos robustos, aprendizaje automático aplicado/visión por computadora y arquitecturas de API. Enfocado en crear herramientas confiables que eliminan la fricción operativa.",
+    "founderBadge": "El ingeniero",
+    "founderTitle": "Emilio Ramirez",
+    "founderBio": "Soy ingeniero de software y automatización full-stack, enfocado en pipelines de datos confiables, aprendizaje automático y visión por computadora aplicados, y arquitecturas de API. Leo cada solicitud yo mismo, así que quien responde tu primer correo es quien escribe el código.",
     "availableForContracts": "Disponible para Contratos",
-    "ctaTitle": "¿Tienes un proyecto de automatización en mente?",
-    "ctaDescription": "Cuéntame qué estás intentando resolver. Te responderé con un alcance real, tiempos de entrega y los siguientes pasos.",
+    "ctaTitle": "¿Listo para automatizar tu flujo de trabajo?",
+    "ctaDescription": "Cuéntame qué estás tratando de resolver. Te respondo con alcance real, plazo y próximos pasos.",
     "ctaScoper": "Dime Qué Necesitas",
     "ctaPackages": "Ver Paquetes",
     "ctaContact": "Contactar Directamente"

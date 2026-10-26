@@ -1,19 +1,34 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-zinc-100 backdrop-blur-md transition-all duration-200 hover:border-zinc-700",
-      className
-    )}
-    {...props}
-  />
-));
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Adds hairline crosshair marks (`+`) at the four corners — blueprint accent, see globals.css. */
+  marks?: boolean;
+}
+
+export const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, marks, children, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-zinc-100 backdrop-blur-md transition-all duration-200 hover:border-zinc-700 hover:-translate-y-px",
+        marks && "relative group-marks",
+        className
+      )}
+      {...props}
+    >
+      {marks && (
+        <>
+          <span className="corner-mark -left-[5px] -top-[5px]" aria-hidden="true" />
+          <span className="corner-mark -right-[5px] -top-[5px]" aria-hidden="true" />
+          <span className="corner-mark -bottom-[5px] -left-[5px]" aria-hidden="true" />
+          <span className="corner-mark -bottom-[5px] -right-[5px]" aria-hidden="true" />
+        </>
+      )}
+      {children}
+    </div>
+  )
+);
 Card.displayName = "Card";
 
 export const CardHeader = React.forwardRef<

@@ -54,6 +54,16 @@ const config: Config = {
           "0%": { transform: "translateY(-100%)" },
           "100%": { transform: "translateY(1000%)" },
         },
+        blink: {
+          "0%, 49%": { opacity: "1" },
+          "50%, 100%": { opacity: "0" },
+        },
+        scanX: {
+          "0%": { left: "0%", opacity: "0" },
+          "10%": { opacity: "1" },
+          "90%": { opacity: "1" },
+          "100%": { left: "100%", opacity: "0" },
+        },
         flowPulse: {
           "0%": { left: "0%", opacity: "0" },
           "12%": { opacity: "1" },
@@ -65,6 +75,8 @@ const config: Config = {
         "pulse-glow": "pulseGlow 3s ease-in-out infinite",
         scanline: "scanline 8s linear infinite",
         "flow-pulse": "flowPulse 2.6s ease-in-out infinite",
+        blink: "blink 1.1s steps(1) infinite",
+        "scan-x": "scanX 3.2s ease-in-out infinite",
       },
     },
   },

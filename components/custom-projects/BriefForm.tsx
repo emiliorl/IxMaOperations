@@ -32,6 +32,11 @@ import { cn } from "@/lib/utils";
  * optional either way — the wizard never asks either, so neither is
  * actually redundant.
  *
+ * Design revamp (Phase 3): styled as an engineering intake sheet rather than
+ * a generic contact form — a titled header bar, numbered fields with one-line
+ * helpers, and Emilio's personal reply commitment next to the submit button.
+ * Field names, validation, and the submitted payload are unchanged.
+ *
  * i18n pivot (Aug 29, 2026): labels/placeholders/validation messages come
  * from messages/<locale>.json's `BriefForm` namespace; the package <select>
  * shows each package's translated name via the `Packages.items` namespace.
@@ -115,83 +120,110 @@ export function BriefForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-      {scopeTier && (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 text-xs text-zinc-400 space-y-1">
-          <span className="font-mono uppercase tracking-wider text-zinc-500">{t("fromYourScope")}</span>
-          <p className="text-zinc-200">
-            {scopeTierName} — {scopeTier.packageSlug ? tPkg(`${scopeTier.packageSlug}.turnaround`) : tEstimator("confirmedOnCall")}
-          </p>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidden"
+      noValidate
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500">
+        <span>
+          <span className="text-zinc-600">{"// "}</span>
+          {t("formLabel")}
+        </span>
+      </div>
+
+      <div className="p-5 sm:p-6 space-y-5">
+        {scopeTier && (
+          <div className="rounded-md border border-zinc-800 bg-zinc-950 p-3 text-xs text-zinc-400 space-y-1">
+            <span className="font-mono uppercase tracking-wider text-zinc-500">{t("fromYourScope")}</span>
+            <p className="text-zinc-200">
+              {scopeTierName} — {scopeTier.packageSlug ? tPkg(`${scopeTier.packageSlug}.turnaround`) : tEstimator("confirmedOnCall")}
+            </p>
+          </div>
+        )}
+
+        <input type="hidden" {...register("surveyCategory")} />
+        <input type="hidden" {...register("surveyComplexity")} />
+        <input type="hidden" {...register("surveyDeliverable")} />
+        <input type="hidden" {...register("surveyUrgency")} />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field index="01" label={t("nameLabel")} help={t("nameHelp")} error={errors.name?.message}>
+            <Input {...register("name")} placeholder={t("namePlaceholder")} autoComplete="name" />
+          </Field>
+          <Field index="02" label={t("emailLabel")} help={t("emailHelp")} error={errors.email?.message}>
+            <Input {...register("email")} type="email" placeholder={t("emailPlaceholder")} autoComplete="email" />
+          </Field>
         </div>
-      )}
 
-      <input type="hidden" {...register("surveyCategory")} />
-      <input type="hidden" {...register("surveyComplexity")} />
-      <input type="hidden" {...register("surveyDeliverable")} />
-      <input type="hidden" {...register("surveyUrgency")} />
+        <Field index="03" label={t("packageLabel")} help={t("packageHelp")} error={errors.packageSlug?.message}>
+          <select
+            {...register("packageSlug")}
+            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
+          >
+            <option value="">{t("packageNotListed")}</option>
+            {PACKAGES.map((pkg) => (
+              <option key={pkg.slug} value={pkg.slug}>
+                {tPkg(`${pkg.slug}.name`)}
+              </option>
+            ))}
+          </select>
+        </Field>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label={t("nameLabel")} error={errors.name?.message}>
-          <Input {...register("name")} placeholder={t("namePlaceholder")} autoComplete="name" />
+        <Field index="04" label={t("problemLabel")} help={t("problemHelp")} error={errors.problem?.message}>
+          <Textarea {...register("problem")} placeholder={t("problemPlaceholder")} rows={5} />
         </Field>
-        <Field label={t("emailLabel")} error={errors.email?.message}>
-          <Input {...register("email")} type="email" placeholder={t("emailPlaceholder")} autoComplete="email" />
-        </Field>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field index="05" label={t("timelineLabel")} help={t("timelineHelp")} error={errors.timeline?.message}>
+            <Input {...register("timeline")} placeholder={t("timelinePlaceholder")} />
+          </Field>
+          <Field index="06" label={t("budgetLabel")} help={t("budgetHelp")} error={errors.budgetRange?.message}>
+            <Input {...register("budgetRange")} placeholder={t("budgetPlaceholder")} />
+          </Field>
+        </div>
+
+        {status === "error" && errorMessage && (
+          <p className="text-xs text-red-400">{errorMessage}</p>
+        )}
       </div>
 
-      <Field label={t("packageLabel")} error={errors.packageSlug?.message}>
-        <select
-          {...register("packageSlug")}
-          className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
-        >
-          <option value="">{t("packageNotListed")}</option>
-          {PACKAGES.map((pkg) => (
-            <option key={pkg.slug} value={pkg.slug}>
-              {tPkg(`${pkg.slug}.name`)}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      <Field label={t("problemLabel")} error={errors.problem?.message}>
-        <Textarea {...register("problem")} placeholder={t("problemPlaceholder")} rows={5} />
-      </Field>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label={t("timelineLabel")} error={errors.timeline?.message}>
-          <Input {...register("timeline")} placeholder={t("timelinePlaceholder")} />
-        </Field>
-        <Field label={t("budgetLabel")} error={errors.budgetRange?.message}>
-          <Input {...register("budgetRange")} placeholder={t("budgetPlaceholder")} />
-        </Field>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 border-t border-zinc-800 bg-zinc-900/40 px-5 py-4 sm:px-6">
+        <Button type="submit" size="lg" disabled={status === "submitting"} className="gap-2 shrink-0">
+          {status === "submitting" && <Loader2 className="h-4 w-4 animate-spin" />}
+          {status === "submitting" ? t("sending") : t("submit")}
+        </Button>
+        <p className="text-xs text-zinc-500 leading-relaxed">{t("personalNote")}</p>
       </div>
-
-      {status === "error" && errorMessage && (
-        <p className="text-xs text-red-400">{errorMessage}</p>
-      )}
-
-      <Button type="submit" size="lg" disabled={status === "submitting"} className="gap-2">
-        {status === "submitting" && <Loader2 className="h-4 w-4 animate-spin" />}
-        {status === "submitting" ? t("sending") : t("submit")}
-      </Button>
     </form>
   );
 }
 
 function Field({
+  index,
   label,
+  help,
   error,
   children,
 }: {
+  index: string;
   label: string;
+  help?: string;
   error?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">{label}</span>
+      <span className="flex items-baseline gap-2 text-xs font-mono uppercase tracking-wider text-zinc-400">
+        <span className="text-zinc-600">{index}</span>
+        {label}
+      </span>
       {children}
-      {error && <span className={cn("block text-xs text-red-400")}>{error}</span>}
+      {error ? (
+        <span className={cn("block text-xs text-red-400")}>{error}</span>
+      ) : (
+        help && <span className="block text-[11px] text-zinc-500 leading-relaxed">{help}</span>
+      )}
     </label>
   );
 }

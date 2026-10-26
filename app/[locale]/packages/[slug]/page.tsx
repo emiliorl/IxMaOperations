@@ -7,7 +7,8 @@ import { getCapabilityByPackageSlug } from "@/lib/capabilities";
 import { CAPABILITY_DEMOS } from "@/lib/capability-demos";
 import { buttonVariants } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { ArrowRight, Check, Clock } from "lucide-react";
+import { SpecSheet } from "@/components/packages/SpecSheet";
+import { ArrowRight, Check } from "lucide-react";
 import { routing } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
@@ -65,14 +66,18 @@ export default async function PackageDetailPage({
     <div className="py-16 md:py-24">
       <div className={cn("container mx-auto px-6 space-y-10", LiveDemo ? "max-w-4xl" : "max-w-3xl")}>
         <div className="space-y-4">
-          <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-zinc-400">
-            <Clock className="h-3.5 w-3.5" />
-            <span>{tItem("turnaround")}</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
             {tItem("name")}
           </h1>
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-2xl">{tItem("whatItIs")}</p>
+          <SpecSheet
+            className="max-w-2xl"
+            rows={[
+              { label: t("specInput"), value: tItem("input") },
+              { label: t("specOutput"), value: tItem("output") },
+              { label: t("specTurnaround"), value: tItem("turnaround") },
+            ]}
+          />
         </div>
 
         <div className="space-y-3">

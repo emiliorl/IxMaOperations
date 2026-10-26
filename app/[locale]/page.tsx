@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { Hero } from "@/components/home/Hero";
 import { ExamplesSection } from "@/components/home/ExamplesSection";
 import { ProjectEstimatorWizard } from "@/components/onboarding/ProjectEstimatorWizard";
-import { Badge } from "@/components/ui/Badge";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { buttonVariants } from "@/components/ui/Button";
 import { ArrowRight } from "lucide-react";
 
@@ -22,6 +22,11 @@ import { ArrowRight } from "lucide-react";
  * i18n pivot (same date): copy moved to messages/<locale>.json
  * (HomeScoper/ClosingCta namespaces); `setRequestLocale` enables static
  * rendering per next-intl's App Router pattern.
+ *
+ * Design revamp: sections open with left-aligned `// 0N LABEL` eyebrows
+ * (`SectionHeader`) instead of centered badge + heading stacks; the scoper is
+ * a one-screen configurator and gets the full 6xl width; the closing CTA is
+ * a left-aligned sheet in Emilio's own voice.
  */
 export default function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
@@ -33,24 +38,19 @@ export default function HomePage({ params }: { params: { locale: string } }) {
       <Hero />
 
       <section id="project-scoper" className="py-16 md:py-20 border-b border-zinc-800 scroll-mt-16">
-        <div className="container mx-auto px-6 max-w-3xl text-center space-y-3 mb-10">
-          <Badge variant="default" className="text-[11px] font-mono">
-            {t("badge")}
-          </Badge>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white tracking-tight">
-            {t("title")}
-          </h2>
-          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-xl mx-auto">
-            {t.rich("description", {
+        <div className="container mx-auto px-6 max-w-6xl space-y-10">
+          <SectionHeader
+            index="01"
+            label={t("badge")}
+            title={t("title")}
+            description={t.rich("description", {
               emailLink: (chunks) => (
                 <Link href="/contact" className="text-zinc-300 underline underline-offset-4 hover:text-zinc-100">
                   {chunks}
                 </Link>
               ),
             })}
-          </p>
-        </div>
-        <div className="container mx-auto px-6 max-w-2xl">
+          />
           <ProjectEstimatorWizard />
         </div>
       </section>
@@ -58,19 +58,22 @@ export default function HomePage({ params }: { params: { locale: string } }) {
       <ExamplesSection />
 
       <section className="py-16 md:py-20 border-b border-zinc-800 bg-zinc-950/80">
-        <div className="container mx-auto px-6 max-w-4xl text-center space-y-6">
-          <Badge variant="default" className="text-[11px] font-mono">
-            {tCta("badge")}
-          </Badge>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
-            {tCta("title")}
-          </h2>
-          <p className="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
-            {tCta("description")}
-          </p>
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="relative rounded-lg border border-zinc-800 bg-zinc-900/30 p-6 sm:p-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div className="max-w-2xl space-y-3">
+              <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">
+                <span className="text-zinc-600">{"// "}</span>
+                03 {tCta("badge")}
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white tracking-tight">
+                {tCta("title")}
+              </h2>
+              <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+                {tCta("description")}
+              </p>
+            </div>
 
-          <div className="flex items-center justify-center pt-2">
-            <Link href="#project-scoper" className={buttonVariants({ size: "lg", variant: "default", className: "w-full sm:w-auto gap-2" })}>
+            <Link href="#project-scoper" className={buttonVariants({ size: "lg", variant: "default", className: "w-full md:w-auto gap-2 shrink-0" })}>
               {tCta("cta")}
               <ArrowRight className="h-4 w-4" />
             </Link>
