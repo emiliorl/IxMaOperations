@@ -120,6 +120,83 @@ export function sortTickets<T extends { status: string; priority: string; create
 }
 
 /**
+ * The problems table sorts by clicking a column heading: first click ascending,
+ * second descending, third back to plan order. "-" in front means descending.
+ * Ascending is the natural reading order: ID A→Z, most urgent status or priority
+ * first, soonest due date first (no date last), fewest open tickets first.
+ */
+export const PLAN_SORT_KEYS = ["code", "title", "area", "status", "priority", "due", "tickets"] as const;
+export type PlanSortKey = (typeof PLAN_SORT_KEYS)[number];
+export type PlanSort = { key: PlanSortKey; desc: boolean } | null;
+
+export function parsePlanSort(value: string | undefined): PlanSort {
+  const desc = value?.startsWith("-") ?? false;
+  const key = (desc ? value!.slice(1) : value) as PlanSortKey;
+  return PLAN_SORT_KEYS.includes(key) ? { key, desc } : null;
+}
+
+/** The URL value for a sort (undefined = plan order, which is left out of the URL). */
+export function planSortParam(sort: PlanSort): string | undefined {
+  return sort ? (sort.desc ? "-" : "") + sort.key : undefined;
+}
+
+/** What clicking a column heading does next. */
+export function nextPlanSort(current: PlanSort, key: PlanSortKey): PlanSort {
+  if (!current || current.key !== key) return { key, desc: false };
+  return current.desc ? null : { key, desc: true };
+}
+
+const STATUS_RANK: Record<string, number> = { blocked: 0, in_progress: 1, pending: 2, completed: 3 };
+const PROBLEM_PRIORITY_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
+
+/** A new array in the order the table shows; with no sort it is the plan order it came in. */
+export function sortProblems<T extends { id: string; code: string | null; title: string; status: string; priority: string; dueDate: string | null; departmentId: string | null }>(
+  items: readonly T[],
+  sort: PlanSort,
+  context: { areaLabel: (departmentId: string | null) => string; openTickets: (id: string) => number }
+): T[] {
+  if (!sort) return [...items];
+  const text = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+  const compare = (a: T, b: T): number => {
+    switch (sort.key) {
+      case "code":
+        // A problem without an ID goes last, whichever way the column is sorted.
+        return text(a.code ?? "\uffff", b.code ?? "\uffff");
+      case "title":
+        return text(a.title, b.title);
+      case "area":
+        return text(context.areaLabel(a.departmentId), context.areaLabel(b.departmentId));
+      case "status":
+        return (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9);
+      case "priority":
+        return (PROBLEM_PRIORITY_RANK[a.priority] ?? 1) - (PROBLEM_PRIORITY_RANK[b.priority] ?? 1);
+      case "due":
+        return 0; // handled below: the missing date is always last
+      case "tickets":
+        return context.openTickets(a.id) - context.openTickets(b.id);
+    }
+  };
+  return items
+    .map((item, position) => ({ item, position }))
+    .sort((x, y) => {
+      if (sort.key === "due") {
+        // No date is always last, whichever way the column is sorted.
+        if (x.item.dueDate === null || y.item.dueDate === null) {
+          return x.item.dueDate === y.item.dueDate ? x.position - y.position : x.item.dueDate === null ? 1 : -1;
+        }
+        const byDate = x.item.dueDate.localeCompare(y.item.dueDate);
+        return (sort.desc ? -byDate : byDate) || x.position - y.position;
+      }
+      if (sort.key === "code" && (x.item.code === null || y.item.code === null) && x.item.code !== y.item.code) {
+        return x.item.code === null ? 1 : -1;
+      }
+      const result = compare(x.item, y.item);
+      return (sort.desc ? -result : result) || x.position - y.position;
+    })
+    .map(({ item }) => item);
+}
+
+/**
  * The few numbers worth seeing before opening any list: what the owner is
  * still working on, what is waiting for the person, and what is stuck.
  */
@@ -143,7 +220,7 @@ export function workspaceStats(
  */
 export function projectFilterHref(
   slug: string,
-  filters: { dept?: string; tickets?: TicketFilter; tab?: ProjectTab | null; q?: string; sort?: TicketSort; mine?: boolean }
+  filters: { dept?: string; tickets?: TicketFilter; tab?: ProjectTab | null; q?: string; sort?: TicketSort; mine?: boolean; psort?: string }
 ) {
   const query: Record<string, string> = {};
   if (filters.dept) query.dept = filters.dept;
@@ -152,6 +229,7 @@ export function projectFilterHref(
   if (filters.q) query.q = filters.q;
   if (filters.sort && filters.sort !== "activity") query.sort = filters.sort;
   if (filters.mine) query.mine = "1";
+  if (filters.psort) query.psort = filters.psort;
   return { pathname: `/portal/projects/${slug}`, query };
 }
 

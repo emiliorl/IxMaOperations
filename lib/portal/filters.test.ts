@@ -5,11 +5,15 @@ import {
   matchesQuery,
   matchesTicketFilter,
   parseProjectTab,
+  nextPlanSort,
+  parsePlanSort,
   parseSearch,
   parseTicketFilter,
   parseTicketSort,
+  planSortParam,
   projectFilterHref,
   resolveFolderFilter,
+  sortProblems,
   sortTickets,
   ticketBucket,
   workspaceStats,
@@ -167,6 +171,70 @@ describe("ticket queue order", () => {
   it("links keep the sort and 'mine', and leave out the defaults", () => {
     expect(projectFilterHref("acme", { sort: "priority", mine: true }).query).toEqual({ sort: "priority", mine: "1" });
     expect(projectFilterHref("acme", { sort: "activity", mine: false }).query).toEqual({});
+  });
+});
+
+describe("problems table order", () => {
+  const problem = (id: string, code: string | null, status: string, priority: string, dueDate: string | null, departmentId: string | null = null) => ({
+    id,
+    code,
+    title: `Problem ${id}`,
+    status,
+    priority,
+    dueDate,
+    departmentId,
+  });
+  const list = [
+    problem("a", "FIN-10", "completed", "low", "2026-12-01", "fin"),
+    problem("b", "FIN-2", "blocked", "high", null, "fin"),
+    problem("c", null, "pending", "medium", "2026-11-01", "ops"),
+    problem("d", "OPE-1", "in_progress", "high", "2026-11-15", "ops"),
+  ];
+  const context = { areaLabel: (id: string | null) => ({ fin: "Finance", ops: "Operations" })[id ?? ""] ?? "Project-wide", openTickets: (id: string) => ({ a: 0, b: 3, c: 1, d: 2 })[id] ?? 0 };
+  const ids = (sort: string) => sortProblems(list, parsePlanSort(sort), context).map((p) => p.id);
+
+  it("no sort keeps the plan order", () => {
+    expect(ids("")).toEqual(["a", "b", "c", "d"]);
+  });
+  it("IDs sort like a person reads them (FIN-2 before FIN-10), with no ID last either way", () => {
+    expect(ids("code")).toEqual(["b", "a", "d", "c"]);
+    expect(ids("-code")).toEqual(["d", "a", "b", "c"]);
+  });
+  it("status puts what is stuck or in progress first", () => {
+    expect(ids("status")).toEqual(["b", "d", "c", "a"]);
+  });
+  it("priority puts high first", () => {
+    expect(ids("priority")).toEqual(["b", "d", "c", "a"]);
+    expect(ids("-priority")).toEqual(["a", "c", "b", "d"]);
+  });
+  it("due date: soonest first, a problem with no date always last", () => {
+    expect(ids("due")).toEqual(["c", "d", "a", "b"]);
+    expect(ids("-due")).toEqual(["a", "d", "c", "b"]);
+  });
+  it("area and open tickets", () => {
+    expect(ids("area")).toEqual(["a", "b", "c", "d"]);
+    expect(ids("-tickets")).toEqual(["b", "d", "c", "a"]);
+  });
+  it("does not reorder the list it was given", () => {
+    const before = list.map((p) => p.id);
+    sortProblems(list, parsePlanSort("-code"), context);
+    expect(list.map((p) => p.id)).toEqual(before);
+  });
+  it("clicking a heading goes ascending, then descending, then back to plan order", () => {
+    const first = nextPlanSort(null, "status");
+    expect(first).toEqual({ key: "status", desc: false });
+    const second = nextPlanSort(first, "status");
+    expect(second).toEqual({ key: "status", desc: true });
+    expect(nextPlanSort(second, "status")).toBeNull();
+    expect(nextPlanSort(second, "code")).toEqual({ key: "code", desc: false });
+  });
+  it("round-trips through the URL and ignores nonsense", () => {
+    expect(planSortParam(parsePlanSort("-due"))).toBe("-due");
+    expect(planSortParam(parsePlanSort("due"))).toBe("due");
+    expect(parsePlanSort("nonsense")).toBeNull();
+    expect(parsePlanSort(undefined)).toBeNull();
+    expect(planSortParam(null)).toBeUndefined();
+    expect(projectFilterHref("acme", { psort: "-due" }).query).toEqual({ psort: "-due" });
   });
 });
 

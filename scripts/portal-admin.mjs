@@ -29,7 +29,10 @@
  *                                                       and sees costs only with --costs. Default full.
  *   unexec <orgSlug> <email>                            revoke company-wide access
  *   milestone <projectSlug> "<Title>" [--dept "<name>"] [--due YYYY-MM-DD]
- *                                     [--status pending|in_progress|completed|blocked] [--order N]
+ *                                     [--status pending|in_progress|completed|blocked] [--order N] [--code FIN-1]
+ *                                                       every problem gets an ID (area prefix + number: FIN-1, OPE-2);
+ *                                                       one is made for you unless you give --code.
+ *   codes <projectSlug> [--dry-run]                     give an ID to every problem that has none (existing IDs never change)
  *   import-plan <projectSlug> <file.json> [--folder "<name>"] [--create-folders] [--dry-run]
  *                                                       load a client's problems (code, priority, action plan,
  *                                                       links, cost) from a JSON file; re-running updates the same
@@ -67,6 +70,7 @@ import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs";
 import { blindIndex, decryptLoose, encryptField, encryptOptional } from "./crypto.mjs";
 import { validatePlan } from "./plan-import.mjs";
+import { assignMissingCodes, areaPrefix, nextProblemCode } from "./problem-codes.mjs";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SECRET_KEY;
@@ -126,6 +130,15 @@ async function departmentByName(organizationId, name) {
   const dept = all.map((d) => ({ id: d.id, name: decryptLoose(d.name) })).find((d) => d.name.trim().toLowerCase() === wanted);
   if (!dept) fail(`No department "${name}" in that company. Create it with: dept <orgSlug> "${name}"`);
   return dept;
+}
+/**
+ * The next ID for a new problem in an area (FIN-3…), or null if the database has no
+ * code column yet (migration 20261029000400_problem_details.sql not run).
+ */
+async function nextCodeFor(projectId, areaName) {
+  const result = await db.from("project_milestones").select("code").eq("project_id", projectId);
+  if (result.error) return null;
+  return nextProblemCode(areaPrefix(areaName), result.data.map((row) => decryptLoose(row.code)));
 }
 async function profileByEmail(email) {
   const profile = must(await db.from("profiles").select("id,display_name").eq("email_hash", blindIndex(email)).maybeSingle(), "Looking up user");
@@ -305,11 +318,13 @@ const commands = {
     const dept = flags.dept ? await departmentByName(project.organization_id, flags.dept) : null;
     if (flags.due && !/^\d{4}-\d{2}-\d{2}$/.test(flags.due)) fail("--due must look like 2026-11-15");
     const status = flags.status ?? "pending";
+    const code = flags.code ?? (await nextCodeFor(project.id, dept?.name ?? null));
     must(
       await db.from("project_milestones").insert({
         project_id: project.id,
         department_id: dept?.id ?? null,
         title: encryptField(positional[1]),
+        ...(code ? { code: encryptField(code) } : {}),
         status,
         due_date: flags.due ?? null,
         sort_order: Number(flags.order ?? 0),
@@ -317,7 +332,38 @@ const commands = {
       }),
       "Saving milestone"
     );
-    console.log(`✓ Milestone "${positional[1]}" in ${project.name}`);
+    console.log(`✓ Milestone ${code ? code + " · " : ""}"${positional[1]}" in ${project.name}`);
+  },
+
+  async codes() {
+    need(1, "codes <projectSlug> [--dry-run]");
+    const dryRun = flags["dry-run"] === true;
+    const project = await projectBySlug(positional[0]);
+    const read = await db
+      .from("project_milestones")
+      .select("id,title,code,department_id,sort_order,created_at")
+      .eq("project_id", project.id)
+      .order("sort_order")
+      .order("created_at");
+    if (read.error) {
+      fail(`Reading plan items: ${read.error.message}\n  (Has migration 20261029000400_problem_details.sql been run in the Supabase SQL editor?)`);
+    }
+    const names = new Map(
+      must(await db.from("departments").select("id,name").eq("organization_id", project.organization_id), "Looking up areas").map((d) => [d.id, decryptLoose(d.name)])
+    );
+    const items = read.data.map((m) => ({
+      id: m.id,
+      title: decryptLoose(m.title) ?? "",
+      code: decryptLoose(m.code),
+      areaName: m.department_id ? (names.get(m.department_id) ?? null) : null,
+    }));
+    const assigned = assignMissingCodes(items);
+    if (assigned.length === 0) return console.log("✓ Every problem already has an ID.");
+    for (const { id, code } of assigned) {
+      console.log(`  ${dryRun ? "would set" : "set"}  ${code}  ${items.find((item) => item.id === id).title}`);
+      if (!dryRun) must(await db.from("project_milestones").update({ code: encryptField(code) }).eq("id", id), `Saving ${code}`);
+    }
+    console.log(`✓ ${dryRun ? "Would give" : "Gave"} an ID to ${assigned.length} problem${assigned.length === 1 ? "" : "s"}.`);
   },
 
   async "import-plan"() {
@@ -365,10 +411,12 @@ const commands = {
       fail(`Reading existing plan items: ${existingResult.error.message}\n  (Has migration 20261029000400_problem_details.sql been run in the Supabase SQL editor?)`);
     }
     const existing = existingResult.data.map((m) => ({ id: m.id, title: decryptLoose(m.title) ?? "", code: decryptLoose(m.code) }));
+    // Codes in use (including ones made below), so a new problem never takes a taken number.
+    const takenCodes = existing.map((m) => m.code).filter(Boolean);
     const findExisting = (problem) =>
       problem.code
         ? existing.find((m) => (m.code ?? "").toLowerCase() === problem.code.toLowerCase())
-        : existing.find((m) => !m.code && m.title.trim().toLowerCase() === problem.title.trim().toLowerCase());
+        : existing.find((m) => m.title.trim().toLowerCase() === problem.title.trim().toLowerCase());
 
     console.log(`${dryRun ? "DRY RUN — nothing will be written. " : ""}Project: ${project.name}`);
     let created = 0;
@@ -376,7 +424,13 @@ const commands = {
     for (const problem of plan.problems) {
       const folder = folderOf(problem);
       const match = findExisting(problem);
-      const label = `${problem.code ? problem.code + " · " : ""}${problem.title}`;
+      // A new problem with no code in the file gets the next ID for its area.
+      let code = problem.code ?? match?.code ?? null;
+      if (!code) {
+        code = nextProblemCode(areaPrefix(folder), takenCodes);
+        takenCodes.push(code);
+      }
+      const label = `${code} · ${problem.title}`;
       const costNote = problem.cost === undefined ? "cost untouched" : problem.cost === null ? "cost removed" : "with cost";
       console.log(`  ${match ? "update" : "create"}  ${label}  [${folder ?? "project-wide"} · ${problem.priority} · ${costNote}]`);
       if (dryRun) {
@@ -393,7 +447,7 @@ const commands = {
       const content = {
         department_id: folder ? folderIds.get(folder) : null,
         title: encryptField(problem.title),
-        code: encryptOptional(problem.code),
+        code: encryptField(code),
         priority: problem.priority,
         delivery: encryptOptional(problem.delivery),
         summary: encryptOptional(problem.summary),

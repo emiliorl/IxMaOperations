@@ -5,7 +5,7 @@ import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { AccessPanel } from "@/components/portal/AccessPanel";
 import { FilterSelect } from "@/components/portal/FilterSelect";
 import { Markdown } from "@/components/portal/Markdown";
-import { Pill } from "@/components/portal/Pills";
+import { Pill, PriorityDot } from "@/components/portal/Pills";
 import { SearchBox } from "@/components/portal/SearchBox";
 import { StatusForm } from "@/components/portal/StatusForm";
 import { TicketList } from "@/components/portal/TicketList";
@@ -17,15 +17,20 @@ import {
   inFolder,
   matchesQuery,
   matchesTicketFilter,
+  nextPlanSort,
+  parsePlanSort,
   parseProjectTab,
   parseSearch,
   parseTicketFilter,
   parseTicketSort,
+  planSortParam,
   projectFilterHref,
   resolveFolderFilter,
+  sortProblems,
   sortTickets,
   ticketBucket,
   workspaceStats,
+  type PlanSortKey,
   type ProjectTab,
 } from "@/lib/portal/filters";
 import { ticketCountsByProblem } from "@/lib/portal/plan";
@@ -48,7 +53,7 @@ const REVIEW_LIST_MAX = 3;
 
 export default async function ProjectPage(props: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ dept?: string; tab?: string; q?: string; access?: string; tickets?: string; sort?: string; mine?: string }>;
+  searchParams: Promise<{ dept?: string; tab?: string; q?: string; access?: string; tickets?: string; sort?: string; mine?: string; psort?: string }>;
 }) {
   const { locale, slug } = await props.params;
   const {
@@ -59,6 +64,7 @@ export default async function ProjectPage(props: {
     tickets: ticketFilterParam,
     sort: sortParam,
     mine: mineParam,
+    psort: planSortParamRaw,
   } = await props.searchParams;
   setRequestLocale(locale);
 
@@ -290,6 +296,7 @@ export default async function ProjectPage(props: {
   const ticketFilter = parseTicketFilter(ticketFilterParam);
   const ticketSort = parseTicketSort(sortParam);
   const mine = mineParam === "1";
+  const planSort = parsePlanSort(planSortParamRaw);
   const ticketCounts = ticketCountsByProblem(project.tickets);
   // Only problems that have a code get a label next to their tickets (without one it would just repeat the title).
   const problemLabels = new Map(project.milestones.flatMap((m): [string, string][] => (m.code ? [[m.id, m.code]] : [])));
@@ -339,6 +346,7 @@ export default async function ProjectPage(props: {
     ...(ticketFilter !== "all" ? { tickets: ticketFilter } : {}),
     ...(ticketSort !== "activity" ? { sort: ticketSort } : {}),
     ...(mine ? { mine: "1" } : {}),
+    ...(planSort ? { psort: planSortParam(planSort)! } : {}),
   };
   const withoutArea = { ...withoutSearch, ...(q ? { q } : {}) };
   const areaOptions = [{ value: "all", label: t("deptAll") }, ...project.departments.map((d) => ({ value: d.id, label: d.name }))];
@@ -350,6 +358,25 @@ export default async function ProjectPage(props: {
   const noResults = (
     <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("searchNoResults", { query: q })}</p>
   );
+
+  const problems = sortProblems(milestones, planSort, { areaLabel, openTickets: (id) => ticketCounts.get(id)?.open ?? 0 });
+  const sortHead = (key: PlanSortKey, label: string, className?: string) => {
+    const active = planSort?.key === key;
+    return (
+      <th scope="col" aria-sort={active ? (planSort!.desc ? "descending" : "ascending") : undefined} className={cn("px-3 py-3 font-normal", className)}>
+        <Link
+          href={projectFilterHref(slug, { ...keep, tab: "plan", psort: planSortParam(nextPlanSort(planSort, key)) })}
+          aria-label={t("sortBy", { column: label })}
+          className={cn("inline-flex items-center gap-1 transition-colors hover:text-zinc-200", active && "text-zinc-100")}
+        >
+          {label}
+          <span aria-hidden className={active ? "text-zinc-300" : "text-zinc-700"}>
+            {active ? (planSort!.desc ? "▼" : "▲") : "↕"}
+          </span>
+        </Link>
+      </th>
+    );
+  };
 
   return (
     <div className="pt-8 pb-10 md:pt-10 md:pb-14">
@@ -457,7 +484,7 @@ export default async function ProjectPage(props: {
           {tabs.map((item) => (
             <Link
               key={item.id}
-              href={projectFilterHref(slug, { ...keep, tab: item.id, ...(item.id === "tickets" ? ticketView : {}) })}
+              href={projectFilterHref(slug, { ...keep, tab: item.id, ...(item.id === "tickets" ? ticketView : {}), ...(item.id === "plan" ? { psort: planSortParam(planSort) } : {}) })}
               aria-current={tab === item.id ? "page" : undefined}
               className={cn(
                 "-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm transition-colors",
@@ -511,69 +538,92 @@ export default async function ProjectPage(props: {
             ) : milestones.length === 0 ? (
               noResults
             ) : (
-              <ul className="divide-y divide-zinc-800/80 px-5 sm:px-6">
-                {milestones.map((m) => {
-                  const counts = ticketCounts.get(m.id) ?? { open: 0, total: 0 };
-                  const problemHref = `/portal/projects/${slug}/problems/${m.id}`;
-                  return (
-                    <li key={m.id} className="py-4 flex flex-wrap items-start justify-between gap-3">
-                      <div className="space-y-1.5 min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {m.code && <span className="font-mono text-xs text-zinc-400">{m.code}</span>}
-                          <Pill kind="milestone" value={m.status} label={t(`milestoneStatus.${m.status}`)} />
-                          {m.priority === "high" && <Pill kind="priority" value="high" label={t("problemPriority.high")} />}
-                          {costItemIds.has(m.id) && (
-                            <span className="rounded-md border border-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-zinc-400">{t("costTitle")}</span>
-                          )}
-                        </div>
-                        {/* One link: the title, with a visible cue that it opens the action plan. */}
-                        <Link href={problemHref} className="group/plan block text-sm font-medium text-zinc-100 hover:text-white">
-                          {m.title}
-                          <span className="ml-2 text-xs font-normal text-zinc-500 transition-colors group-hover/plan:text-zinc-200">{t("viewPlan")} →</span>
-                        </Link>
-                        <p className="text-[11px] text-zinc-500 font-mono">
-                          {areaLabel(m.departmentId)}
-                          {m.delivery && ` · ${m.delivery}`}
-                          {m.dueDate && ` · ${t("due", { date: dueFmt.format(Date.parse(m.dueDate)) })}`}
-                        </p>
-                        {(m.summary ?? m.description) && (
-                          <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">{m.summary ?? m.description}</p>
-                        )}
-                        {/* A pending item hasn't started, so there's nothing to report on yet. */}
-                        {(counts.open > 0 || canReport(m)) && (
-                          <div className="flex flex-wrap items-center gap-3 pt-1.5">
-                            {counts.open > 0 && (
-                              <Link
-                                href={problemHref}
-                                className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 font-mono text-[11px] text-amber-300 hover:bg-amber-500/15"
-                              >
-                                {t("openTicketsCount", { count: counts.open })}
-                              </Link>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[820px] border-collapse text-left">
+                  <thead>
+                    <tr className="border-b border-zinc-800 bg-zinc-900/60 font-mono text-[11px] uppercase tracking-wider text-zinc-500">
+                      {sortHead("code", t("colId"), "w-24 pl-5 sm:pl-6")}
+                      {sortHead("title", t("colProblem"))}
+                      {hasSeveralAreas && sortHead("area", t("fieldDepartment"), "w-32")}
+                      {sortHead("status", t("statusLabel"), "w-40")}
+                      {sortHead("priority", t("fieldPriority"), "w-28")}
+                      {sortHead("tickets", t("ticketsTitle"), "w-36")}
+                      {sortHead("due", t("colDue"), "w-28 pr-5 sm:pr-6")}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/80">
+                    {problems.map((m) => {
+                      const counts = ticketCounts.get(m.id) ?? { open: 0, total: 0 };
+                      const problemHref = `/portal/projects/${slug}/problems/${m.id}`;
+                      return (
+                        <tr key={m.id} className="align-top transition-colors hover:bg-zinc-900/50">
+                          <td className="py-3.5 pl-5 sm:pl-6 pr-3">
+                            <Link href={problemHref} className="font-mono text-xs font-medium text-zinc-200 underline underline-offset-4 hover:text-white">
+                              {m.code ?? "—"}
+                            </Link>
+                          </td>
+                          <td className="px-3 py-3.5">
+                            {/* The title is the link, with a visible cue that it opens the action plan. */}
+                            <Link href={problemHref} className="group/plan text-sm font-medium text-zinc-100 hover:text-white">
+                              {m.title}
+                              <span className="ml-2 text-xs font-normal text-zinc-500 transition-colors group-hover/plan:text-zinc-200">{t("viewPlan")} →</span>
+                            </Link>
+                            {costItemIds.has(m.id) && (
+                              <span className="ml-2 rounded-md border border-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-zinc-400">{t("costTitle")}</span>
                             )}
-                            {canReport(m) && (
-                              <Link
-                                href={{ pathname: `/portal/projects/${slug}/tickets/new`, query: { item: m.id } }}
-                                className="text-xs text-zinc-400 underline underline-offset-4 hover:text-zinc-100"
-                              >
-                                {t("reportIssue")} →
-                              </Link>
+                            {(m.summary ?? m.description) && (
+                              <p className="mt-1 line-clamp-2 max-w-xl text-xs leading-relaxed text-zinc-500">{m.summary ?? m.description}</p>
                             )}
-                          </div>
-                        )}
-                      </div>
-                      {isAdmin && (
-                        <StatusForm
-                          action={updateMilestoneStatus}
-                          hidden={{ locale, milestoneId: m.id }}
-                          current={m.status}
-                          options={MILESTONE_STATUSES.map((status) => ({ value: status, label: t(`milestoneStatus.${status}`) }))}
-                          ariaLabel={t("statusLabel")}
-                        />
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+                          </td>
+                          {hasSeveralAreas && <td className="px-3 py-3.5 font-mono text-[11px] text-zinc-400">{areaLabel(m.departmentId)}</td>}
+                          <td className="px-3 py-3.5">
+                            {isAdmin ? (
+                              <StatusForm
+                                action={updateMilestoneStatus}
+                                hidden={{ locale, milestoneId: m.id }}
+                                current={m.status}
+                                options={MILESTONE_STATUSES.map((status) => ({ value: status, label: t(`milestoneStatus.${status}`) }))}
+                                ariaLabel={t("statusLabel")}
+                              />
+                            ) : (
+                              <Pill kind="milestone" value={m.status} label={t(`milestoneStatus.${m.status}`)} />
+                            )}
+                          </td>
+                          <td className="px-3 py-3.5">
+                            <PriorityDot value={m.priority} label={t(`priority.${m.priority}`)} />
+                          </td>
+                          <td className="px-3 py-3.5">
+                            {/* A pending item hasn't started, so there's nothing to report on yet. */}
+                            <div className="flex flex-col items-start gap-1.5">
+                              {counts.open > 0 ? (
+                                <Link
+                                  href={problemHref}
+                                  className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-mono text-[11px] text-amber-300 hover:bg-amber-500/15"
+                                >
+                                  {t("ticketsOpenCount", { count: counts.open })}
+                                </Link>
+                              ) : (
+                                <span className="font-mono text-[11px] text-zinc-600">—</span>
+                              )}
+                              {canReport(m) && (
+                                <Link
+                                  href={{ pathname: `/portal/projects/${slug}/tickets/new`, query: { item: m.id } }}
+                                  className="text-xs text-zinc-400 underline underline-offset-4 hover:text-zinc-100"
+                                >
+                                  {t("reportIssue")} →
+                                </Link>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3.5 pl-3 pr-5 sm:pr-6 font-mono text-[11px] text-zinc-400">
+                            {m.dueDate ? dueFmt.format(Date.parse(m.dueDate)) : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
         )}
