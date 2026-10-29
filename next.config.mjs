@@ -28,6 +28,25 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
  * Calendly embed (no console CSP-violation errors) before shipping.
  */
 const isDev = process.env.NODE_ENV !== "production";
+
+/**
+ * Supabase origin for the private client portal (auth + signed storage
+ * URLs). Derived from the same public env var the client SDK reads, and only
+ * added to the CSP when it's set, so the policy stays tight until the portal
+ * actually exists. `wss:` covers Supabase Realtime on the same host.
+ */
+function supabaseOrigins() {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return { http: [], ws: [] };
+  try {
+    const { origin, host } = new URL(raw);
+    return { http: [origin], ws: [`wss://${host}`] };
+  } catch {
+    return { http: [], ws: [] };
+  }
+}
+const SUPABASE = supabaseOrigins();
+
 const CSP = [
   "default-src 'self'",
   // cdn.jsdelivr.net here (not just connect-src) because tesseract.js's
@@ -37,8 +56,8 @@ const CSP = [
   `script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net ${isDev ? "'unsafe-eval'" : "'wasm-unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://images.unsplash.com",
-  "connect-src 'self' https://cdn.jsdelivr.net",
+  ["img-src 'self' data: blob: https://images.unsplash.com", ...SUPABASE.http].join(" "),
+  ["connect-src 'self' https://cdn.jsdelivr.net", ...SUPABASE.http, ...SUPABASE.ws].join(" "),
   "worker-src 'self' blob:",
   "frame-src https://calendly.com",
   "frame-ancestors 'none'",
@@ -66,10 +85,22 @@ const nextConfig = {
   // the easiest path to a readable reconstruction of it.
   productionBrowserSourceMaps: false,
   images: {
-    domains: ["images.unsplash.com"],
+    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
   },
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      // Private client portal: kept out of search indexes and never cached by
+      // a shared proxy/CDN (it renders per-user data). English is unprefixed
+      // (`localePrefix: "as-needed"`), Spanish lives under /es.
+      ...["/portal/:path*", "/es/portal/:path*"].map((source) => ({
+        source,
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+          { key: "Cache-Control", value: "private, no-store" },
+        ],
+      })),
+    ];
   },
   webpack: (config) => {
     // next-intl's extractor uses a dynamic import() that webpack's

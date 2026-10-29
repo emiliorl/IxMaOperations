@@ -66,15 +66,29 @@ export function clientIp(req: Request): string {
   return req.headers.get("x-real-ip") ?? "unknown";
 }
 
+export interface RateLimitOptions {
+  /**
+   * Deny instead of allow when the limiter is unconfigured or Upstash errors.
+   * Use for routes with real side effects beyond a notification email (e.g.
+   * writing to Google Calendar, auth attempts), where "no rate limiting" is
+   * worse than a brief outage. Unconfigured still allows in local dev so the
+   * app is usable without Upstash.
+   */
+  failClosed?: boolean;
+}
+
 export async function checkRateLimit(
   routeName: string,
   identifier: string,
   requests: number,
-  windowSeconds: number
+  windowSeconds: number,
+  { failClosed = false }: RateLimitOptions = {}
 ): Promise<RateLimitResult> {
+  const open: RateLimitResult = { allowed: true, limit: requests, remaining: requests, retryAfterSeconds: 0 };
+  const closed: RateLimitResult = { allowed: false, limit: requests, remaining: 0, retryAfterSeconds: 60 };
   const limiter = getLimiter(routeName, requests, windowSeconds);
   if (!limiter) {
-    return { allowed: true, limit: requests, remaining: requests, retryAfterSeconds: 0 };
+    return failClosed && process.env.NODE_ENV === "production" ? closed : open;
   }
   try {
     const { success, limit, remaining, reset } = await limiter.limit(identifier);
@@ -85,7 +99,7 @@ export async function checkRateLimit(
       retryAfterSeconds: Math.max(0, Math.ceil((reset - Date.now()) / 1000)),
     };
   } catch (error) {
-    console.error(`[rate-limit] Upstash call failed for "${routeName}" — failing open.`, error);
-    return { allowed: true, limit: requests, remaining: requests, retryAfterSeconds: 0 };
+    console.error(`[rate-limit] Upstash call failed for "${routeName}" — failing ${failClosed ? "closed" : "open"}.`, error);
+    return failClosed ? closed : open;
   }
 }
