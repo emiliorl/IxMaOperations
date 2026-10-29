@@ -34,7 +34,13 @@ export async function PortalHeader({ locale }: { locale: string }) {
         <div className="flex items-center gap-4 text-xs">
           {session ? (
             <>
-              <AccountMenu name={session.name} email={session.email} isAdmin={session.isAdmin} signOutFormId="portal-sign-out" />
+              <AccountMenu
+                name={session.name}
+                email={session.email}
+                isAdmin={session.isAdmin}
+                notifyEmail={session.notifyEmail}
+                signOutFormId="portal-sign-out"
+              />
               {/* The menu's "Sign out" button submits this form (linked by id). */}
               <form id="portal-sign-out" action={signOut} className="hidden">
                 <input type="hidden" name="locale" value={locale} />

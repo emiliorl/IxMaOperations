@@ -1,8 +1,10 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Check, ChevronDown, KeyRound, LogOut } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Bell, Check, ChevronDown, KeyRound, LogOut } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { setEmailNotifications } from "@/app/[locale]/portal/actions";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { initialsOf } from "@/lib/portal/initials";
@@ -23,17 +25,22 @@ export function AccountMenu({
   name,
   email,
   isAdmin,
+  notifyEmail,
   signOutFormId,
 }: {
   name: string;
   email: string;
   isAdmin: boolean;
+  /** Whether the person gets e-mails about their own tickets. */
+  notifyEmail: boolean;
   signOutFormId: string;
 }) {
   const t = useTranslations("Portal");
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const [emailOn, setEmailOn] = useState(notifyEmail);
+  const [, startTransition] = useTransition();
 
   return (
     <DropdownMenu.Root>
@@ -80,6 +87,31 @@ export function AccountMenu({
           </DropdownMenu.RadioGroup>
 
           <DropdownMenu.Separator className="my-1 h-px bg-zinc-800" />
+
+          {/* The owner's own alerts are set up by the owner; this switch is for people with tickets. */}
+          {!isAdmin && (
+            <DropdownMenu.CheckboxItem
+              checked={emailOn}
+              // Keep the menu open so the change is visible; undo it if it could not be saved.
+              onSelect={(event) => event.preventDefault()}
+              onCheckedChange={(next) => {
+                setEmailOn(next);
+                startTransition(async () => {
+                  const result = await setEmailNotifications(locale, next);
+                  if (!result.ok) setEmailOn(!next);
+                });
+              }}
+              className={cn(item, "justify-between")}
+            >
+              <span className="flex items-center gap-2.5">
+                <Bell className="h-4 w-4 text-zinc-500" aria-hidden />
+                {t("emailNotifications")}
+              </span>
+              <DropdownMenu.ItemIndicator>
+                <Check className="h-3.5 w-3.5 text-zinc-300" aria-hidden />
+              </DropdownMenu.ItemIndicator>
+            </DropdownMenu.CheckboxItem>
+          )}
 
           <DropdownMenu.Item asChild>
             <Link href="/portal/set-password" className={item}>

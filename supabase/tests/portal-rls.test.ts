@@ -129,6 +129,7 @@ beforeAll(async () => {
   await db.exec(sql("20261029000700_confirm_ticket_fixed.sql"));
   await db.exec(sql("20261029000800_leader_logs.sql"));
   await db.exec(sql("20261029000900_closed_tickets.sql"));
+  await db.exec(sql("20261029001000_email_notifications.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -340,6 +341,21 @@ describe("a person with ONE folder (Finance)", () => {
     expect(await affected(`update public.profiles set display_name = 'Fede F.' where id = '${U.leadFin}'`)).toBe(1);
     expect(await rejection(`update public.profiles set email = 'evil@x.test' where id = '${U.leadFin}'`)).toMatch(/permission denied/i);
     expect(await affected(`update public.profiles set display_name = 'pwned' where id = '${U.leadAll}'`)).toBe(0);
+  });
+
+  it("can switch their own e-mails off and on, but not anyone else's", async () => {
+    expect(await affected(`update public.profiles set notify_email = false where id = '${U.leadFin}'`)).toBe(1);
+    expect(await affected(`update public.profiles set notify_email = true where id = '${U.leadFin}'`)).toBe(1);
+    expect(await affected(`update public.profiles set notify_email = false where id = '${U.leadAll}'`)).toBe(0);
+    await as({ id: U.admin, admin: true });
+    expect((await rows<{ notify_email: boolean }>(`select notify_email from public.profiles where id = '${U.leadAll}'`))[0].notify_email).toBe(true);
+  });
+
+  it("e-mails are on until someone switches them off", async () => {
+    await as({ id: U.admin, admin: true });
+    const all = await rows<{ notify_email: boolean }>(`select notify_email from public.profiles`);
+    expect(all.length).toBeGreaterThan(0);
+    expect(all.every((row) => row.notify_email === true)).toBe(true);
   });
 });
 

@@ -165,6 +165,38 @@ export async function sendOwnerAlert(subject: string, lines: string[]): Promise<
   }
 }
 
+/**
+ * An email from the portal: to the owner (tagged alerts and the morning digest)
+ * or to a client about their own ticket. Never throws; returns whether Resend
+ * accepted it.
+ *
+ * PORTAL_EMAIL_FROM must be an address on a domain verified in Resend. The
+ * sandbox sender used as the fallback only delivers to the Resend account's own
+ * address, so until a domain is verified the owner's emails arrive and clients'
+ * do not (the failure is logged).
+ */
+export async function sendPortalEmail(input: {
+  to: string;
+  subject: string;
+  text: string;
+  headers?: Record<string, string>;
+}): Promise<boolean> {
+  try {
+    const result = await getResendClient().emails.send({
+      from: process.env.PORTAL_EMAIL_FROM || "IxMa Operations Portal <onboarding@resend.dev>",
+      to: input.to,
+      subject: input.subject,
+      text: input.text,
+      headers: input.headers,
+    });
+    if (result.error) throw new Error(result.error.message);
+    return true;
+  } catch (error) {
+    console.error("[email] portal email failed:", error instanceof Error ? error.message : error);
+    return false;
+  }
+}
+
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {

@@ -989,6 +989,7 @@
     "searchMore": "Mostrando los primeros {shown} de {total}. Agrega una palabra para acotar.",
     "searchIn": { "summary": "Resumen", "description": "Detalles", "comment": "Comentario", "plan": "Plan de acción" },
     "searchNoResults": "Nada coincide con “{query}”.",
+    "emailNotifications": "Avisarme por correo de mis tickets",
     "chooseArea": "Elige un área",
     "viewAllAreas": "Ver todas las áreas ({done} de {total} hitos)",
     "noOpenTickets": "Sin tickets abiertos",

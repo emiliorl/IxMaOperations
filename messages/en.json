@@ -989,6 +989,7 @@
     "searchMore": "Showing the first {shown} of {total}. Add a word to narrow it down.",
     "searchIn": { "summary": "Summary", "description": "Details", "comment": "Comment", "plan": "Action plan" },
     "searchNoResults": "Nothing matches “{query}”.",
+    "emailNotifications": "Email me about my tickets",
     "chooseArea": "Choose an area",
     "viewAllAreas": "See all areas ({done} of {total} milestones)",
     "noOpenTickets": "No open tickets",

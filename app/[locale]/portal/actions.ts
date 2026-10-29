@@ -4,10 +4,10 @@ import { headers } from "next/headers";
 import { hasLocale } from "next-intl";
 import { redirect } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { sendOwnerAlert } from "@/lib/email";
 import { blindIndex, decryptLoose, encryptField, encryptOptional } from "@/lib/field-crypto";
 import { requireUser } from "@/lib/portal/auth";
 import { prepareFiles, type FileProblem } from "@/lib/portal/attachments";
+import { alertOwner, notifyTicketPerson } from "@/lib/portal/notify-send";
 import { isActiveTicket } from "@/lib/portal/plan";
 import { validateNewPassword } from "@/lib/portal/password";
 import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
@@ -182,17 +182,23 @@ export async function createTicket(_prev: FormState, formData: FormData): Promis
 
   const failedFiles = await saveAttachments({ supabase, userId: user.id, ticketId: ticket.id, files: files.files });
 
+  // Only a high or critical ticket interrupts the owner; the rest waits for the morning digest (lib/portal/notify.ts).
   if (!isAdmin) {
-    await sendOwnerAlert(`New ticket #${ticket.ticket_number} — ${title.title}`, [
-      `${user.email} opened ticket #${ticket.ticket_number} in "${decryptLoose(project.name)}".`,
-      "",
-      `Priority: ${input.priority} · Type: ${input.category} · Environment: ${input.environment}`,
-      files.files.length > 0 ? `Files attached: ${files.files.length - failedFiles}` : "",
-      "",
-      input.description,
-      "",
-      `${SITE_URL}/portal/tickets/${ticket.id}`,
-    ]);
+    await alertOwner({
+      event: { kind: "opened", priority: input.priority },
+      project: { name: decryptLoose(project.name) ?? "", slug: input.projectSlug },
+      subject: `New ${input.priority} ticket #${ticket.ticket_number} — ${title.title}`,
+      lines: [
+        `${user.email} opened ticket #${ticket.ticket_number} in "${decryptLoose(project.name)}".`,
+        "",
+        `Priority: ${input.priority} · Type: ${input.category} · Environment: ${input.environment}`,
+        files.files.length > 0 ? `Files attached: ${files.files.length - failedFiles}` : "",
+        "",
+        input.description,
+        "",
+        `${SITE_URL}/portal/tickets/${ticket.id}`,
+      ],
+    });
   }
   redirect({
     href: failedFiles > 0 ? { pathname: `/portal/tickets/${ticket.id}`, query: { files: "failed" } } : `/portal/tickets/${ticket.id}`,
@@ -244,17 +250,8 @@ export async function addComment(_prev: FormState, formData: FormData): Promise<
     files: files.files,
   });
 
-  if (!isAdmin) {
-    const { data: ticket } = await supabase.from("tickets").select("ticket_number,title").eq("id", input.ticketId).maybeSingle();
-    await sendOwnerAlert(`New comment on ticket #${ticket?.ticket_number ?? "?"}`, [
-      `${user.email} commented on "${decryptLoose(ticket?.title) ?? "a ticket"}":`,
-      "",
-      input.message,
-      files.files.length > 0 ? `\nFiles attached: ${files.files.length - failedFiles}` : "",
-      "",
-      `${SITE_URL}/portal/tickets/${input.ticketId}`,
-    ]);
-  }
+  // A client's comment is in the owner's morning digest; the owner's own reply tells the person who opened the ticket.
+  if (isAdmin && !internal) await notifyTicketPerson({ ticketId: input.ticketId, kind: "owner_replied", actorId: user.id });
   redirect({
     href: failedFiles > 0 ? { pathname: `/portal/tickets/${input.ticketId}`, query: { files: "failed" } } : `/portal/tickets/${input.ticketId}`,
     locale,
@@ -284,7 +281,11 @@ export async function reopenTicket(_prev: FormState, formData: FormData): Promis
   if (!files.ok) return { error: fileError(files.error) };
 
   // Only a ticket that is waiting for review, resolved or closed can be reopened (the database insists too).
-  const { data: ticket } = await supabase.from("tickets").select("ticket_number,title,status").eq("id", input.ticketId).maybeSingle();
+  const { data: ticket } = await supabase
+    .from("tickets")
+    .select("ticket_number,title,status,projects(name,slug)")
+    .eq("id", input.ticketId)
+    .maybeSingle();
   if (!ticket) return { error: "denied" };
   if (ticket.status === "open" || ticket.status === "in_progress") return { error: "invalid" };
 
@@ -304,16 +305,22 @@ export async function reopenTicket(_prev: FormState, formData: FormData): Promis
 
   if (!isAdmin) {
     const backAfterClosing = ticket.status !== "needs_review";
-    await sendOwnerAlert(`Ticket #${ticket.ticket_number} ${backAfterClosing ? "was reopened" : "is still broken"}`, [
-      backAfterClosing
-        ? `${user.email} reopened "${decryptLoose(ticket.title) ?? "a ticket"}":`
-        : `${user.email} says "${decryptLoose(ticket.title) ?? "a ticket"}" is still not fixed, and reopened it:`,
-      "",
-      input.message,
-      files.files.length > 0 ? `\nFiles attached: ${files.files.length - failedFiles}` : "",
-      "",
-      `${SITE_URL}/portal/tickets/${input.ticketId}`,
-    ]);
+    const project = (Array.isArray(ticket.projects) ? ticket.projects[0] : ticket.projects) as { name: string; slug: string } | null;
+    await alertOwner({
+      event: { kind: "reopened" },
+      project: { name: decryptLoose(project?.name) ?? "", slug: project?.slug ?? "" },
+      subject: `Ticket #${ticket.ticket_number} ${backAfterClosing ? "was reopened" : "is still broken"}`,
+      lines: [
+        backAfterClosing
+          ? `${user.email} reopened "${decryptLoose(ticket.title) ?? "a ticket"}":`
+          : `${user.email} says "${decryptLoose(ticket.title) ?? "a ticket"}" is still not fixed, and reopened it:`,
+        "",
+        input.message,
+        files.files.length > 0 ? `\nFiles attached: ${files.files.length - failedFiles}` : "",
+        "",
+        `${SITE_URL}/portal/tickets/${input.ticketId}`,
+      ],
+    });
   }
   redirect({
     href: failedFiles > 0 ? { pathname: `/portal/tickets/${input.ticketId}`, query: { files: "failed" } } : `/portal/tickets/${input.ticketId}`,
@@ -331,13 +338,13 @@ export async function reopenTicket(_prev: FormState, formData: FormData): Promis
  */
 export async function confirmTicketFixed(_prev: FormState, formData: FormData): Promise<FormState> {
   const locale = pickLocale(formData.get("locale"));
-  const { supabase, user, isAdmin } = await requireUser(locale);
+  const { supabase } = await requireUser(locale);
 
   const parsed = confirmFixedInput.safeParse({ ticketId: text(formData, "ticketId") });
   if (!parsed.success) return { error: "invalid" };
   const { ticketId } = parsed.data;
 
-  const { data: ticket } = await supabase.from("tickets").select("ticket_number,title,status").eq("id", ticketId).maybeSingle();
+  const { data: ticket } = await supabase.from("tickets").select("status").eq("id", ticketId).maybeSingle();
   if (!ticket) return { error: "denied" };
   if (ticket.status !== "needs_review") return { error: "invalid" };
 
@@ -345,15 +352,16 @@ export async function confirmTicketFixed(_prev: FormState, formData: FormData): 
   if (error) return { error: "generic" };
   if (closed !== true) return { error: "denied" };
 
-  if (!isAdmin) {
-    await sendOwnerAlert(`Ticket #${ticket.ticket_number} confirmed fixed`, [
-      `${user.email} checked "${decryptLoose(ticket.title) ?? "a ticket"}", says it works, and closed it.`,
-      "",
-      `${SITE_URL}/portal/tickets/${ticketId}`,
-    ]);
-  }
+  // No email: it is good news and goes into the owner's morning digest.
   redirect({ href: `/portal/tickets/${ticketId}`, locale });
   return {};
+}
+
+/** The switch in the account menu: e-mails about my own tickets on or off. */
+export async function setEmailNotifications(locale: string, enabled: boolean): Promise<{ ok: boolean }> {
+  const { supabase, user } = await requireUser(pickLocale(locale));
+  const { data, error } = await supabase.from("profiles").update({ notify_email: Boolean(enabled) }).eq("id", user.id).select("id");
+  return { ok: !error && (data?.length ?? 0) === 1 };
 }
 
 // ---------------------------------------------------------------- owner only
@@ -366,13 +374,19 @@ export async function confirmTicketFixed(_prev: FormState, formData: FormData): 
  */
 export async function updateTicketStatus(_prev: FormState, formData: FormData): Promise<FormState> {
   const locale = pickLocale(formData.get("locale"));
-  const { supabase } = await requireUser(locale);
+  const { supabase, user } = await requireUser(locale);
   const parsed = ticketStatusInput.safeParse({ ticketId: text(formData, "ticketId"), status: text(formData, "status") });
   if (!parsed.success) return { error: "invalid" };
 
+  const { data: before } = await supabase.from("tickets").select("status").eq("id", parsed.data.ticketId).maybeSingle();
   const { data, error } = await supabase.from("tickets").update({ status: parsed.data.status }).eq("id", parsed.data.ticketId).select("id");
   if (error) return { error: classify(error) };
   if (!data || data.length === 0) return { error: "denied" };
+
+  // "Fixed — please check": the one status change the person has to act on, so they get an email (once, not on a re-save).
+  if (parsed.data.status === "needs_review" && before?.status !== "needs_review") {
+    await notifyTicketPerson({ ticketId: parsed.data.ticketId, kind: "fix_ready", actorId: user.id });
+  }
   return { ok: true };
 }
 
