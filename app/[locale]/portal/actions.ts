@@ -1,5 +1,6 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { headers } from "next/headers";
 import { hasLocale } from "next-intl";
 import { redirect } from "@/i18n/navigation";
@@ -20,6 +21,7 @@ import {
   milestoneStatusInput,
   removeCompanyAccessInput,
   removeMemberInput,
+  reopenTicketInput,
   ticketInput,
   ticketStatusInput,
 } from "@/lib/portal/schemas";
@@ -250,35 +252,99 @@ export async function addComment(_prev: FormState, formData: FormData): Promise<
   return {};
 }
 
+/**
+ * "Still broken": the owner marked a ticket as fixed ("Needs your review") and
+ * the person found it is not. Their note is saved first, as an ordinary comment
+ * (so the owner always sees why), then the ticket goes back to "open" through
+ * the reopen_ticket() database function — the only way a non-owner can change a
+ * status, and it can only do this one move for people who may write in the
+ * ticket's folder. The status change lands in the project log automatically.
+ */
+export async function reopenTicket(_prev: FormState, formData: FormData): Promise<FormState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, user, isAdmin } = await requireUser(locale);
+
+  const parsed = reopenTicketInput.safeParse({ ticketId: text(formData, "ticketId"), message: text(formData, "message") });
+  if (!parsed.success) return { error: "invalid" };
+  const input = parsed.data;
+
+  const files = await prepareFiles(uploadedFiles(formData));
+  if (!files.ok) return { error: fileError(files.error) };
+
+  // Only a ticket that is waiting for review can be sent back (the database insists too).
+  const { data: ticket } = await supabase.from("tickets").select("ticket_number,title,status").eq("id", input.ticketId).maybeSingle();
+  if (!ticket) return { error: "denied" };
+  if (ticket.status !== "needs_review") return { error: "invalid" };
+
+  const { data: comment, error } = await supabase
+    .from("ticket_comments")
+    .insert({ ticket_id: input.ticketId, author_id: user.id, message: encryptField(input.message), is_internal: false })
+    .select("id")
+    .single();
+  if (error || !comment) return { error: error ? classify(error) : "generic" };
+
+  const failedFiles = await saveAttachments({ supabase, userId: user.id, ticketId: input.ticketId, commentId: comment.id, files: files.files });
+
+  const { data: reopened, error: reopenError } = await supabase.rpc("reopen_ticket", { p_ticket: input.ticketId });
+  if (reopenError) return { error: "generic" };
+  if (reopened !== true) return { error: "denied" };
+
+  if (!isAdmin) {
+    await sendOwnerAlert(`Ticket #${ticket.ticket_number} is still broken`, [
+      `${user.email} says "${decryptLoose(ticket.title) ?? "a ticket"}" is still not fixed, and reopened it:`,
+      "",
+      input.message,
+      files.files.length > 0 ? `\nFiles attached: ${files.files.length - failedFiles}` : "",
+      "",
+      `${SITE_URL}/portal/tickets/${input.ticketId}`,
+    ]);
+  }
+  redirect({
+    href: failedFiles > 0 ? { pathname: `/portal/tickets/${input.ticketId}`, query: { files: "failed" } } : `/portal/tickets/${input.ticketId}`,
+    locale,
+  });
+  return {};
+}
+
 // ---------------------------------------------------------------- owner only
 
-export async function updateTicketStatus(formData: FormData): Promise<void> {
+/**
+ * Both status actions tell the screen what happened. Row-level security lets
+ * only the owner update these rows; for anyone else the update succeeds with
+ * ZERO rows changed, so "no row came back" is reported as a refusal instead of
+ * pretending it worked.
+ */
+export async function updateTicketStatus(_prev: FormState, formData: FormData): Promise<FormState> {
   const locale = pickLocale(formData.get("locale"));
   const { supabase } = await requireUser(locale);
   const parsed = ticketStatusInput.safeParse({ ticketId: text(formData, "ticketId"), status: text(formData, "status") });
-  if (parsed.success) {
-    // RLS lets only the owner update tickets; for anyone else this changes zero rows.
-    await supabase.from("tickets").update({ status: parsed.data.status }).eq("id", parsed.data.ticketId).select("id");
-    redirect({ href: `/portal/tickets/${parsed.data.ticketId}`, locale });
-  }
+  if (!parsed.success) return { error: "invalid" };
+
+  const { data, error } = await supabase.from("tickets").update({ status: parsed.data.status }).eq("id", parsed.data.ticketId).select("id");
+  if (error) return { error: classify(error) };
+  if (!data || data.length === 0) return { error: "denied" };
+  refresh();
+  return {};
 }
 
-export async function updateMilestoneStatus(formData: FormData): Promise<void> {
+export async function updateMilestoneStatus(_prev: FormState, formData: FormData): Promise<FormState> {
   const locale = pickLocale(formData.get("locale"));
   const { supabase } = await requireUser(locale);
-  const slug = text(formData, "projectSlug");
   const parsed = milestoneStatusInput.safeParse({ milestoneId: text(formData, "milestoneId"), status: text(formData, "status") });
-  if (parsed.success && SLUG.test(slug)) {
-    await supabase
-      .from("project_milestones")
-      .update({
-        status: parsed.data.status,
-        completed_at: parsed.data.status === "completed" ? new Date().toISOString() : null,
-      })
-      .eq("id", parsed.data.milestoneId)
-      .select("id");
-    redirect({ href: `/portal/projects/${slug}`, locale });
-  }
+  if (!parsed.success) return { error: "invalid" };
+
+  const { data, error } = await supabase
+    .from("project_milestones")
+    .update({
+      status: parsed.data.status,
+      completed_at: parsed.data.status === "completed" ? new Date().toISOString() : null,
+    })
+    .eq("id", parsed.data.milestoneId)
+    .select("id");
+  if (error) return { error: classify(error) };
+  if (!data || data.length === 0) return { error: "denied" };
+  refresh();
+  return {};
 }
 
 // ------------------------------------------------- owner: who can see what

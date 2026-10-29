@@ -97,10 +97,15 @@ const nextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: SECURITY_HEADERS },
+      // API routes: never indexed by search engines.
+      {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
+      },
       // Private client portal: kept out of search indexes and never cached by
       // a shared proxy/CDN (it renders per-user data). English is unprefixed
       // (`localePrefix: "as-needed"`), Spanish lives under /es.
-      ...["/portal/:path*", "/es/portal/:path*"].map((source) => ({
+      ...["/portal", "/portal/:path*", "/es/portal", "/es/portal/:path*", "/en/portal", "/en/portal/:path*"].map((source) => ({
         source,
         headers: [
           { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },

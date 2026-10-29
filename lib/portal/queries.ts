@@ -75,6 +75,8 @@ export interface TicketSummary {
   /** The plan item (problem) this ticket is about, if any. */
   milestoneId: string | null;
   createdAt: string;
+  /** Who opened it. Null when unknown or when the viewer isn't allowed to see the name. */
+  createdByName: string | null;
 }
 
 export interface ProjectDetail {
@@ -159,6 +161,28 @@ async function loadProblemExtras(supabase: SupabaseClient, projectId: string): P
   );
 }
 
+/**
+ * Display names for ticket authors, in one query. The database only returns
+ * names the viewer may see (people on their project, and authors of tickets
+ * they can read); a failure just leaves the names blank — it never takes the
+ * page down.
+ */
+async function loadAuthorNames(supabase: SupabaseClient, tickets: { created_by: string | null }[]): Promise<Map<string, string>> {
+  const ids = Array.from(new Set(tickets.map((t) => t.created_by).filter((id): id is string => Boolean(id))));
+  if (ids.length === 0) return new Map();
+  const { data, error } = await supabase.from("profiles").select("id,display_name").in("id", ids);
+  if (error) {
+    console.warn(`[portal] ticket authors unavailable: ${error.message}`);
+    return new Map();
+  }
+  const names = new Map<string, string>();
+  for (const row of (data ?? []) as { id: string; display_name: string }[]) {
+    const name = plainOrNull(row.display_name);
+    if (name) names.set(row.id, name);
+  }
+  return names;
+}
+
 async function loadOverview(supabase: SupabaseClient, projectId: string): Promise<string | null> {
   const { data, error } = await supabase.from("projects").select("overview").eq("id", projectId).maybeSingle();
   if (error) {
@@ -191,7 +215,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
     supabase.from("project_member_departments").select("user_id,department_id").eq("project_id", project.id),
     supabase
       .from("tickets")
-      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at")
+      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,created_by")
       .eq("project_id", project.id)
       .order("created_at", { ascending: false })
       .limit(200),
@@ -201,6 +225,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
   for (const result of [departments, milestones, members, memberFolders, tickets]) {
     if (result.error) throw new Error(`Failed to load project data: ${result.error.message}`);
   }
+  const authors = await loadAuthorNames(supabase, tickets.data ?? []);
 
   const foldersByUser = new Map<string, string[]>();
   for (const row of memberFolders.data ?? []) {
@@ -255,6 +280,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       departmentId: t.department_id,
       milestoneId: t.milestone_id,
       createdAt: t.created_at,
+      createdByName: (t.created_by && authors.get(t.created_by)) || null,
     })),
   };
 }
@@ -523,7 +549,7 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
     supabase.from("problem_costs").select("cost_note").eq("milestone_id", item.id).maybeSingle(),
     supabase
       .from("tickets")
-      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at")
+      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,created_by")
       .eq("milestone_id", item.id)
       .order("created_at", { ascending: false })
       .limit(200),
@@ -531,6 +557,7 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
   if (tickets.error) throw new Error(`Failed to load tickets: ${tickets.error.message}`);
   if (details.error) console.warn(`[portal] plan-item details unavailable: ${details.error.message}`);
   if (cost.error) console.warn(`[portal] costs unavailable: ${cost.error.message}`);
+  const authors = await loadAuthorNames(supabase, tickets.data ?? []);
 
   const extra = (details.data ?? null) as {
     code: string | null;
@@ -565,6 +592,7 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
       departmentId: t.department_id,
       milestoneId: t.milestone_id,
       createdAt: t.created_at,
+      createdByName: (t.created_by && authors.get(t.created_by)) || null,
     })),
   };
 }
@@ -591,7 +619,9 @@ export async function getProjectEvents(
   supabase: SupabaseClient,
   projectId: string,
   range: { from: number; to: number } | null,
-  limit = 500
+  limit = 500,
+  /** Narrow in the database (not after the fact) so a busy project can't push an item's own history past the limit. */
+  only: { milestoneId?: string; excludeKind?: LogEvent["kind"] } = {}
 ): Promise<LogEntry[]> {
   let query = supabase
     .from("project_events")
@@ -599,6 +629,8 @@ export async function getProjectEvents(
     .eq("project_id", projectId)
     .order("created_at", { ascending: false })
     .limit(limit);
+  if (only.milestoneId) query = query.eq("milestone_id", only.milestoneId);
+  if (only.excludeKind) query = query.neq("kind", only.excludeKind);
   if (range) query = query.gte("created_at", new Date(range.from).toISOString()).lt("created_at", new Date(range.to).toISOString());
 
   const { data, error } = await query;

@@ -1,3 +1,6 @@
+import { getPathname } from "@/i18n/navigation";
+import { routing, type AppLocale } from "@/i18n/routing";
+
 /**
  * lib/site-url.ts
  *
@@ -18,3 +21,28 @@
  * under the wrong one — a live host/sitemap mismatch, not a local bug.
  */
 export const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ixmaoperations.com").replace(/\/+$/, "");
+
+/**
+ * Builds the canonical absolute URL for a public route in a specific locale,
+ * always without query parameters (`?package=...`, etc.).
+ */
+export function publicUrl(locale: AppLocale, href: string): string {
+  const pathname = getPathname({ locale, href });
+  return `${SITE_URL}${pathname}`;
+}
+
+/**
+ * Builds `Metadata["alternates"]` (`canonical` + reciprocal `hreflang`
+ * `languages` including `x-default`) for a public page.
+ */
+export function publicAlternates(locale: string, href: string): { canonical: string; languages: Record<string, string> } {
+  const languages: Record<string, string> = {};
+  for (const loc of routing.locales) {
+    languages[loc] = publicUrl(loc, href);
+  }
+  languages["x-default"] = languages[routing.defaultLocale];
+  return {
+    canonical: languages[locale] ?? languages[routing.defaultLocale],
+    languages,
+  };
+}

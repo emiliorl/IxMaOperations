@@ -6,7 +6,7 @@ import { refreshSession } from "./lib/supabase/proxy";
 const intlProxy = createMiddleware(routing);
 
 /** /portal and /es/portal (English is unprefixed — see i18n/routing.ts). */
-const PORTAL_PATH = /^\/(?:es\/)?portal(?:\/|$)/;
+const PORTAL_PATH = /^\/(?:(?:en|es)\/)?portal(?:\/|$)/;
 
 /**
  * Locale routing for every page, plus session refresh for the private client
@@ -17,6 +17,7 @@ const PORTAL_PATH = /^\/(?:es\/)?portal(?:\/|$)/;
 export default async function proxy(request: NextRequest) {
   const response = intlProxy(request);
   if (PORTAL_PATH.test(request.nextUrl.pathname)) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
     await refreshSession(request, response);
   }
   return response;

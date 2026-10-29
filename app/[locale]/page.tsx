@@ -1,13 +1,25 @@
+import type { Metadata } from "next";
 import { use } from "react";
 import { useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Hero } from "@/components/home/Hero";
 import { ExamplesSection } from "@/components/home/ExamplesSection";
 import { ProjectEstimatorWizard } from "@/components/onboarding/ProjectEstimatorWizard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { buttonVariants } from "@/components/ui/Button";
+import { publicAlternates } from "@/lib/site-url";
 import { ArrowRight } from "lucide-react";
+
+export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await props.params;
+  const t = await getTranslations({ locale, namespace: "Metadata" });
+  return {
+    title: t("title"),
+    description: t("description"),
+    alternates: publicAlternates(locale, "/"),
+  };
+}
 
 /**
  * v4 homepage (pivot Aug 29, 2026 — supersedes the v3 Stage 9 layout).

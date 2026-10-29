@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="9 9 182 182" width="100%" height="100%">
+  <!-- Dark Rounded-Square Badge Container -->
+  <rect x="10" y="10" width="180" height="180" rx="40" fill="#111827" stroke="#0D9488" stroke-width="2" stroke-opacity="0.4" />
+
+  <!-- Left Hemisphere: Mayan 'Ix' Step-Fret (Greca) Earth Foundation -->
+  <path d="M 94 20 
+           L 30 57 
+           L 30 143 
+           L 94 180 
+           L 94 154 
+           L 52 130 
+           L 52 70 
+           L 94 46 Z" 
+        fill="#0D9488" />
+  
+  <!-- Inner Mayan Greca Step Hook -->
+  <path d="M 94 64 
+           L 68 79 
+           L 68 121 
+           L 94 136 
+           L 94 118 
+           L 83 111 
+           L 83 89 
+           L 94 82 Z" 
+        fill="#2DD4BF" opacity="0.9" />
+
+  <!-- Three Mayan Jaguar / Tensor Silicon Nodes (Triad) -->
+  <rect x="61" y="96" width="8" height="8" rx="1.5" fill="#F59E0B" />
+  <rect x="73" y="83" width="8" height="8" rx="1.5" fill="#2DD4BF" />
+  <rect x="73" y="109" width="8" height="8" rx="1.5" fill="#2DD4BF" />
+
+  <!-- Right Hemisphere: Taiwan 'Ma' Kinetic Semiconductor Wafer Blades -->
+  <!-- Upper High-Velocity Vector Blade -->
+  <polygon points="106,36 170,73 170,97 106,60" fill="#2DD4BF" />
+  <!-- Mid High-Velocity Vector Blade -->
+  <polygon points="106,74 170,111 170,135 106,98" fill="#0D9488" />
+  <!-- Lower Forward Propulsion Fin -->
+  <polygon points="106,112 156,141 132,155 106,140" fill="#2DD4BF" opacity="0.85" />
+
+  <!-- Central Virgo Precision Diamond Node (Bridges Ix & Ma) -->
+  <polygon points="100,86 112,100 100,114 88,100" fill="#F59E0B" />
+</svg>

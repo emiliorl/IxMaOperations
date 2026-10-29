@@ -42,7 +42,7 @@ export async function generateMetadata(
       icon: [
         { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
         { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-        { url: "/logo-icon.svg", type: "image/svg+xml" },
+        { url: "/ixma-operations-badge-jade.svg", type: "image/svg+xml" },
       ],
       shortcut: "/icon-192.png",
       apple: "/apple-icon.png",

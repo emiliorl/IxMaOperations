@@ -46,7 +46,10 @@ export async function TicketList({
               )}
             >
               <span className="font-mono text-xs text-zinc-500 w-10 shrink-0">#{ticket.number}</span>
-              <span className={cn("flex-1 min-w-[12rem] text-sm", active ? "text-zinc-50 font-medium" : "text-zinc-300")}>{ticket.title}</span>
+              <span className="flex-1 min-w-[12rem]">
+                <span className={cn("block text-sm", active ? "text-zinc-50 font-medium" : "text-zinc-300")}>{ticket.title}</span>
+                {ticket.createdByName && <span className="block text-[11px] text-zinc-500">{t("openedByShort", { name: ticket.createdByName })}</span>}
+              </span>
               {problem && <span className="font-mono text-[11px] text-zinc-400">{problem}</span>}
               {showFolder && <span className="font-mono text-[11px] text-zinc-500">{folderLabel(ticket.departmentId)}</span>}
               <Pill kind="priority" value={ticket.priority} label={t(`priority.${ticket.priority}`)} />

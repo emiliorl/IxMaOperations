@@ -3,14 +3,15 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { AccessPanel } from "@/components/portal/AccessPanel";
-import { selectClass } from "@/components/portal/Field";
 import { Markdown } from "@/components/portal/Markdown";
 import { Pill } from "@/components/portal/Pills";
+import { StatusForm } from "@/components/portal/StatusForm";
 import { TicketList } from "@/components/portal/TicketList";
 import { buttonVariants } from "@/components/ui/Button";
 import { MILESTONE_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
-import { isActiveTicket, ticketCountsByProblem } from "@/lib/portal/plan";
+import { inFolder, matchesTicketFilter, parseTicketFilter, projectFilterHref, resolveFolderFilter, ticketBucket } from "@/lib/portal/filters";
+import { ticketCountsByProblem } from "@/lib/portal/plan";
 import { milestoneProgress } from "@/lib/portal/progress";
 import {
   canOpenTickets,
@@ -49,23 +50,27 @@ export default async function ProjectPage(props: {
   // Filter: no choice yet → the person's own folder when they have exactly one;
   // "all" → everything they can see.
   const defaultFolder = !hasEveryFolder && access.departmentIds.length === 1 ? access.departmentIds[0] : null;
-  const filterFolder = dept === "all" ? null : dept && folderName.has(dept) ? dept : dept === undefined ? defaultFolder : null;
-  const matches = (departmentId: string | null) => filterFolder === null || departmentId === null || departmentId === filterFolder;
+  const filterFolder = resolveFolderFilter(dept, new Set(folderName.keys()), defaultFolder);
+  // What the links below carry along: the folder only when the person actually chose one.
+  const deptParam = dept === "all" || (dept && folderName.has(dept)) ? dept : undefined;
 
-  const progress = milestoneProgress(project.milestones);
-  const milestones = project.milestones.filter((m) => matches(m.departmentId));
-  const folderTickets = project.tickets.filter((ticket) => matches(ticket.departmentId));
-  const openCount = folderTickets.filter((ticket) => isActiveTicket(ticket.status)).length;
-  const ticketFilter = ticketFilterParam === "open" || ticketFilterParam === "solved" ? ticketFilterParam : "all";
-  const tickets = folderTickets.filter(
-    (ticket) => ticketFilter === "all" || isActiveTicket(ticket.status) === (ticketFilter === "open")
-  );
+  // The folder view's items (that folder + project-wide). The progress bar is
+  // computed from the SAME list, so it always matches the rows beneath it.
+  const milestones = project.milestones.filter((m) => inFolder(filterFolder, m.departmentId));
+  const progress = milestoneProgress(milestones);
+  const folderTickets = project.tickets.filter((ticket) => inFolder(filterFolder, ticket.departmentId));
+  const openCount = folderTickets.filter((ticket) => ticketBucket(ticket.status) === "open").length;
+  const reviewCount = folderTickets.filter((ticket) => ticketBucket(ticket.status) === "review").length;
+  const ticketFilter = parseTicketFilter(ticketFilterParam);
+  const tickets = folderTickets.filter((ticket) => matchesTicketFilter(ticket.status, ticketFilter));
   const ticketCounts = ticketCountsByProblem(project.tickets);
   // Only problems that have a code get a label next to their tickets (without one it would just repeat the title).
   const problemLabels = new Map(project.milestones.flatMap((m): [string, string][] => (m.code ? [[m.id, m.code]] : [])));
   const staging = safeHttpUrl(project.stagingUrl);
   const production = safeHttpUrl(project.productionUrl);
   const mayOpenTickets = canOpenTickets(access, isAdmin);
+  const canReport = (m: { status: string; departmentId: string | null }) =>
+    mayOpenTickets && m.status !== "pending" && canWriteIn(access, isAdmin, m.departmentId);
   const folderLabel = (departmentId: string | null) => (departmentId ? (folderName.get(departmentId) ?? "—") : t("deptProjectWide"));
 
   const memberFolders = (member: (typeof project.team)[number]) => {
@@ -167,13 +172,13 @@ export default async function ProjectPage(props: {
           {project.departments.length > 0 && (
             <nav aria-label={t("foldersLabel")} className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500 mr-1">{t("foldersLabel")}</span>
-              <Link href={{ pathname: `/portal/projects/${slug}`, query: { dept: "all" } }} className={chip(filterFolder === null)}>
+              <Link href={projectFilterHref(slug, { dept: "all", tickets: ticketFilter })} className={chip(filterFolder === null)}>
                 {t("deptAll")}
               </Link>
               {project.departments.map((d) => (
                 <Link
                   key={d.id}
-                  href={{ pathname: `/portal/projects/${slug}`, query: { dept: d.id } }}
+                  href={projectFilterHref(slug, { dept: d.id, tickets: ticketFilter })}
                   className={chip(filterFolder === d.id)}
                 >
                   {d.name}
@@ -197,7 +202,12 @@ export default async function ProjectPage(props: {
             <div className="p-5 sm:p-6 space-y-5">
               <div className="space-y-1.5">
                 <div className="flex items-baseline justify-between font-mono text-[11px] uppercase tracking-wider text-zinc-500">
-                  <span>{t("progress")}</span>
+                  <span>
+                    {t("progress")}
+                    {filterFolder && (
+                      <span className="ml-2 normal-case tracking-normal text-zinc-600">{t("progressScope", { folder: folderName.get(filterFolder) ?? "—" })}</span>
+                    )}
+                  </span>
                   <span className="text-zinc-300">{progress.percent}%</span>
                 </div>
                 <div
@@ -237,46 +247,36 @@ export default async function ProjectPage(props: {
                         {(m.summary ?? m.description) && (
                           <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">{m.summary ?? m.description}</p>
                         )}
-                        <div className="flex flex-wrap items-center gap-2 pt-1.5">
-                          {mayOpenTickets && canWriteIn(access, isAdmin, m.departmentId) && (
-                            <Link
-                              href={{ pathname: `/portal/projects/${slug}/tickets/new`, query: { item: m.id } }}
-                              className={buttonVariants({ size: "sm" })}
-                            >
-                              {t("openTicket")}
-                            </Link>
-                          )}
-                          <Link href={problemHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
-                            {t("viewPlan")}
-                          </Link>
-                          {counts.open > 0 ? (
-                            <Link
-                              href={{ pathname: problemHref }}
-                              className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 font-mono text-[11px] text-amber-300 hover:bg-amber-500/15"
-                            >
-                              {t("openTicketsCount", { count: counts.open })}
-                            </Link>
-                          ) : (
-                            counts.total > 0 && <span className="font-mono text-[11px] text-zinc-600">{t("openTicketsCount", { count: 0 })}</span>
-                          )}
-                        </div>
+                        {/* The title above opens the item. A pending item hasn't started, so there's nothing to report on yet. */}
+                        {(counts.open > 0 || canReport(m)) && (
+                          <div className="flex flex-wrap items-center gap-3 pt-1.5">
+                            {counts.open > 0 && (
+                              <Link
+                                href={problemHref}
+                                className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 font-mono text-[11px] text-amber-300 hover:bg-amber-500/15"
+                              >
+                                {t("openTicketsCount", { count: counts.open })}
+                              </Link>
+                            )}
+                            {canReport(m) && (
+                              <Link
+                                href={{ pathname: `/portal/projects/${slug}/tickets/new`, query: { item: m.id } }}
+                                className="text-xs text-zinc-400 underline underline-offset-4 hover:text-zinc-100"
+                              >
+                                {t("reportIssue")} →
+                              </Link>
+                            )}
+                          </div>
+                        )}
                       </div>
                       {isAdmin && (
-                        <form action={updateMilestoneStatus} className="flex items-center gap-2">
-                          <input type="hidden" name="locale" value={locale} />
-                          <input type="hidden" name="projectSlug" value={slug} />
-                          <input type="hidden" name="milestoneId" value={m.id} />
-                          <select name="status" defaultValue={m.status} aria-label={t("statusLabel")} className={cn(selectClass, "h-8 w-auto text-xs")}>
-                            {MILESTONE_STATUSES.map((status) => (
-                              <option key={status} value={status}>
-                                {t(`milestoneStatus.${status}`)}
-                              </option>
-                            ))}
-                          </select>
-                          <button type="submit" className={buttonVariants({ variant: "secondary", size: "sm" })}>
-                            {t("save")}
-                          </button>
-                        </form>
+                        <StatusForm
+                          action={updateMilestoneStatus}
+                          hidden={{ locale, milestoneId: m.id }}
+                          current={m.status}
+                          options={MILESTONE_STATUSES.map((status) => ({ value: status, label: t(`milestoneStatus.${status}`) }))}
+                          ariaLabel={t("statusLabel")}
+                        />
                       )}
                     </li>
                     );
@@ -293,6 +293,7 @@ export default async function ProjectPage(props: {
                 <span className="text-zinc-600">{"// 02 "}</span>
                 {t("ticketsTitle")}
                 {openCount > 0 && <span className="ml-3 text-amber-400">{t("ticketsOpenCount", { count: openCount })}</span>}
+                {reviewCount > 0 && <span className="ml-3 text-emerald-400">{reviewCount} · {t("ticketFilterReview")}</span>}
               </span>
             </div>
             {folderTickets.length > 0 && (
@@ -301,12 +302,13 @@ export default async function ProjectPage(props: {
                   [
                     ["all", t("ticketFilterAll")],
                     ["open", t("ticketFilterOpen")],
+                    ["review", t("ticketFilterReview")],
                     ["solved", t("ticketFilterSolved")],
                   ] as const
                 ).map(([value, label]) => (
                   <Link
                     key={value}
-                    href={{ pathname: `/portal/projects/${slug}`, query: { ...(dept ? { dept } : {}), ...(value === "all" ? {} : { tickets: value }) } }}
+                    href={projectFilterHref(slug, { dept: deptParam, tickets: value })}
                     className={chip(ticketFilter === value)}
                   >
                     {label}

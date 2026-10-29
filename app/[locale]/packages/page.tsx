@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PACKAGES } from "@/lib/packages";
 import { PackageCard } from "@/components/packages/PackageCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { publicAlternates } from "@/lib/site-url";
 
 export async function generateMetadata(
   props: {
@@ -14,6 +15,7 @@ export async function generateMetadata(
   return {
     title: `${t("listTitle")} — IxMaOperations`,
     description: t("listDescription"),
+    alternates: publicAlternates(params.locale, "/packages"),
   };
 }
 

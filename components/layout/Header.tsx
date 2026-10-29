@@ -34,18 +34,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-800">
       <div className="container mx-auto px-6 h-14 flex items-center justify-between max-w-6xl">
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link href="/" className="flex items-center group">
           <Image
-            src="/logo-icon.svg"
+            src="/ixma-operations-lockup-jade.svg"
             alt="IxMa Operations"
-            width={24}
-            height={24}
-            className="w-6 h-6 object-contain"
+            width={114}
+            height={36}
+            className="h-8 sm:h-9 w-auto object-contain transition-opacity group-hover:opacity-90"
             priority
           />
-          <span className="font-semibold text-sm tracking-tight text-white group-hover:text-zinc-200 transition-colors">
-            IxMa Operations
-          </span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-xs text-zinc-400">

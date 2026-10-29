@@ -125,6 +125,7 @@ beforeAll(async () => {
   await db.exec(sql("20261029000300_ticket_attachments.sql"));
   await db.exec(sql("20261029000400_problem_details.sql"));
   await db.exec(sql("20261029000500_project_log.sql"));
+  await db.exec(sql("20261029000600_reopen_ticket.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -957,5 +958,91 @@ describe("the automatic project log", () => {
   it("the public key sees nothing", async () => {
     await as(null);
     expect(await rejection(`select * from public.project_events`)).toMatch(/permission denied/i);
+  });
+});
+
+describe("sending a fixed ticket back ('still broken')", () => {
+  const reopen = async (ticket: string) => (await rows<{ ok: boolean }>(`select public.reopen_ticket('${ticket}') as ok`))[0].ok;
+  const statusOf = async (ticket: string) => (await rows<{ status: string }>(`select status from public.tickets where id = '${ticket}'`))[0]?.status;
+  /** The owner marks a ticket as fixed, waiting for the person to check. */
+  const markFixed = async (ticket: string) => {
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.tickets set status = 'needs_review' where id = '${ticket}'`);
+  };
+
+  it("someone with the ticket's folder can reopen it, and it becomes plain 'open' again", async () => {
+    for (const who of [U.leadFin, U.leadAll, U.multi]) {
+      await markFixed(T_FIN);
+      await as({ id: who });
+      expect(await reopen(T_FIN)).toBe(true);
+      expect(await statusOf(T_FIN)).toBe("open");
+    }
+  });
+
+  it("a company-wide FULL executive can reopen, and the owner can too", async () => {
+    await markFixed(T_FIN);
+    await as({ id: U.cfo });
+    expect(await reopen(T_FIN)).toBe(true);
+    await markFixed(T_FIN);
+    await as({ id: U.admin, admin: true });
+    expect(await reopen(T_FIN)).toBe(true);
+  });
+
+  it("a project-wide ticket can be reopened by any member of the project", async () => {
+    await markFixed(T_ALL);
+    await as({ id: U.memberOps });
+    expect(await reopen(T_ALL)).toBe(true);
+  });
+
+  it("people without that folder cannot reopen it", async () => {
+    await markFixed(T_FIN);
+    await as({ id: U.memberOps }); // Operations only
+    expect(await reopen(T_FIN)).toBe(false);
+    await as({ id: U.admin, admin: true });
+    expect(await statusOf(T_FIN)).toBe("needs_review");
+  });
+
+  it("a view-only executive, another company's people and a signed-in stranger cannot", async () => {
+    await markFixed(T_FIN);
+    for (const who of [U.ceo, U.outsider, U.betaExec, U.nobody]) {
+      await as({ id: who });
+      expect(await reopen(T_FIN)).toBe(false);
+    }
+    await as({ id: U.admin, admin: true });
+    expect(await statusOf(T_FIN)).toBe("needs_review");
+  });
+
+  it("the public key cannot call it at all", async () => {
+    await markFixed(T_FIN);
+    await as(null);
+    expect(await rejection(`select public.reopen_ticket('${T_FIN}')`)).toMatch(/permission denied/i);
+  });
+
+  it("only a ticket that is waiting for review can be reopened — nothing else changes status through it", async () => {
+    for (const status of ["open", "in_progress", "resolved", "closed"]) {
+      await as({ id: U.admin, admin: true });
+      await db.exec(`update public.tickets set status = '${status}' where id = '${T_FIN}'`);
+      await as({ id: U.leadFin });
+      expect(await reopen(T_FIN)).toBe(false);
+      expect(await statusOf(T_FIN)).toBe(status);
+    }
+  });
+
+  it("does not open the door to editing tickets directly", async () => {
+    await markFixed(T_FIN);
+    await as({ id: U.leadFin });
+    expect(await affected(`update public.tickets set status = 'resolved' where id = '${T_FIN}'`)).toBe(0);
+    expect(await statusOf(T_FIN)).toBe("needs_review");
+  });
+
+  it("the project log records who sent it back, from 'needs review' to 'open'", async () => {
+    await markFixed(T_FIN);
+    await as({ id: U.leadFin });
+    await reopen(T_FIN);
+    const [event] = await rows<{ from_status: string; to_status: string; actor_id: string }>(
+      `select from_status, to_status, actor_id from public.project_events
+       where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'open'`
+    );
+    expect(event).toEqual({ from_status: "needs_review", to_status: "open", actor_id: U.leadFin });
   });
 });

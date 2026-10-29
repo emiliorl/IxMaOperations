@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/Button";
+import { publicAlternates } from "@/lib/site-url";
 import {
   ArrowRight,
   Terminal,
@@ -26,6 +27,7 @@ export async function generateMetadata(
   return {
     title: `${t("metaTitle")} — IxMaOperations`,
     description: t("metaDescription"),
+    alternates: publicAlternates(params.locale, "/about"),
   };
 }
 

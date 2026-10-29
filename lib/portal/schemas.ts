@@ -40,6 +40,12 @@ export const commentInput = z.object({
   internal: z.boolean(),
 });
 
+/** "Still broken": a note is required, so the owner always knows what is still wrong. */
+export const reopenTicketInput = z.object({
+  ticketId: z.string().uuid(),
+  message: z.string().trim().min(3).max(5000),
+});
+
 export const ticketStatusInput = z.object({
   ticketId: z.string().uuid(),
   status: z.enum(TICKET_STATUSES),

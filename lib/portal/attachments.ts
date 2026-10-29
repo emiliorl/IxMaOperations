@@ -51,6 +51,29 @@ export function sanitizeFileName(name: string): string {
   return trimmed || "file";
 }
 
+interface FileLike {
+  name: string;
+  size: number;
+  lastModified?: number;
+}
+
+/** The same file picked twice (same name, size and date) is one file. */
+export const fileKey = (file: FileLike): string => `${file.name}|${file.size}|${file.lastModified ?? 0}`;
+
+/** Adds newly picked files to the ones already chosen, in order, skipping duplicates. */
+export function mergeFiles<T extends FileLike>(current: T[], added: T[]): T[] {
+  const seen = new Set(current.map(fileKey));
+  const merged = [...current];
+  for (const file of added) {
+    const key = fileKey(file);
+    if (!seen.has(key)) {
+      seen.add(key);
+      merged.push(file);
+    }
+  }
+  return merged;
+}
+
 /** Metadata-only check, usable in the browser before anything is uploaded. */
 export function checkFiles(files: { name: string; size: number }[]): FileProblem | null {
   if (files.length > MAX_FILES) return "too_many";

@@ -4,9 +4,9 @@ import { Link } from "@/i18n/navigation";
 import { updateTicketStatus } from "@/app/[locale]/portal/actions";
 import { AttachmentList } from "@/components/portal/AttachmentList";
 import { CommentForm } from "@/components/portal/CommentForm";
-import { selectClass } from "@/components/portal/Field";
 import { Pill } from "@/components/portal/Pills";
-import { buttonVariants } from "@/components/ui/Button";
+import { StatusForm } from "@/components/portal/StatusForm";
+import { StillBrokenForm } from "@/components/portal/StillBrokenForm";
 import { TICKET_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
 import { canWriteIn, getProjectAccess, getTicketDetail } from "@/lib/portal/queries";
@@ -69,6 +69,19 @@ export default async function TicketPage(props: {
             )}
           </header>
 
+          {/* The owner says it's fixed → the person can say "still broken" and reopen this same ticket. */}
+          {ticket.status === "needs_review" && mayComment && !isAdmin && (
+            <section className="rounded-lg border border-amber-500/40 bg-amber-500/[0.04] overflow-hidden">
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="space-y-1">
+                  <h2 className="text-sm font-semibold text-zinc-100">{t("stillBrokenTitle")}</h2>
+                  <p className="text-xs text-zinc-400 leading-relaxed max-w-2xl">{t("stillBrokenHelp")}</p>
+                </div>
+                <StillBrokenForm locale={locale} ticketId={ticket.id} />
+              </div>
+            </section>
+          )}
+
           <section className={panel}>
             <div className={band}>
               <span>
@@ -128,23 +141,16 @@ export default async function TicketPage(props: {
                   {t("adminControls")}
                 </span>
               </div>
-              <form action={updateTicketStatus} className="p-5 sm:p-6 flex flex-wrap items-center gap-3">
-                <input type="hidden" name="locale" value={locale} />
-                <input type="hidden" name="ticketId" value={ticket.id} />
-                <label htmlFor="status" className="font-mono text-xs uppercase tracking-wider text-zinc-400">
-                  {t("statusLabel")}
-                </label>
-                <select id="status" name="status" defaultValue={ticket.status} className={cn(selectClass, "w-auto")}>
-                  {TICKET_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {t(`ticketStatus.${status}`)}
-                    </option>
-                  ))}
-                </select>
-                <button type="submit" className={buttonVariants({ variant: "secondary" })}>
-                  {t("save")}
-                </button>
-              </form>
+              <div className="p-5 sm:p-6 flex flex-wrap items-center gap-3">
+                <span className="font-mono text-xs uppercase tracking-wider text-zinc-400">{t("statusLabel")}</span>
+                <StatusForm
+                  action={updateTicketStatus}
+                  hidden={{ locale, ticketId: ticket.id }}
+                  current={ticket.status}
+                  options={TICKET_STATUSES.map((status) => ({ value: status, label: t(`ticketStatus.${status}`) }))}
+                  ariaLabel={t("statusLabel")}
+                />
+              </div>
             </section>
           )}
 

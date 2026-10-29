@@ -7,9 +7,40 @@ import {
   contentMatches,
   extensionOf,
   humanSize,
+  mergeFiles,
   prepareFiles,
   sanitizeFileName,
 } from "./attachments";
+
+describe("choosing files one at a time", () => {
+  const file = (name: string, size = 100, lastModified = 1) => ({ name, size, lastModified });
+
+  it("picking more files adds to the ones already chosen, in order", () => {
+    const merged = mergeFiles([file("a.png")], [file("b.png"), file("c.png")]);
+    expect(merged.map((f) => f.name)).toEqual(["a.png", "b.png", "c.png"]);
+  });
+
+  it("the same file picked again is not added twice", () => {
+    expect(mergeFiles([file("a.png")], [file("a.png")])).toHaveLength(1);
+    expect(mergeFiles([], [file("a.png"), file("a.png")])).toHaveLength(1);
+  });
+
+  it("different files that share a name are kept (different size or date)", () => {
+    expect(mergeFiles([file("shot.png", 100)], [file("shot.png", 200)])).toHaveLength(2);
+    expect(mergeFiles([file("shot.png", 100, 1)], [file("shot.png", 100, 2)])).toHaveLength(2);
+  });
+
+  it("cancelling the picker (nothing added) keeps what was chosen", () => {
+    const current = [file("a.png")];
+    expect(mergeFiles(current, [])).toEqual(current);
+  });
+
+  it("does not change the lists it was given", () => {
+    const current = [file("a.png")];
+    mergeFiles(current, [file("b.png")]);
+    expect(current).toHaveLength(1);
+  });
+});
 
 const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
 const file = (name: string, bytes: Uint8Array | string) => new File([typeof bytes === "string" ? bytes : new Uint8Array(bytes)], name);

@@ -5,6 +5,7 @@ import { ScheduleEmbed } from "@/components/custom-projects/ScheduleEmbed";
 import { getPackageBySlug } from "@/lib/packages";
 import { parseSurveyAnswers } from "@/lib/estimator-logic";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { publicAlternates } from "@/lib/site-url";
 
 export async function generateMetadata(
   props: {
@@ -16,6 +17,7 @@ export async function generateMetadata(
   return {
     title: `${t("titleDefault")} — IxMaOperations`,
     description: t("description"),
+    alternates: publicAlternates(params.locale, "/custom-projects"),
   };
 }
 

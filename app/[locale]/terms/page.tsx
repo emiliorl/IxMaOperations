@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LegalDocument, type LegalSection } from "@/components/legal/LegalDocument";
+import { publicAlternates } from "@/lib/site-url";
 
 export async function generateMetadata(
   props: {
@@ -12,6 +13,7 @@ export async function generateMetadata(
   return {
     title: `${t("title")} — IxMaOperations`,
     description: t("intro"),
+    alternates: publicAlternates(params.locale, "/terms"),
   };
 }
 

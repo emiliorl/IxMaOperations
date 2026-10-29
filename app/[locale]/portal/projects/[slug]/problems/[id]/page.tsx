@@ -43,7 +43,8 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
   const open = ticketCountsByProblem(problem.tickets.map((tk) => ({ milestoneId: id, status: tk.status }))).get(id)?.open ?? 0;
-  const activity = (await getProjectEvents(supabase, project.id, null, 500)).filter((e) => e.milestoneId === id).slice(0, 30);
+  // "Ticket opened" is already visible as a row in the ticket history below, so it's left out here.
+  const activity = await getProjectEvents(supabase, project.id, null, 30, { milestoneId: id, excludeKind: "ticket_opened" });
 
   // Section numbers follow what is actually shown (links, cost and activity are optional).
   const hasLinks = problem.resources.length > 0;
@@ -78,11 +79,10 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
             {problem.dueDate && ` · ${t("due", { date: dueFmt.format(Date.parse(problem.dueDate)) })}`}
           </p>
           {mayOpen && (
-            <div className="flex flex-wrap items-center gap-3 pt-1">
+            <div className="pt-1">
               <Link href={newTicket} className={buttonVariants({ size: "lg" })}>
                 {t("openTicketFor")}
               </Link>
-              <span className="text-xs text-zinc-500">{t("openTicketsCount", { count: open })}</span>
             </div>
           )}
         </header>

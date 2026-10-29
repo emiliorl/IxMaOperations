@@ -15,7 +15,14 @@ const loadSession = cache(async () => {
   const supabase = await createSupabaseServer();
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
+  // "No session cookie" is the normal signed-out case. Anything else (an expired
+  // or already-used refresh token, the auth server being slow or rate-limiting)
+  // also lands here as "signed out"; record why, so a surprise sign-in prompt can be explained.
+  if (error && error.name !== "AuthSessionMissingError") {
+    console.warn(`[portal] session check failed: ${error.name} status=${error.status ?? "?"} ${error.message}`);
+  }
   if (!user) return { supabase, user: null };
 
   const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
@@ -33,7 +40,7 @@ const loadSession = cache(async () => {
 export async function getPortalSession() {
   const session = await loadSession();
   if (!session?.user) return null;
-  return { name: session.name!, isAdmin: session.isAdmin! };
+  return { name: session.name!, email: session.user.email ?? "", isAdmin: session.isAdmin! };
 }
 
 /**

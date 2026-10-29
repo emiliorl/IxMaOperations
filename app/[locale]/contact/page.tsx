@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/Button";
+import { publicAlternates } from "@/lib/site-url";
 import { ArrowRight, Mail } from "lucide-react";
 
 export async function generateMetadata(
@@ -14,6 +15,7 @@ export async function generateMetadata(
   return {
     title: `${t("title")} — IxMaOperations`,
     description: t("description"),
+    alternates: publicAlternates(params.locale, "/contact"),
   };
 }
 

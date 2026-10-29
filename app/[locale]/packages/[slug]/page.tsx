@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SpecSheet } from "@/components/packages/SpecSheet";
 import { ArrowRight, Check } from "lucide-react";
 import { routing } from "@/i18n/routing";
+import { publicAlternates } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 
 export function generateStaticParams() {
@@ -28,6 +29,7 @@ export async function generateMetadata(
   return {
     title: `${t("name")} — IxMaOperations`,
     description: t("pitch"),
+    alternates: publicAlternates(params.locale, `/packages/${pkg.slug}`),
   };
 }
 
