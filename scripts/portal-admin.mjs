@@ -16,16 +16,25 @@
  *   reset-password <email>                              new one-time password; they must choose their own at next sign-in
  *   invite-link <email> [--locale en|es]                a one-time link that signs them in and lets them choose their own
  *                                                       password (the safest way to onboard someone — no password is shared)
- *   member <projectSlug> <email> [--dept "<name>" ...] [--all] [--role lead|member]
+ *   member <projectSlug> <email> [--dept "<name>" ...] [--all] [--role lead|member] [--costs]
  *                                                       which FOLDERS they can open: repeat --dept for several,
- *                                                       or --all (also the default when no --dept is given)
+ *                                                       or --all (also the default when no --dept is given).
+ *                                                       Everyone with --all always sees costs; --costs lets a team
+ *                                                       lead (or anyone with only some folders) see them too.
  *   unmember <projectSlug> <email>                      take someone off a project
- *   exec <orgSlug> <email> [--access full|view]         company-wide access (CEO / CFO): every project and
+ *   exec <orgSlug> <email> [--access full|view] [--costs]
+ *                                                       company-wide access (CEO / CFO): every project and
  *                                                       folder of that company. full = can also open tickets
- *                                                       and comment; view = read only. Default full.
+ *                                                       and comment (and always sees costs); view = read only,
+ *                                                       and sees costs only with --costs. Default full.
  *   unexec <orgSlug> <email>                            revoke company-wide access
  *   milestone <projectSlug> "<Title>" [--dept "<name>"] [--due YYYY-MM-DD]
  *                                     [--status pending|in_progress|completed|blocked] [--order N]
+ *   import-plan <projectSlug> <file.json> [--folder "<name>"] [--create-folders] [--dry-run]
+ *                                                       load a client's problems (code, priority, action plan,
+ *                                                       links, cost) from a JSON file; re-running updates the same
+ *                                                       items (matched by code). Prices must be in "cost" only.
+ *                                                       See scripts/plan-import.mjs for the file format.
  *   make-admin <email>                                  mark yourself as the owner (sign in again afterwards)
  *   list                                                show companies, projects and who can see them
  *
@@ -55,7 +64,9 @@
  */
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import fs from "node:fs";
 import { blindIndex, decryptLoose, encryptField, encryptOptional } from "./crypto.mjs";
+import { validatePlan } from "./plan-import.mjs";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SECRET_KEY;
@@ -69,7 +80,7 @@ const [command, ...rest] = process.argv.slice(2);
 const positional = [];
 const flags = {};
 const multi = {}; // repeated flags, e.g. --dept "A" --dept "B"
-const BOOLEAN_FLAGS = new Set(["all"]);
+const BOOLEAN_FLAGS = new Set(["all", "costs", "dry-run", "create-folders"]);
 for (let i = 0; i < rest.length; i++) {
   if (!rest[i].startsWith("--")) {
     positional.push(rest[i]);
@@ -227,7 +238,9 @@ const commands = {
     const folders = allFolders ? [] : await Promise.all(names.map((n) => departmentByName(project.organization_id, n)));
 
     must(
-      await db.from("project_members").upsert({ project_id: project.id, user_id: profile.id, role, all_departments: allFolders }),
+      await db
+        .from("project_members")
+        .upsert({ project_id: project.id, user_id: profile.id, role, all_departments: allFolders, can_view_costs: flags.costs === true }),
       "Adding to project"
     );
     // Replace the folder list wholesale (a failure here leaves fewer folders, never more).
@@ -238,7 +251,10 @@ const commands = {
         "Granting folders (is each department attached to the project? use project-dept)"
       );
     }
-    console.log(`✓ ${profile.display_name} → ${project.name} · ${allFolders ? "all folders" : folders.map((f) => f.name).join(", ")} · ${role}`);
+    const seesCosts = allFolders || flags.costs === true;
+    console.log(
+      `✓ ${profile.display_name} → ${project.name} · ${allFolders ? "all folders" : folders.map((f) => f.name).join(", ")} · ${role} · ${seesCosts ? "can see costs" : "no costs"}`
+    );
   },
 
   async unmember() {
@@ -255,8 +271,16 @@ const commands = {
     if (!["full", "view"].includes(level)) fail('--access must be "full" or "view".');
     const org = await orgBySlug(positional[0]);
     const profile = await profileByEmail(positional[1]);
-    must(await db.from("organization_members").upsert({ organization_id: org.id, user_id: profile.id, access_level: level }), "Saving company-wide access");
-    console.log(`✓ ${profile.display_name} now has ${level === "full" ? "FULL" : "VIEW-ONLY"} company-wide access to ${org.name}`);
+    must(
+      await db
+        .from("organization_members")
+        .upsert({ organization_id: org.id, user_id: profile.id, access_level: level, can_view_costs: flags.costs === true }),
+      "Saving company-wide access"
+    );
+    const seesCosts = level === "full" || flags.costs === true;
+    console.log(
+      `✓ ${profile.display_name} now has ${level === "full" ? "FULL" : "VIEW-ONLY"} company-wide access to ${org.name} · ${seesCosts ? "can see costs" : "no costs"}`
+    );
   },
 
   async unexec() {
@@ -288,6 +312,127 @@ const commands = {
     console.log(`✓ Milestone "${positional[1]}" in ${project.name}`);
   },
 
+  async "import-plan"() {
+    need(2, 'import-plan <projectSlug> <file.json> [--folder "<name>"] [--create-folders] [--dry-run]');
+    const dryRun = flags["dry-run"] === true;
+
+    let raw;
+    try {
+      raw = JSON.parse(fs.readFileSync(positional[1], "utf8"));
+    } catch (error) {
+      fail(`Couldn't read ${positional[1]} as JSON: ${error.message}`);
+    }
+    const checked = validatePlan(raw);
+    if (!checked.ok) fail(`The plan file has problems:\n  - ${checked.errors.join("\n  - ")}`);
+    const { plan } = checked;
+
+    const project = await projectBySlug(positional[0]);
+
+    // Folders: the file names them per problem; --folder is the default for problems that don't.
+    const folderOf = (problem) => problem.folder ?? flags.folder ?? null;
+    const wanted = [...new Set(plan.problems.map(folderOf).filter(Boolean))];
+    const known = must(await db.from("departments").select("id,name").eq("organization_id", project.organization_id), "Looking up folders")
+      .map((d) => ({ id: d.id, name: decryptLoose(d.name) }));
+    const folderIds = new Map();
+    for (const name of wanted) {
+      const found = known.find((d) => d.name.trim().toLowerCase() === name.trim().toLowerCase());
+      if (found) folderIds.set(name, found.id);
+      else if (flags["create-folders"] === true) {
+        if (dryRun) folderIds.set(name, null);
+        else {
+          const created = must(
+            await db.from("departments").insert({ organization_id: project.organization_id, name: encryptField(name) }).select("id").single(),
+            `Creating folder "${name}"`
+          );
+          folderIds.set(name, created.id);
+        }
+      } else {
+        fail(`No folder "${name}" in that company. Add --create-folders to create it, or create it with: dept <orgSlug> "${name}"`);
+      }
+    }
+
+    // What already exists (so re-running updates instead of duplicating).
+    const existingResult = await db.from("project_milestones").select("id,title,code").eq("project_id", project.id);
+    if (existingResult.error) {
+      fail(`Reading existing plan items: ${existingResult.error.message}\n  (Has migration 20261029000400_problem_details.sql been run in the Supabase SQL editor?)`);
+    }
+    const existing = existingResult.data.map((m) => ({ id: m.id, title: decryptLoose(m.title) ?? "", code: decryptLoose(m.code) }));
+    const findExisting = (problem) =>
+      problem.code
+        ? existing.find((m) => (m.code ?? "").toLowerCase() === problem.code.toLowerCase())
+        : existing.find((m) => !m.code && m.title.trim().toLowerCase() === problem.title.trim().toLowerCase());
+
+    console.log(`${dryRun ? "DRY RUN — nothing will be written. " : ""}Project: ${project.name}`);
+    let created = 0;
+    let updated = 0;
+    for (const problem of plan.problems) {
+      const folder = folderOf(problem);
+      const match = findExisting(problem);
+      const label = `${problem.code ? problem.code + " · " : ""}${problem.title}`;
+      const costNote = problem.cost === undefined ? "cost untouched" : problem.cost === null ? "cost removed" : "with cost";
+      console.log(`  ${match ? "update" : "create"}  ${label}  [${folder ?? "project-wide"} · ${problem.priority} · ${costNote}]`);
+      if (dryRun) {
+        match ? updated++ : created++;
+        continue;
+      }
+
+      if (folder) {
+        must(
+          await db.from("project_departments").upsert({ project_id: project.id, department_id: folderIds.get(folder) }),
+          `Attaching folder "${folder}" to the project`
+        );
+      }
+      const content = {
+        department_id: folder ? folderIds.get(folder) : null,
+        title: encryptField(problem.title),
+        code: encryptOptional(problem.code),
+        priority: problem.priority,
+        delivery: encryptOptional(problem.delivery),
+        summary: encryptOptional(problem.summary),
+        solution: encryptOptional(problem.solution),
+        resources: problem.links.length > 0 ? encryptField(JSON.stringify(problem.links)) : null,
+        due_date: problem.due,
+        sort_order: problem.order,
+      };
+
+      let id;
+      if (match) {
+        // Progress belongs to the portal once an item exists, so a re-import never resets its status.
+        must(await db.from("project_milestones").update(content).eq("id", match.id), `Updating ${label}`);
+        id = match.id;
+        updated++;
+      } else {
+        const inserted = must(
+          await db
+            .from("project_milestones")
+            .insert({
+              ...content,
+              project_id: project.id,
+              status: problem.status,
+              completed_at: problem.status === "completed" ? new Date().toISOString() : null,
+            })
+            .select("id")
+            .single(),
+          `Creating ${label}`
+        );
+        id = inserted.id;
+        created++;
+      }
+
+      if (problem.cost === null) {
+        must(await db.from("problem_costs").delete().eq("milestone_id", id), `Removing cost of ${label}`);
+      } else if (problem.cost !== undefined) {
+        must(await db.from("problem_costs").upsert({ milestone_id: id, cost_note: encryptField(problem.cost) }), `Saving cost of ${label}`);
+      }
+    }
+
+    if (plan.overview !== null) {
+      console.log("  overview  " + (dryRun ? "would be set" : "set"));
+      if (!dryRun) must(await db.from("projects").update({ overview: encryptField(plan.overview) }).eq("id", project.id), "Saving the overview");
+    }
+    console.log(`✓ ${dryRun ? "Would create" : "Created"} ${created}, ${dryRun ? "would update" : "updated"} ${updated}.`);
+  },
+
   async "make-admin"() {
     need(1, "make-admin <email>");
     const profile = await profileByEmail(positional[0]);
@@ -302,32 +447,35 @@ const commands = {
     for (const org of orgs) {
       console.log(`\n${decryptLoose(org.name)}  [${org.slug}]`);
       const execs = must(
-        await db.from("organization_members").select("access_level,profiles(display_name,email)").eq("organization_id", org.id),
+        await db.from("organization_members").select("*,profiles(display_name,email)").eq("organization_id", org.id),
         "Listing company-wide access"
       );
       for (const e of execs) {
         const who = Array.isArray(e.profiles) ? e.profiles[0] : e.profiles;
-        console.log(`  ★ ${decryptLoose(who?.display_name)} <${decryptLoose(who?.email)}> · company-wide · ${e.access_level === "full" ? "full access" : "view only"}`);
+        console.log(`  ★ ${decryptLoose(who?.display_name)} <${decryptLoose(who?.email)}> · company-wide · ${e.access_level === "full" ? "full access" : "view only"}${e.access_level === "full" || e.can_view_costs ? " · costs" : ""}`);
       }
       const projects = must(await db.from("projects").select("id,name,slug,office_address").eq("organization_id", org.id), "Listing projects");
       for (const project of projects) {
         console.log(`  ▸ ${decryptLoose(project.name)}  [${project.slug}]${project.office_address ? `  @ ${decryptLoose(project.office_address)}` : ""}`);
         const members = must(
-          await db.from("project_members").select("user_id,role,all_departments,profiles(display_name,email)").eq("project_id", project.id),
+          await db.from("project_members").select("*,profiles(display_name,email)").eq("project_id", project.id),
           "Listing members"
         );
         const folders = must(
-          await db.from("project_member_departments").select("user_id,departments(name)").eq("project_id", project.id),
+          await db.from("project_member_departments").select("user_id,department_id").eq("project_id", project.id),
           "Listing folders"
+        );
+        const deptNames = new Map(
+          must(await db.from("departments").select("id,name").eq("organization_id", org.id), "Listing department names").map((d) => [d.id, decryptLoose(d.name)])
         );
         for (const m of members) {
           const who = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
           const names = folders
             .filter((f) => f.user_id === m.user_id)
-            .map((f) => decryptLoose((Array.isArray(f.departments) ? f.departments[0] : f.departments)?.name))
+            .map((f) => deptNames.get(f.department_id))
             .filter(Boolean);
           const scope = m.all_departments ? "all folders" : names.length ? names.join(", ") : "project-wide items only";
-          console.log(`      - ${decryptLoose(who?.display_name)} <${decryptLoose(who?.email)}> · ${scope} · ${m.role}`);
+          console.log(`      - ${decryptLoose(who?.display_name)} <${decryptLoose(who?.email)}> · ${scope} · ${m.role}${m.all_departments || m.can_view_costs ? " · costs" : ""}`);
         }
       }
     }

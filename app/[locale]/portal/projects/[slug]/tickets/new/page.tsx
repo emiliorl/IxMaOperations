@@ -33,7 +33,12 @@ export default async function NewTicketPage(props: {
   // those in folders they may write in.
   const items = project.milestones
     .filter((m) => canWriteIn(access, isAdmin, m.departmentId))
-    .map((m) => ({ id: m.id, title: m.title, description: m.description, departmentId: m.departmentId }));
+    .map((m) => ({
+      id: m.id,
+      title: m.code ? `${m.code} · ${m.title}` : m.title,
+      description: m.summary ?? m.description,
+      departmentId: m.departmentId,
+    }));
 
   return (
     <div className="py-10 md:py-14">
@@ -41,7 +46,7 @@ export default async function NewTicketPage(props: {
         <Link href={`/portal/projects/${slug}`} className="text-xs text-zinc-500 hover:text-zinc-200 underline underline-offset-4">
           ← {t("backToProject")}
         </Link>
-        <SectionHeader as="h1" index="00" label={project.name} title={t("reportProblem")} description={t("newTicketDescription")} />
+        <SectionHeader as="h1" index="00" label={project.name} title={t("openTicket")} description={t("newTicketDescription")} />
         <TicketForm
           locale={locale}
           projectSlug={slug}

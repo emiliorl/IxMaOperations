@@ -83,7 +83,19 @@ export default async function TicketPage(props: {
                 {ticket.planItem && (
                   <div className="space-y-1">
                     <dt className="font-mono uppercase tracking-wider text-zinc-500">{t("relatedItem")}</dt>
-                    <dd className="text-zinc-300">{ticket.planItem}</dd>
+                    <dd className="text-zinc-300">
+                      {ticket.planItemId ? (
+                        <Link
+                          href={`/portal/projects/${ticket.project.slug}/problems/${ticket.planItemId}`}
+                          className="underline underline-offset-4 hover:text-white"
+                        >
+                          {ticket.planItemCode ? `${ticket.planItemCode} · ` : ""}
+                          {ticket.planItem}
+                        </Link>
+                      ) : (
+                        ticket.planItem
+                      )}
+                    </dd>
                   </div>
                 )}
                 <div className="space-y-1">

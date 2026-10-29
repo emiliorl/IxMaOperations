@@ -4,12 +4,22 @@ import { Link } from "@/i18n/navigation";
 import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { AccessPanel } from "@/components/portal/AccessPanel";
 import { selectClass } from "@/components/portal/Field";
+import { Markdown } from "@/components/portal/Markdown";
 import { Pill } from "@/components/portal/Pills";
+import { TicketList } from "@/components/portal/TicketList";
 import { buttonVariants } from "@/components/ui/Button";
 import { MILESTONE_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
+import { isActiveTicket, ticketCountsByProblem } from "@/lib/portal/plan";
 import { milestoneProgress } from "@/lib/portal/progress";
-import { canOpenTickets, canWriteIn, getProjectAccess, getProjectDetail, listCompanyAccess } from "@/lib/portal/queries";
+import {
+  canOpenTickets,
+  canWriteIn,
+  getProjectAccess,
+  getProjectDetail,
+  listCompanyAccess,
+  listProjectCostFlags,
+} from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -17,10 +27,10 @@ const panel = "rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidd
 
 export default async function ProjectPage(props: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ dept?: string; access?: string }>;
+  searchParams: Promise<{ dept?: string; access?: string; tickets?: string }>;
 }) {
   const { locale, slug } = await props.params;
-  const { dept, access: accessNotice } = await props.searchParams;
+  const { dept, access: accessNotice, tickets: ticketFilterParam } = await props.searchParams;
   setRequestLocale(locale);
 
   const { supabase, user, isAdmin } = await requireUser(locale);
@@ -29,7 +39,6 @@ export default async function ProjectPage(props: {
 
   const t = await getTranslations("Portal");
   const access = await getProjectAccess(supabase, user.id, project.id, project.organizationId);
-  const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
   // `project.departments` is already limited by the database to the folders this
@@ -45,7 +54,15 @@ export default async function ProjectPage(props: {
 
   const progress = milestoneProgress(project.milestones);
   const milestones = project.milestones.filter((m) => matches(m.departmentId));
-  const tickets = project.tickets.filter((ticket) => matches(ticket.departmentId));
+  const folderTickets = project.tickets.filter((ticket) => matches(ticket.departmentId));
+  const openCount = folderTickets.filter((ticket) => isActiveTicket(ticket.status)).length;
+  const ticketFilter = ticketFilterParam === "open" || ticketFilterParam === "solved" ? ticketFilterParam : "all";
+  const tickets = folderTickets.filter(
+    (ticket) => ticketFilter === "all" || isActiveTicket(ticket.status) === (ticketFilter === "open")
+  );
+  const ticketCounts = ticketCountsByProblem(project.tickets);
+  // Only problems that have a code get a label next to their tickets (without one it would just repeat the title).
+  const problemLabels = new Map(project.milestones.flatMap((m): [string, string][] => (m.code ? [[m.id, m.code]] : [])));
   const staging = safeHttpUrl(project.stagingUrl);
   const production = safeHttpUrl(project.productionUrl);
   const mayOpenTickets = canOpenTickets(access, isAdmin);
@@ -63,7 +80,9 @@ export default async function ProjectPage(props: {
       active ? "border-zinc-600 bg-zinc-800 text-zinc-100" : "border-zinc-800 bg-zinc-900 text-zinc-500 hover:text-zinc-200"
     );
 
-  const companyAccess = isAdmin ? await listCompanyAccess(supabase, project.organizationId) : [];
+  const [companyAccess, costUserIds] = isAdmin
+    ? await Promise.all([listCompanyAccess(supabase, project.organizationId), listProjectCostFlags(supabase, project.id)])
+    : [[], []];
 
   return (
     <>
@@ -79,6 +98,16 @@ export default async function ProjectPage(props: {
               <Pill kind="project" value={project.status} label={t(`projectStatus.${project.status}`)} />
             </div>
             {project.description && <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-2xl">{project.description}</p>}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {mayOpenTickets && (
+                <Link href={`/portal/projects/${slug}/tickets/new`} className={buttonVariants({ size: "sm" })}>
+                  {t("openTicket")}
+                </Link>
+              )}
+              <Link href={`/portal/projects/${slug}/log`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                {t("logLink")} →
+              </Link>
+            </div>
             {(project.officeAddress || staging || production) && (
               <dl className="flex flex-wrap gap-x-8 gap-y-2 text-xs pt-1">
                 {project.officeAddress && (
@@ -117,6 +146,22 @@ export default async function ProjectPage(props: {
               </p>
             )}
           </header>
+
+          {/* Overview (never holds costs — those live on each problem and are access-controlled) */}
+          {project.overview && (
+            <details className={cn(panel, "group")}>
+              <summary className={cn(band, "cursor-pointer list-none select-none hover:text-zinc-300")}>
+                <span>
+                  <span className="text-zinc-600">{"// 00 "}</span>
+                  {t("overviewTitle")}
+                </span>
+                <span aria-hidden className="transition-transform group-open:rotate-180">⌄</span>
+              </summary>
+              <div className="p-5 sm:p-6">
+                <Markdown>{project.overview}</Markdown>
+              </div>
+            </details>
+          )}
 
           {/* Folders */}
           {project.departments.length > 0 && (
@@ -170,26 +215,51 @@ export default async function ProjectPage(props: {
                 <p className="text-sm text-zinc-500">{t("noMilestones")}</p>
               ) : (
                 <ul className="divide-y divide-zinc-800/80">
-                  {milestones.map((m) => (
-                    <li key={m.id} className="py-3 first:pt-0 last:pb-0 flex flex-wrap items-start justify-between gap-3">
-                      <div className="space-y-1 min-w-0">
+                  {milestones.map((m) => {
+                    const counts = ticketCounts.get(m.id) ?? { open: 0, total: 0 };
+                    const problemHref = `/portal/projects/${slug}/problems/${m.id}`;
+                    return (
+                    <li key={m.id} className="py-4 first:pt-0 last:pb-0 flex flex-wrap items-start justify-between gap-3">
+                      <div className="space-y-1.5 min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
+                          {m.code && <span className="font-mono text-xs text-zinc-400">{m.code}</span>}
                           <Pill kind="milestone" value={m.status} label={t(`milestoneStatus.${m.status}`)} />
-                          <span className="text-sm text-zinc-100">{m.title}</span>
+                          {m.priority === "high" && <Pill kind="priority" value="high" label={t("problemPriority.high")} />}
                         </div>
+                        <Link href={problemHref} className="block text-sm font-medium text-zinc-100 hover:text-white">
+                          {m.title}
+                        </Link>
                         <p className="text-[11px] text-zinc-500 font-mono">
                           {folderLabel(m.departmentId)}
+                          {m.delivery && ` · ${m.delivery}`}
                           {m.dueDate && ` · ${t("due", { date: dueFmt.format(Date.parse(m.dueDate)) })}`}
                         </p>
-                        {m.description && <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">{m.description}</p>}
-                        {mayOpenTickets && canWriteIn(access, isAdmin, m.departmentId) && (
-                          <Link
-                            href={{ pathname: `/portal/projects/${slug}/tickets/new`, query: { item: m.id } }}
-                            className="inline-block pt-1 text-[11px] text-zinc-500 hover:text-zinc-100 underline underline-offset-4"
-                          >
-                            {t("reportProblem")} →
-                          </Link>
+                        {(m.summary ?? m.description) && (
+                          <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">{m.summary ?? m.description}</p>
                         )}
+                        <div className="flex flex-wrap items-center gap-2 pt-1.5">
+                          {mayOpenTickets && canWriteIn(access, isAdmin, m.departmentId) && (
+                            <Link
+                              href={{ pathname: `/portal/projects/${slug}/tickets/new`, query: { item: m.id } }}
+                              className={buttonVariants({ size: "sm" })}
+                            >
+                              {t("openTicket")}
+                            </Link>
+                          )}
+                          <Link href={problemHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                            {t("viewPlan")}
+                          </Link>
+                          {counts.open > 0 ? (
+                            <Link
+                              href={{ pathname: problemHref }}
+                              className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 font-mono text-[11px] text-amber-300 hover:bg-amber-500/15"
+                            >
+                              {t("openTicketsCount", { count: counts.open })}
+                            </Link>
+                          ) : (
+                            counts.total > 0 && <span className="font-mono text-[11px] text-zinc-600">{t("openTicketsCount", { count: 0 })}</span>
+                          )}
+                        </div>
                       </div>
                       {isAdmin && (
                         <form action={updateMilestoneStatus} className="flex items-center gap-2">
@@ -209,45 +279,47 @@ export default async function ProjectPage(props: {
                         </form>
                       )}
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               )}
             </div>
           </section>
 
-          {/* 02 Tickets */}
+          {/* 02 Tickets — every ticket together; the ones still open come first and are highlighted */}
           <section className={panel}>
             <div className={band}>
               <span>
                 <span className="text-zinc-600">{"// 02 "}</span>
                 {t("ticketsTitle")}
+                {openCount > 0 && <span className="ml-3 text-amber-400">{t("ticketsOpenCount", { count: openCount })}</span>}
               </span>
-              {mayOpenTickets && (
-                <Link href={`/portal/projects/${slug}/tickets/new`} className={buttonVariants({ size: "sm" })}>
-                  {t("newTicket")}
-                </Link>
-              )}
             </div>
-            {tickets.length === 0 ? (
-              <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noTickets")}</p>
-            ) : (
-              <ul className="divide-y divide-zinc-800/80">
-                {tickets.map((ticket) => (
-                  <li key={ticket.id}>
-                    <Link
-                      href={`/portal/tickets/${ticket.id}`}
-                      className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 sm:px-6 py-3.5 hover:bg-zinc-900/60 transition-colors"
-                    >
-                      <span className="font-mono text-xs text-zinc-500 w-10 shrink-0">#{ticket.number}</span>
-                      <span className="flex-1 min-w-[12rem] text-sm text-zinc-100">{ticket.title}</span>
-                      <span className="font-mono text-[11px] text-zinc-500">{folderLabel(ticket.departmentId)}</span>
-                      <Pill kind="priority" value={ticket.priority} label={t(`priority.${ticket.priority}`)} />
-                      <Pill kind="ticketStatus" value={ticket.status} label={t(`ticketStatus.${ticket.status}`)} />
-                      <span className="font-mono text-[11px] text-zinc-600 w-24 text-right">{dateFmt.format(Date.parse(ticket.createdAt))}</span>
-                    </Link>
-                  </li>
+            {folderTickets.length > 0 && (
+              <nav aria-label={t("ticketsTitle")} className="flex flex-wrap items-center gap-2 border-b border-zinc-800/80 px-5 sm:px-6 py-3">
+                {(
+                  [
+                    ["all", t("ticketFilterAll")],
+                    ["open", t("ticketFilterOpen")],
+                    ["solved", t("ticketFilterSolved")],
+                  ] as const
+                ).map(([value, label]) => (
+                  <Link
+                    key={value}
+                    href={{ pathname: `/portal/projects/${slug}`, query: { ...(dept ? { dept } : {}), ...(value === "all" ? {} : { tickets: value }) } }}
+                    className={chip(ticketFilter === value)}
+                  >
+                    {label}
+                  </Link>
                 ))}
-              </ul>
+              </nav>
+            )}
+            {folderTickets.length === 0 ? (
+              <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noTickets")}</p>
+            ) : tickets.length === 0 ? (
+              <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noTicketsFilter")}</p>
+            ) : (
+              <TicketList tickets={tickets} locale={locale} folderLabel={folderLabel} problemCodes={problemLabels} />
             )}
           </section>
 
@@ -280,6 +352,7 @@ export default async function ProjectPage(props: {
               departments={project.departments}
               team={project.team}
               companyAccess={companyAccess}
+              costUserIds={costUserIds}
               notice={accessNotice === "saved" || accessNotice === "error" ? accessNotice : null}
             />
           )}

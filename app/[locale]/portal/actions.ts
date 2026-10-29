@@ -323,6 +323,7 @@ export async function saveMemberAccess(formData: FormData): Promise<void> {
     role: text(formData, "role"),
     allDepartments: formData.get("allDepartments") === "on",
     departmentIds: formData.getAll("departmentId").filter((v): v is string => typeof v === "string"),
+    canViewCosts: formData.get("canViewCosts") === "on",
   });
   if (!isAdmin || !parsed.success || !SLUG.test(slug)) return backToAccess(locale, SLUG.test(slug) ? slug : "", "error");
   const input = parsed.data;
@@ -333,7 +334,13 @@ export async function saveMemberAccess(formData: FormData): Promise<void> {
 
   const member = await supabase
     .from("project_members")
-    .upsert({ project_id: project.id, user_id: userId, role: input.role, all_departments: input.allDepartments });
+    .upsert({
+      project_id: project.id,
+      user_id: userId,
+      role: input.role,
+      all_departments: input.allDepartments,
+      can_view_costs: input.canViewCosts,
+    });
   if (member.error) return backToAccess(locale, slug, "error");
 
   const cleared = await supabase.from("project_member_departments").delete().eq("project_id", project.id).eq("user_id", userId);
@@ -373,6 +380,7 @@ export async function saveCompanyAccess(formData: FormData): Promise<void> {
     email: text(formData, "email"),
     displayName: text(formData, "displayName"),
     level: text(formData, "level"),
+    canViewCosts: formData.get("canViewCosts") === "on",
   });
   if (!isAdmin || !parsed.success) return backToAccess(locale, SLUG.test(slug) ? slug : "", "error");
   const input = parsed.data;
@@ -381,7 +389,12 @@ export async function saveCompanyAccess(formData: FormData): Promise<void> {
   if (!userId) return backToAccess(locale, slug, "error");
   const saved = await supabase
     .from("organization_members")
-    .upsert({ organization_id: input.organizationId, user_id: userId, access_level: input.level });
+    .upsert({
+      organization_id: input.organizationId,
+      user_id: userId,
+      access_level: input.level,
+      can_view_costs: input.canViewCosts,
+    });
   return backToAccess(locale, slug, saved.error ? "error" : "saved");
 }
 

@@ -123,6 +123,8 @@ beforeAll(async () => {
   await db.exec(sql("20261029000100_access_model.sql"));
   await db.exec(sql("20261029000200_encrypted_content.sql"));
   await db.exec(sql("20261029000300_ticket_attachments.sql"));
+  await db.exec(sql("20261029000400_problem_details.sql"));
+  await db.exec(sql("20261029000500_project_log.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -211,7 +213,7 @@ describe("not signed in (public API key)", () => {
     await as(null);
     for (const table of [
       "organizations", "profiles", "departments", "projects", "project_departments", "project_members",
-      "project_member_departments", "organization_members", "project_milestones", "tickets", "ticket_comments", "ticket_attachments", "meetings",
+      "project_member_departments", "organization_members", "project_milestones", "tickets", "ticket_comments", "ticket_attachments", "project_events", "meetings",
     ]) {
       expect(await rejection(`select * from public.${table}`), table).toMatch(/permission denied/i);
     }
@@ -726,5 +728,234 @@ describe("files attached to tickets", () => {
   it("the storage bucket for the files is private", async () => {
     await db.exec("reset role");
     expect(await rows(`select public from storage.buckets where id = 'ticket-attachments'`)).toEqual([{ public: false }]);
+  });
+});
+
+describe("problem details (action plan, links)", () => {
+  it("the action plan of a folder you don't have is invisible with its plan item", async () => {
+    await db.exec("reset role");
+    await db.exec(`update public.project_milestones set solution = 'HR-ONLY ACTION PLAN' where title = 'HR onboarding'`);
+    await as({ id: U.leadFin });
+    expect(await rows(`select solution from public.project_milestones where solution is not null`)).toEqual([]);
+    await as({ id: U.leadAll });
+    expect(await rows(`select solution from public.project_milestones where title = 'HR onboarding'`)).toEqual([{ solution: "HR-ONLY ACTION PLAN" }]);
+  });
+
+  it("only the owner can write a problem's details", async () => {
+    await as({ id: U.leadFin });
+    expect(await affected(`update public.project_milestones set solution = 'defaced'`)).toBe(0);
+    await as({ id: U.cfo });
+    expect(await affected(`update public.project_milestones set priority = 'low'`)).toBe(0);
+    await as({ id: U.admin, admin: true });
+    expect(await affected(`update public.project_milestones set solution = 'Real plan', priority = 'high' where title = 'Invoice automation'`)).toBe(1);
+  });
+
+  it("priority only accepts high, medium or low", async () => {
+    await as({ id: U.admin, admin: true });
+    expect(await rejection(`update public.project_milestones set priority = 'urgent' where title = 'Kickoff'`)).toMatch(/check constraint/i);
+    expect(await rejection(`update public.project_milestones set priority = 'high' where title = 'Kickoff'`)).toBeNull();
+  });
+
+  it("the project overview is readable by members and writable only by the owner", async () => {
+    await as({ id: U.admin, admin: true });
+    expect(await affected(`update public.projects set overview = 'blueprint overview' where id = '${P1}'`)).toBe(1);
+    await as({ id: U.leadFin });
+    expect(await rows(`select overview from public.projects where id = '${P1}'`)).toEqual([{ overview: "blueprint overview" }]);
+    expect(await affected(`update public.projects set overview = 'x' where id = '${P1}'`)).toBe(0);
+    await as({ id: U.outsider });
+    expect(await rows(`select overview from public.projects where id = '${P1}'`)).toEqual([]);
+  });
+});
+
+describe("costs: only full access, plus people the owner switches on", () => {
+  const FIN_COST = "COST-FINANCE-ITEM";
+  const HR_COST = "COST-HR-ITEM";
+
+  beforeEach(async () => {
+    await db.exec("reset role");
+    await db.exec(`
+      insert into public.problem_costs (milestone_id, cost_note)
+        select id, '${FIN_COST}' from public.project_milestones where title = 'Invoice automation';
+      insert into public.problem_costs (milestone_id, cost_note)
+        select id, '${HR_COST}' from public.project_milestones where title = 'HR onboarding';
+    `);
+  });
+
+  const costs = async () => (await rows<{ cost_note: string }>(`select cost_note from public.problem_costs order by 1`)).map((r) => r.cost_note);
+
+  it("the owner sees every cost", async () => {
+    await as({ id: U.admin, admin: true });
+    expect(await costs()).toEqual([FIN_COST, HR_COST].sort());
+  });
+
+  it("a person with full project access (all folders) sees costs automatically", async () => {
+    await as({ id: U.leadAll });
+    expect(await costs()).toEqual([FIN_COST, HR_COST].sort());
+  });
+
+  it("a company-wide FULL executive sees costs automatically; a view-only one does not", async () => {
+    await as({ id: U.cfo });
+    expect(await costs()).toEqual([FIN_COST, HR_COST].sort());
+    await as({ id: U.ceo });
+    expect(await costs()).toEqual([]);
+  });
+
+  it("a team lead with only their folder does NOT see costs by default — even for their own folder's problem", async () => {
+    await as({ id: U.leadFin });
+    expect(await costs()).toEqual([]);
+    await as({ id: U.memberOps });
+    expect(await costs()).toEqual([]);
+    await as({ id: U.multi });
+    expect(await costs()).toEqual([]);
+  });
+
+  it("when the owner switches 'can see costs' on, a lead sees costs — but only for folders they have", async () => {
+    await as({ id: U.admin, admin: true });
+    expect(await affected(`update public.project_members set can_view_costs = true where user_id = '${U.leadFin}'`)).toBe(1);
+    await as({ id: U.leadFin });
+    expect(await costs()).toEqual([FIN_COST]); // Finance's problem yes, HR's never
+  });
+
+  it("the switch also works for a view-only executive, and switching it off takes effect at once", async () => {
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.organization_members set can_view_costs = true where user_id = '${U.ceo}'`);
+    await as({ id: U.ceo });
+    expect(await costs()).toEqual([FIN_COST, HR_COST].sort());
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.organization_members set can_view_costs = false where user_id = '${U.ceo}'`);
+    await as({ id: U.ceo });
+    expect(await costs()).toEqual([]);
+  });
+
+  it("costs of another company are invisible, even to someone with full access there", async () => {
+    await as({ id: U.betaExec });
+    expect(await costs()).toEqual([]);
+    await as({ id: U.outsider });
+    expect(await costs()).toEqual([]);
+  });
+
+  it("nobody but the owner can write, change or delete a cost — including people who can read it", async () => {
+    await as({ id: U.leadAll });
+    expect(await affected(`update public.problem_costs set cost_note = 'free'`)).toBe(0);
+    expect(await affected(`delete from public.problem_costs`)).toBe(0);
+    expect(
+      await rejection(`insert into public.problem_costs (milestone_id, cost_note) select id, 'x' from public.project_milestones where title = 'Kickoff'`)
+    ).toMatch(/row-level security/i);
+    await as({ id: U.cfo });
+    expect(await affected(`update public.problem_costs set cost_note = 'free'`)).toBe(0);
+  });
+
+  it("a person cannot give themselves the switch", async () => {
+    await as({ id: U.leadFin });
+    expect(await affected(`update public.project_members set can_view_costs = true where user_id = '${U.leadFin}'`)).toBe(0);
+    await as({ id: U.ceo });
+    expect(await affected(`update public.organization_members set can_view_costs = true where user_id = '${U.ceo}'`)).toBe(0);
+  });
+
+  it("the public key sees nothing", async () => {
+    await as(null);
+    expect(await rejection(`select * from public.problem_costs`)).toMatch(/permission denied/i);
+    expect(await rejection(`select public.can_view_costs('${P1}')`)).toMatch(/permission denied/i);
+  });
+
+  it("the cost rule itself answers correctly per person and per company (checked directly, not only through other layers)", async () => {
+    const may = async (who: Who, project: string) => {
+      await as(who);
+      return (await rows<{ ok: boolean }>(`select public.can_view_costs('${project}') as ok`))[0].ok;
+    };
+    expect(await may({ id: U.admin, admin: true }, P1)).toBe(true);
+    expect(await may({ id: U.leadAll }, P1)).toBe(true); // full project access
+    expect(await may({ id: U.cfo }, P1)).toBe(true); // company-wide full
+    expect(await may({ id: U.cfo }, P3)).toBe(true); // ...for every project of that company
+    expect(await may({ id: U.ceo }, P1)).toBe(false); // view-only
+    expect(await may({ id: U.leadFin }, P1)).toBe(false); // one folder, no switch
+    expect(await may({ id: U.betaExec }, P1)).toBe(false); // full access — to a DIFFERENT company
+    expect(await may({ id: U.outsider }, P1)).toBe(false);
+    expect(await may({ id: U.nobody }, P1)).toBe(false);
+    expect(await may({ id: U.betaExec }, P2)).toBe(true); // ...but yes for their own
+  });
+
+  it("a cost goes with its problem", async () => {
+    await db.exec("reset role");
+    await db.exec(`delete from public.project_milestones where title = 'HR onboarding'`);
+    expect(await rows(`select 1 from public.problem_costs where cost_note = '${HR_COST}'`)).toHaveLength(0);
+  });
+});
+
+describe("the automatic project log", () => {
+  const events = async (kind?: string) =>
+    rows<{ kind: string; from_status: string | null; to_status: string | null }>(
+      `select kind, from_status, to_status from public.project_events ${kind ? `where kind = '${kind}'` : ""} order by created_at, kind`
+    );
+
+  const count = async (where: string) => (await rows(`select 1 from public.project_events where ${where}`)).length;
+
+  it("records a ticket being opened, by whoever opened it (the seed's own tickets were logged too)", async () => {
+    await as({ id: U.admin, admin: true });
+    const before = await count(`kind = 'ticket_opened' and actor_id = '${U.leadFin}'`);
+    expect(before).toBeGreaterThan(0); // T_FIN, created in the seed
+    await as({ id: U.leadFin });
+    await db.exec(newTicket(P1, DEPT_FIN, U.leadFin, "Logged ticket"));
+    await as({ id: U.admin, admin: true });
+    expect(await count(`kind = 'ticket_opened' and actor_id = '${U.leadFin}'`)).toBe(before + 1);
+    expect((await events("ticket_opened")).every((e) => e.to_status === "open")).toBe(true);
+  });
+
+  it("records ticket and plan status changes with the old and new status", async () => {
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.tickets set status = 'in_progress' where id = '${T_FIN}'`);
+    await db.exec(`update public.tickets set status = 'resolved' where id = '${T_FIN}'`);
+    await db.exec(`update public.project_milestones set status = 'completed' where title = 'Invoice automation'`);
+    expect(await events("ticket_status")).toEqual([
+      { kind: "ticket_status", from_status: "open", to_status: "in_progress" },
+      { kind: "ticket_status", from_status: "in_progress", to_status: "resolved" },
+    ]);
+    expect(await events("plan_status")).toEqual([{ kind: "plan_status", from_status: "in_progress", to_status: "completed" }]);
+  });
+
+  it("does not log a change that changed nothing", async () => {
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.tickets set title = 'edited' where id = '${T_FIN}'`);
+    await db.exec(`update public.tickets set status = 'open' where id = '${T_FIN}'`);
+    expect(await events("ticket_status")).toEqual([]);
+  });
+
+  it("records public comments but leaves no trace of the owner's internal notes", async () => {
+    await as({ id: U.admin, admin: true });
+    const before = (await events("comment_added")).length; // the seed's public comment is already logged
+    await as({ id: U.leadFin });
+    await db.exec(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_FIN}', '${U.leadFin}', 'public')`);
+    await as({ id: U.admin, admin: true });
+    expect((await events("comment_added")).length).toBe(before + 1);
+    await db.exec(`insert into public.ticket_comments (ticket_id, author_id, message, is_internal) values ('${T_FIN}', '${U.admin}', 'secret', true)`);
+    expect((await events("comment_added")).length).toBe(before + 1); // the internal note added nothing
+  });
+
+  it("you only see events from folders you have, plus project-wide ones", async () => {
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.tickets set status = 'in_progress' where id in ('${T_FIN}', '${T_OPS}', '${T_ALL}')`);
+    await as({ id: U.leadFin });
+    const mine = await rows<{ ticket_id: string }>(`select ticket_id from public.project_events where kind = 'ticket_status'`);
+    expect(sorted(mine.map((r) => r.ticket_id))).toEqual(sorted([T_FIN, T_ALL]));
+    await as({ id: U.outsider }); // another company: only its own project's events, never P1's
+    expect(await count(`project_id = '${P1}'`)).toBe(0);
+    expect(await count(`project_id = '${P2}'`)).toBeGreaterThan(0);
+    await as({ id: U.cfo });
+    expect(await count(`kind = 'ticket_status'`)).toBe(3);
+  });
+
+  it("nobody — not even the owner — can write, edit or delete the log directly", async () => {
+    await as({ id: U.admin, admin: true });
+    expect(
+      await rejection(`insert into public.project_events (project_id, kind) values ('${P1}', 'ticket_opened')`)
+    ).toMatch(/permission denied|row-level security/i);
+    expect(await rejection(`delete from public.project_events`)).toMatch(/permission denied/i);
+    await as({ id: U.leadFin });
+    expect(await rejection(`insert into public.project_events (project_id, kind) values ('${P1}', 'ticket_opened')`)).toMatch(/permission denied/i);
+  });
+
+  it("the public key sees nothing", async () => {
+    await as(null);
+    expect(await rejection(`select * from public.project_events`)).toMatch(/permission denied/i);
   });
 });

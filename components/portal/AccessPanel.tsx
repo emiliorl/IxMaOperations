@@ -34,6 +34,7 @@ export async function AccessPanel({
   departments,
   team,
   companyAccess,
+  costUserIds,
   notice,
 }: {
   locale: string;
@@ -43,6 +44,8 @@ export async function AccessPanel({
   departments: Department[];
   team: TeamMember[];
   companyAccess: CompanyAccessEntry[];
+  /** Project members who were given the "can see costs" switch. */
+  costUserIds: string[];
   notice: "saved" | "error" | null;
 }) {
   const t = await getTranslations("Portal");
@@ -75,6 +78,13 @@ export async function AccessPanel({
         </label>
       ))}
     </div>
+  );
+
+  const costsCheck = (checked: boolean) => (
+    <label className={check} title={t("costsHelp")}>
+      <input type="checkbox" name="canViewCosts" defaultChecked={checked} className="accent-zinc-300" />
+      {t("canSeeCosts")}
+    </label>
   );
 
   const levelSelect = (value: string) => (
@@ -138,6 +148,7 @@ export async function AccessPanel({
                         {hidden(person.userId)}
                         <input type="hidden" name="organizationId" value={organizationId} />
                         {levelSelect(person.level)}
+                        {costsCheck(person.canViewCosts)}
                         <button type="submit" className={buttonVariants({ variant: "secondary", size: "sm" })}>
                           {t("save")}
                         </button>
@@ -163,6 +174,7 @@ export async function AccessPanel({
             {newPersonFields("company")}
             <div className="flex items-center gap-3">
               {levelSelect("full")}
+              {costsCheck(false)}
               <button type="submit" className={buttonVariants({ size: "sm" })}>
                 {t("add")}
               </button>
@@ -172,6 +184,7 @@ export async function AccessPanel({
             <span className="text-zinc-500">{t("accessLevel.full")}:</span> {t("accessLevelHelp.full")}{" "}
             <span className="text-zinc-500">{t("accessLevel.view")}:</span> {t("accessLevelHelp.view")}
           </p>
+          <p className="text-[11px] text-zinc-600 leading-relaxed max-w-2xl">{t("costsHelp")}</p>
         </div>
 
         {/* Project team and folders */}
@@ -197,6 +210,7 @@ export async function AccessPanel({
                   {hidden(member.userId)}
                   {roleSelect(member.role)}
                   {folderChecks(member)}
+                  {costsCheck(costUserIds.includes(member.userId))}
                   <button type="submit" className={buttonVariants({ variant: "secondary", size: "sm" })}>
                     {t("save")}
                   </button>
@@ -211,6 +225,7 @@ export async function AccessPanel({
             {newPersonFields("member")}
             <div className="flex flex-wrap items-center gap-3">{roleSelect("member")}</div>
             {folderChecks()}
+            {costsCheck(false)}
             <button type="submit" className={buttonVariants({ size: "sm" })}>
               {t("add")}
             </button>

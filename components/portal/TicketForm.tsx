@@ -62,7 +62,7 @@ export function TicketForm({
     <form action={action} className="rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidden">
       <div className="border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500">
         <span className="text-zinc-600">{"// "}</span>
-        {t("reportProblem")}
+        {t("openTicket")}
       </div>
 
       <div className="p-5 sm:p-6 space-y-5">

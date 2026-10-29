@@ -68,6 +68,8 @@ export const memberAccessInput = z
     role: z.enum(["lead", "member"]),
     allDepartments: z.boolean(),
     departmentIds: z.array(z.string().uuid()).max(100),
+    /** Lets this person see the cost information too (full-access people always can). */
+    canViewCosts: z.boolean(),
   })
   .refine((v) => v.userId !== "" || v.email !== "", "Choose a person.");
 
@@ -85,6 +87,7 @@ export const companyAccessInput = z
     email: optionalEmail,
     displayName: z.string().trim().max(120),
     level: z.enum(["view", "full"]),
+    canViewCosts: z.boolean(),
   })
   .refine((v) => v.userId !== "" || v.email !== "", "Choose a person.");
 
