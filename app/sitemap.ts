@@ -22,7 +22,7 @@ import { SITE_URL } from "@/lib/site-url";
  * than competing with "/" for a search engine's attention.
  */
 
-type StaticHref = "/" | "/about" | "/packages" | "/custom-projects" | "/contact";
+type StaticHref = "/" | "/about" | "/packages" | "/custom-projects" | "/contact" | "/privacy" | "/terms";
 
 function localizedUrls(href: StaticHref | string): { url: string; languages: Record<string, string> } {
   const languages: Record<string, string> = {};
@@ -49,6 +49,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/custom-projects", 0.8, "monthly"),
     entry("/about", 0.7, "monthly"),
     entry("/contact", 0.5, "monthly"),
+    entry("/privacy", 0.3, "yearly"),
+    entry("/terms", 0.3, "yearly"),
     ...CAPABILITIES.map((capability) => entry(`/packages/${capability.packageSlug}`, 0.6, "monthly")),
   ];
 }

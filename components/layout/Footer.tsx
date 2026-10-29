@@ -37,6 +37,8 @@ export function Footer() {
           <Link href="/packages" className="hover:text-zinc-200">{t("packages")}</Link>
           <Link href="/custom-projects" className="hover:text-zinc-200">{t("customProjects")}</Link>
           <Link href="/contact" className="hover:text-zinc-200">{t("contact")}</Link>
+          <Link href="/privacy" className="text-zinc-500 hover:text-zinc-200">{t("privacy")}</Link>
+          <Link href="/terms" className="text-zinc-500 hover:text-zinc-200">{t("terms")}</Link>
         </div>
       </div>
     </footer>

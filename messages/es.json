@@ -27,7 +27,9 @@
     "packages": "Paquetes",
     "customProjects": "Proyectos a Medida",
     "about": "Nosotros",
-    "contact": "Contacto"
+    "contact": "Contacto",
+    "privacy": "Privacidad",
+    "terms": "Términos"
   },
   "Hero": {
     "statusAvailable": "Disponible para proyectos",
@@ -650,5 +652,135 @@
     "ctaScoper": "Dime Qué Necesitas",
     "ctaPackages": "Ver Paquetes",
     "ctaContact": "Contactar Directamente"
+  },
+  "Legal": {
+    "lastUpdatedLabel": "Última actualización",
+    "lastUpdated": "28 de octubre de 2026",
+    "Privacy": {
+      "title": "Política de Privacidad",
+      "intro": "Esta política explica qué información recopila IxMaOperations a través de este sitio web, cómo se usa y qué opciones tienes. Está escrita en lenguaje sencillo a propósito.",
+      "sections": [
+        {
+          "heading": "Quiénes somos",
+          "paragraphs": [
+            "IxMaOperations es una práctica de automatización e ingeniería por contrato operada por Emilio Ramirez. Para cualquier tema de esta política, escribe a eramirez@ixmaoperations.com."
+          ]
+        },
+        {
+          "heading": "Qué información recopilamos",
+          "paragraphs": [
+            "Solicitudes de proyecto: cuando envías el formulario de proyecto o el estimador, recibimos tu nombre, correo electrónico, la descripción de tu proyecto, tu plazo, un rango de presupuesto opcional y las respuestas del estimador que elegiste. Esto nos llega por correo y no se publica en ningún lugar.",
+            "Agenda: cuando reservas una reunión, recibimos tu nombre, correo electrónico, la hora y el formato que elegiste (en línea o presencial), una nota opcional y, en las reuniones presenciales, el lugar de la reunión.",
+            "Demostraciones interactivas: las demostraciones de documentos e imágenes se ejecutan dentro de tu navegador y los archivos que eliges no se nos envían. La demostración del extractor web envía a nuestro servidor la dirección web que escribes para obtener esa página pública; no guardamos la dirección ni el resultado.",
+            "Datos técnicos: tu dirección IP se usa temporalmente, hasta una hora, para limitar el tráfico abusivo, y nuestro proveedor de alojamiento conserva registros estándar del servidor. Este sitio no usa analíticas, publicidad ni cookies de seguimiento."
+          ]
+        },
+        {
+          "heading": "Google Calendar y datos de usuario de Google",
+          "paragraphs": [
+            "Usamos la API de Google Calendar de dos maneras. Primero, para leer el calendario del propietario y así ofrecer solo horarios realmente libres, y para crear el evento del calendario (con un enlace de Google Meet en las reuniones en línea) cuando se reserva una reunión.",
+            "Segundo, si eliges Conectar Google Calendar en la página de reservas, otorgas acceso de solo lectura a tu información de disponibilidad (libre/ocupado) para mostrar horarios que nos funcionen a ambos. Solo leemos la hora de inicio y fin de tus periodos ocupados. No leemos títulos, descripciones, asistentes ni ubicaciones de tus eventos. Tu token de acceso se usa una sola vez, en memoria, para mostrar la coincidencia; no se guarda, no solicitamos un token de actualización y los datos no se comparten, no se venden ni se usan para publicidad o para entrenar modelos de IA.",
+            "El uso y la transferencia por parte de IxMaOperations de la información recibida de las API de Google cumplirá con la Política de Datos de Usuario de los Servicios de API de Google, incluidos los requisitos de Uso Limitado.",
+            "Puedes revocar el acceso en cualquier momento en myaccount.google.com/permissions."
+          ]
+        },
+        {
+          "heading": "Cómo usamos la información",
+          "paragraphs": [
+            "Usamos tu información para responder tu solicitud, agendar y realizar reuniones, entregar el trabajo acordado y proteger el sitio contra abusos. No vendemos tu información ni la usamos para publicidad."
+          ]
+        },
+        {
+          "heading": "Proveedores de servicios",
+          "paragraphs": [
+            "Dependemos de unos pocos proveedores para operar el sitio: Vercel (alojamiento), Resend (envío de correo), Supabase (base de datos e inicio de sesión de cuentas de clientes), Upstash (límite de solicitudes) y Google (Calendar y Meet). Procesan datos únicamente para prestarnos su servicio."
+          ]
+        },
+        {
+          "heading": "Cuentas de clientes",
+          "paragraphs": [
+            "Las cuentas del área de clientes las creamos nosotros para clientes existentes; no hay registro público. La información de una cuenta de cliente, como el estado del proyecto, los tickets y los archivos que adjuntes, solo la ven tú y nosotros."
+          ]
+        },
+        {
+          "heading": "Cuánto tiempo conservamos la información",
+          "paragraphs": [
+            "Los correos de solicitud de proyecto y los registros de reuniones se conservan el tiempo necesario para responderte, llevar a cabo cualquier trabajo y cumplir nuestras propias necesidades de registro. Los eliminamos antes si lo pides."
+          ]
+        },
+        {
+          "heading": "Seguridad",
+          "paragraphs": [
+            "Las conexiones a este sitio están cifradas, el acceso a los datos almacenados está restringido y los datos de clientes se separan por cuenta. Ningún sistema es perfectamente seguro, pero tomamos medidas razonables para proteger tu información."
+          ]
+        },
+        {
+          "heading": "Tus opciones",
+          "paragraphs": [
+            "Puedes pedirnos que te mostremos, corrijamos o eliminemos la información que tenemos sobre ti, o que cancelemos una reserva, escribiendo a eramirez@ixmaoperations.com. Este sitio no está dirigido a menores de 18 años."
+          ]
+        },
+        {
+          "heading": "Cambios a esta política",
+          "paragraphs": [
+            "Si cambiamos esta política, actualizaremos la fecha al inicio de esta página. Si un cambio afecta cómo se manejan los datos de usuario de Google, lo indicaremos claramente aquí."
+          ]
+        }
+      ]
+    },
+    "Terms": {
+      "title": "Términos del Servicio",
+      "intro": "Estos términos rigen el uso de este sitio web y de su función de agenda. No sustituyen el acuerdo escrito que firmamos para cualquier proyecto de pago.",
+      "sections": [
+        {
+          "heading": "Acerca de este sitio",
+          "paragraphs": [
+            "Este sitio presenta los servicios de IxMaOperations y te permite enviar una solicitud de proyecto o reservar una reunión. Nada aquí es una oferta vinculante, una cotización ni una garantía de disponibilidad. El alcance, el precio y la entrega de un proyecto se establecen únicamente en un acuerdo escrito entre ambos."
+          ]
+        },
+        {
+          "heading": "Reserva de reuniones",
+          "paragraphs": [
+            "Una reunión queda confirmada cuando recibes una invitación de calendario de nuestra parte. Las reuniones presenciales se realizan en el lugar acordado contigo y requieren al menos 24 horas de aviso. Para cancelar o reprogramar, responde a la invitación o escribe a eramirez@ixmaoperations.com. Podemos rechazar o reprogramar una reunión si surge algo inevitable, y te avisaremos lo antes posible."
+          ]
+        },
+        {
+          "heading": "Uso aceptable",
+          "paragraphs": [
+            "No hagas mal uso del sitio: no se permiten reservas automatizadas o masivas, intentos de sobrecargarlo, sondearlo o eludir sus protecciones, ni usar las demostraciones contra sitios que no tienes derecho a inspeccionar. Podemos bloquear el acceso que parezca abusivo."
+          ]
+        },
+        {
+          "heading": "Demostraciones",
+          "paragraphs": [
+            "Las demostraciones interactivas ilustran lo que construimos. Se ofrecen tal cual, pueden ser inexactas y no deben usarse para decisiones reales ni con documentos sensibles."
+          ]
+        },
+        {
+          "heading": "Propiedad intelectual",
+          "paragraphs": [
+            "El texto, el diseño y el código de este sitio pertenecen a IxMaOperations. La propiedad del trabajo entregado a un cliente se define en el acuerdo escrito de ese cliente."
+          ]
+        },
+        {
+          "heading": "Servicios de terceros",
+          "paragraphs": [
+            "La agenda usa Google Calendar y Google Meet. Si conectas tu Google Calendar, a esa conexión se le aplican los términos de Google y nuestra Política de Privacidad."
+          ]
+        },
+        {
+          "heading": "Exclusiones y responsabilidad",
+          "paragraphs": [
+            "El sitio se ofrece tal cual, sin garantías de ningún tipo. En la medida que la ley lo permita, IxMaOperations no es responsable de pérdidas indirectas o consecuentes derivadas del uso del sitio. La responsabilidad por el trabajo de pago se rige por el acuerdo escrito de ese trabajo."
+          ]
+        },
+        {
+          "heading": "Cambios y contacto",
+          "paragraphs": [
+            "Podemos actualizar estos términos; la fecha de arriba indica la versión más reciente. Preguntas: eramirez@ixmaoperations.com."
+          ]
+        }
+      ]
+    }
   }
 }
