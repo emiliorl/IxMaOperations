@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categoryOf, filterEvents, parseFilter, parseWeek, recentWeeks, summarize, weekRange, type LogEvent } from "./log";
+import { categoryOf, filterEvents, logHref, parseFilter, parseWeek, recentWeeks, summarize, weekRange, type LogEvent } from "./log";
 import { ticketCountsByProblem, isActiveTicket, parseResources, serializeResources } from "./plan";
 import { zonedTimeToUtc } from "@/lib/tz";
 
@@ -20,7 +20,7 @@ describe("what kind of change an event is", () => {
     expect(categoryOf(ev("ticket_status", "resolved"))).toBe("solved");
     expect(categoryOf(ev("ticket_status", "closed"))).toBe("solved");
     expect(categoryOf(ev("ticket_status", "in_progress"))).toBe("activity");
-    expect(categoryOf(ev("ticket_status", "needs_review"))).toBe("activity");
+    expect(categoryOf(ev("ticket_status", "needs_review"))).toBe("review"); // waiting for the person to check the fix
     expect(categoryOf(ev("ticket_status", "open"))).toBe("activity"); // re-opened
   });
 
@@ -133,5 +133,16 @@ describe("problems: open tickets and links", () => {
   it("caps the number of links", () => {
     const many = Array.from({ length: 21 }, (_, i) => ({ url: `https://x.test/${i}` }));
     expect(serializeResources(many)).toBeNull();
+  });
+});
+
+describe("log filter links", () => {
+  it("carries every filter along and leaves defaults out", () => {
+    expect(logHref("acme", { week: "2026-10-19" }).query).toEqual({ week: "2026-10-19" });
+    expect(logHref("acme", { week: "all", type: "solved", area: "fin" }).query).toEqual({ week: "all", type: "solved", area: "fin" });
+    expect(logHref("acme", { week: "all", type: "all", area: "all" }).query).toEqual({ week: "all" });
+  });
+  it("points at the project's log", () => {
+    expect(logHref("acme", { week: "all" }).pathname).toBe("/portal/projects/acme/log");
   });
 });

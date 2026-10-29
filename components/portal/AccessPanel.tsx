@@ -36,7 +36,10 @@ export async function AccessPanel({
   companyAccess,
   costUserIds,
   notice,
+  index,
 }: {
+  /** Section number shown in the band ("// 03"); none when the panel has a tab of its own. */
+  index?: string;
   locale: string;
   projectSlug: string;
   organizationId: string;
@@ -111,7 +114,7 @@ export async function AccessPanel({
     <section id="access" className="rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidden">
       <div className={band}>
         <span>
-          <span className="text-zinc-600">{"// 04 "}</span>
+          {index && <span className="text-zinc-600">{`// ${index} `}</span>}
           {t("accessTitle")}
         </span>
         <span className="normal-case tracking-normal text-zinc-600">{t("ownerBadge")}</span>

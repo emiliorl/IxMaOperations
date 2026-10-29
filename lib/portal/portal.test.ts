@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { safeHttpUrl } from "./constants";
 import { milestoneProgress } from "./progress";
-import { canOpenTickets, canWriteIn, writableDepartments } from "./queries";
+import { canOpenTickets, canViewProjectLog, canWriteIn, writableDepartments } from "./queries";
 import { validateNewPassword } from "./password";
 import { MAX_TITLE, resolveTicketFolder, resolveTicketTitle } from "./ticket-title";
 import { commentInput, loginInput, ticketInput } from "./schemas";
@@ -90,7 +90,7 @@ describe("what the page offers each kind of person", () => {
   const OPS = { id: "o", name: "Operations" };
   const HR = { id: "h", name: "HR" };
   const folders = [FIN, OPS, HR];
-  const none = { isMember: false, allDepartments: false, departmentIds: [] as string[], orgLevel: null };
+  const none = { isMember: false, role: null, allDepartments: false, departmentIds: [] as string[], orgLevel: null };
 
   it("a person with one folder can write only there and project-wide", () => {
     const one = { ...none, isMember: true, departmentIds: ["f"] };
@@ -123,6 +123,17 @@ describe("what the page offers each kind of person", () => {
     }
     expect(canOpenTickets(view, false)).toBe(false);
     expect(canOpenTickets(none, false)).toBe(false);
+  });
+
+  it("only the owner, executives and team leads are offered the project log", () => {
+    expect(canViewProjectLog(none, true)).toBe(true);
+    expect(canViewProjectLog({ ...none, orgLevel: "view" as const }, false)).toBe(true);
+    expect(canViewProjectLog({ ...none, orgLevel: "full" as const }, false)).toBe(true);
+    expect(canViewProjectLog({ ...none, isMember: true, role: "lead" as const }, false)).toBe(true);
+    // a regular member, even one with every folder, and a stranger are not
+    expect(canViewProjectLog({ ...none, isMember: true, role: "member" as const }, false)).toBe(false);
+    expect(canViewProjectLog({ ...none, isMember: true, role: "member" as const, allDepartments: true }, false)).toBe(false);
+    expect(canViewProjectLog(none, false)).toBe(false);
   });
 
   it("who is offered the 'New ticket' button", () => {

@@ -21,6 +21,8 @@ export function errorMessageKey(error: ActionError, form: "login" | "ticket"): s
       return form === "login" ? "errorInvalid" : "errorTicketInvalid";
     case "denied":
       return form === "login" ? "errorInvalid" : "errorDenied";
+    case "closed":
+      return "errorTicketClosed";
     default:
       return form === "login" ? "errorUnavailable" : "errorGeneric";
   }

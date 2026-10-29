@@ -10,11 +10,12 @@ import { errorMessageKey } from "./error-messages";
 import { FileField } from "./FileField";
 
 /**
- * Shown on a ticket the owner marked as fixed ("Needs your review"). If it is
- * still broken the person says what they see and the SAME ticket reopens, so
- * the whole story stays in one place and in the project log.
+ * Shown on a ticket the owner marked as fixed ("Needs your review"), and on a
+ * resolved or closed one. The person says what they see (or what they need to
+ * add) and the SAME ticket reopens, so the whole story stays in one place and
+ * in the project log.
  */
-export function StillBrokenForm({ locale, ticketId }: { locale: string; ticketId: string }) {
+export function StillBrokenForm({ locale, ticketId, closed = false }: { locale: string; ticketId: string; closed?: boolean }) {
   const t = useTranslations("Portal");
   const [state, action, pending] = useActionState<FormState, FormData>(reopenTicket, {});
 
@@ -23,7 +24,7 @@ export function StillBrokenForm({ locale, ticketId }: { locale: string; ticketId
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="ticketId" value={ticketId} />
       <label htmlFor="r-message" className="flex items-baseline gap-2 text-xs font-mono uppercase tracking-wider text-zinc-400">
-        {t("stillBrokenNote")}
+        {closed ? t("reopenNote") : t("stillBrokenNote")}
       </label>
       <Textarea id="r-message" name="message" rows={4} required minLength={3} maxLength={5000} />
       <FileField id="r-files" />
@@ -34,7 +35,7 @@ export function StillBrokenForm({ locale, ticketId }: { locale: string; ticketId
       )}
       <Button type="submit" variant="outline" disabled={pending} className="gap-2">
         {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-        {pending ? t("sending") : t("stillBrokenSend")}
+        {pending ? t("sending") : closed ? t("reopenSend") : t("stillBrokenSend")}
       </Button>
     </form>
   );

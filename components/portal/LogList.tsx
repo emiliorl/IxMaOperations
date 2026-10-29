@@ -8,6 +8,7 @@ const DOT: Record<LogCategory, string> = {
   progress: "bg-sky-400",
   opened: "bg-amber-400",
   solved: "bg-emerald-400",
+  review: "bg-transparent ring-2 ring-emerald-400", // hollow: waiting on someone
   activity: "bg-zinc-600",
 };
 
@@ -29,7 +30,9 @@ export async function LogList({
   const stamp = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone });
 
   const describe = (e: LogEntry): string => {
-    const who = e.actorName ?? t("logSomeone");
+    // The owner's profile is hidden from clients, so the database records "made by the owner" on the event itself.
+    // Plan-item status changes can only ever be made by the owner, which also covers events logged before that was recorded.
+    const who = e.byOwner || e.kind === "plan_status" ? t("logOwner") : (e.actorName ?? t("logSomeone"));
     const ticket = { number: e.ticketNumber ?? "?", title: e.ticketTitle ?? "—" };
     const item = e.problemCode ? `${e.problemCode} · ${e.problemTitle ?? "—"}` : (e.problemTitle ?? "—");
     switch (e.kind) {

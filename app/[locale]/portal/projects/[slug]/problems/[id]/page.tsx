@@ -8,9 +8,11 @@ import { TicketList } from "@/components/portal/TicketList";
 import { buttonVariants } from "@/components/ui/Button";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { requireUser } from "@/lib/portal/auth";
+import { sortTickets } from "@/lib/portal/filters";
 import { ticketCountsByProblem } from "@/lib/portal/plan";
 import {
   canOpenTickets,
+  canViewProjectLog,
   canWriteIn,
   getProblem,
   getProjectAccess,
@@ -32,7 +34,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
   if (!project) notFound();
 
   // None of these depend on each other, only on the project.
-  const [problem, access, activity, t] = await Promise.all([
+  const [problem, access, allActivity, t] = await Promise.all([
     getProblem(supabase, project.id, id),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     // "Ticket opened" is already visible as a row in the ticket history below, so it's left out here.
@@ -40,6 +42,8 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
     getTranslations("Portal"),
   ]);
   if (!problem) notFound();
+  // The activity feed is for leaders (owner, executives, team leads); everyone else sees the tickets above, not the audit trail.
+  const activity = canViewProjectLog(access, isAdmin) ? allActivity : [];
   const mayOpen = canOpenTickets(access, isAdmin) && canWriteIn(access, isAdmin, problem.departmentId);
   const timeZone = DEFAULT_AVAILABILITY.hostTimezone;
 
@@ -64,7 +68,10 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
   return (
     <div className="py-10 md:py-14">
       <div className="container mx-auto px-6 max-w-4xl space-y-8">
-        <Link href={`/portal/projects/${slug}`} className="text-xs text-zinc-500 hover:text-zinc-200 underline underline-offset-4">
+        <Link
+          href={{ pathname: `/portal/projects/${slug}`, query: { dept: problem.departmentId ?? "all" } }}
+          className="text-xs text-zinc-500 hover:text-zinc-200 underline underline-offset-4"
+        >
           ← {project.name}
         </Link>
 
@@ -158,7 +165,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
           {problem.tickets.length === 0 ? (
             <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noProblemTickets")}</p>
           ) : (
-            <TicketList tickets={problem.tickets} locale={locale} folderLabel={folderLabel} showFolder={false} />
+            <TicketList tickets={sortTickets(problem.tickets, "activity")} locale={locale} folderLabel={folderLabel} showFolder={false} />
           )}
         </section>
 

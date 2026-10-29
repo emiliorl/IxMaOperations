@@ -10,7 +10,8 @@ import { StatusForm } from "@/components/portal/StatusForm";
 import { StillBrokenForm } from "@/components/portal/StillBrokenForm";
 import { TICKET_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
-import { canWriteIn, getProjectAccess, getTicketDetail } from "@/lib/portal/queries";
+import { isActiveTicket } from "@/lib/portal/plan";
+import { canWriteIn, getProjectAccess, getProjectEvents, getTicketDetail } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -34,10 +35,15 @@ export default async function TicketPage(props: {
 
   // Whether to OFFER a comment box (a view-only executive can read but not write;
   // the database refuses their comment either way).
-  const access = await getProjectAccess(supabase, user.id, ticket.project.id, ticket.project.organizationId);
+  const [access, events, t] = await Promise.all([
+    getProjectAccess(supabase, user.id, ticket.project.id, ticket.project.organizationId),
+    // This ticket's own status history. Everyone who can see the ticket may read this; the project-wide log is for leaders.
+    getProjectEvents(supabase, ticket.project.id, null, 100, { ticketId: ticket.id }),
+    getTranslations("Portal"),
+  ]);
   const mayComment = canWriteIn(access, isAdmin, ticket.departmentId);
-
-  const t = await getTranslations("Portal");
+  // Oldest first, so it reads as a story: opened → in progress → fixed → still broken → closed.
+  const statusChanges = events.filter((event) => event.kind === "ticket_status").reverse();
   const stamp = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
   const url = safeHttpUrl(ticket.affectedUrl);
 
@@ -46,7 +52,10 @@ export default async function TicketPage(props: {
       <div className="py-10 md:py-14">
         <div className="container mx-auto px-6 max-w-3xl space-y-8">
           <Link
-            href={`/portal/projects/${ticket.project.slug}`}
+            href={{
+              pathname: `/portal/projects/${ticket.project.slug}`,
+              query: { tab: "tickets", ...(ticket.departmentId ? { dept: ticket.departmentId } : { dept: "all" }) },
+            }}
             className="text-xs text-zinc-500 hover:text-zinc-200 underline underline-offset-4"
           >
             ← {t("backToProject")} · {ticket.project.name}
@@ -62,6 +71,7 @@ export default async function TicketPage(props: {
             </div>
             <p className="text-xs text-zinc-500">
               {t("openedBy", { name: ticket.createdByName ?? "—", date: stamp.format(Date.parse(ticket.createdAt)) })}
+              {ticket.updatedAt !== ticket.createdAt && ` · ${t("ticketUpdatedOn", { date: stamp.format(Date.parse(ticket.updatedAt)) })}`}
             </p>
             {filesNotice === "failed" && (
               <p role="status" className="text-xs text-amber-400">
@@ -86,6 +96,30 @@ export default async function TicketPage(props: {
                   <StillBrokenForm locale={locale} ticketId={ticket.id} />
                 </div>
               </div>
+            </section>
+          )}
+
+          {statusChanges.length > 0 && (
+            <section className={panel}>
+              <div className={band}>
+                <span>
+                  <span className="text-zinc-600">{"// "}</span>
+                  {t("ticketTimeline")}
+                </span>
+              </div>
+              <ul className="divide-y divide-zinc-800/80">
+                {statusChanges.map((event) => (
+                  <li key={event.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 sm:px-6 py-3 text-sm text-zinc-300">
+                    <span>
+                      {t("historyStatus", {
+                        who: event.byOwner ? t("logOwner") : (event.actorName ?? t("logSomeone")),
+                        status: t(`ticketStatus.${event.toStatus ?? "open"}`),
+                      })}
+                    </span>
+                    <span className="font-mono text-[11px] text-zinc-500">{stamp.format(Date.parse(event.createdAt))}</span>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 
@@ -189,7 +223,16 @@ export default async function TicketPage(props: {
                 </ul>
               )}
               <div className="border-t border-zinc-800 pt-6">
-                {mayComment ? (
+                {mayComment && !isAdmin && !isActiveTicket(ticket.status) ? (
+                  // Closed: no more messages until the person reopens it, which is the same ticket (history stays together).
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-zinc-100">{t("ticketClosedTitle")}</h3>
+                      <p className="text-xs text-zinc-400 leading-relaxed max-w-2xl">{t("ticketClosedHelp")}</p>
+                    </div>
+                    <StillBrokenForm locale={locale} ticketId={ticket.id} closed />
+                  </div>
+                ) : mayComment ? (
                   <CommentForm locale={locale} ticketId={ticket.id} isAdmin={isAdmin} />
                 ) : (
                   <p className="text-xs text-zinc-500">{t("viewOnlyNote")}</p>

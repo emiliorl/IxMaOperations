@@ -37,6 +37,25 @@ export default async function PortalHomePage(props: { params: Promise<{ locale: 
                   )}
                   <h2 className="text-base font-semibold text-zinc-100 group-hover:text-white">{project.name}</h2>
                   <Pill kind="project" value={project.status} label={t(`projectStatus.${project.status}`)} />
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-baseline justify-between font-mono text-[11px] text-zinc-500">
+                      <span>{t("milestonesDone", { done: project.progress.done, total: project.progress.total })}</span>
+                      <span className="text-zinc-300">{project.progress.percent}%</span>
+                    </div>
+                    <div className="h-1 w-full rounded-full bg-zinc-800" aria-hidden>
+                      <div className="h-full rounded-full bg-zinc-300" style={{ width: `${project.progress.percent}%` }} />
+                    </div>
+                  </div>
+                  {(project.open > 0 || project.review > 0) && (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px]">
+                      {project.open > 0 && <span className="text-amber-400">{t("ticketsOpenCount", { count: project.open })}</span>}
+                      {project.review > 0 && (
+                        <span className="text-emerald-400">
+                          {project.review} · {t("ticketFilterReview")}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </Link>
               ))}
             </div>

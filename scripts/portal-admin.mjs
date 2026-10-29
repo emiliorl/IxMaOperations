@@ -211,6 +211,14 @@ const commands = {
     console.log(`✓ New password for ${profile.display_name}\n\n    ${password}\n`);
   },
 
+  async rename() {
+    need(2, 'rename <email> "<New display name>"');
+    const [email, displayName] = positional;
+    const profile = await profileByEmail(email);
+    must(await db.from("profiles").update({ display_name: encryptField(displayName) }).eq("id", profile.id), "Renaming");
+    console.log(`✓ ${profile.display_name} is now called ${displayName}`);
+  },
+
   async "invite-link"() {
     need(1, "invite-link <email> [--locale en|es]");
     const email = positional[0].trim();

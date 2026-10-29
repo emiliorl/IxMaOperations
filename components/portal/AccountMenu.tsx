@@ -87,11 +87,13 @@ export function AccountMenu({
               {t("changePassword")}
             </Link>
           </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <button type="submit" form={signOutFormId} className={item}>
-              <LogOut className="h-4 w-4 text-zinc-500" aria-hidden />
-              {t("signOut")}
-            </button>
+          {/* Submit the header's sign-out form from the handler itself. A plain submit button here would be removed by the closing menu before the browser got to submit it. */}
+          <DropdownMenu.Item
+            className={item}
+            onSelect={() => (document.getElementById(signOutFormId) as HTMLFormElement | null)?.requestSubmit()}
+          >
+            <LogOut className="h-4 w-4 text-zinc-500" aria-hidden />
+            {t("signOut")}
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

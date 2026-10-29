@@ -127,6 +127,8 @@ beforeAll(async () => {
   await db.exec(sql("20261029000500_project_log.sql"));
   await db.exec(sql("20261029000600_reopen_ticket.sql"));
   await db.exec(sql("20261029000700_confirm_ticket_fixed.sql"));
+  await db.exec(sql("20261029000800_leader_logs.sql"));
+  await db.exec(sql("20261029000900_closed_tickets.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -1019,14 +1021,41 @@ describe("sending a fixed ticket back ('still broken')", () => {
     expect(await rejection(`select public.reopen_ticket('${T_FIN}')`)).toMatch(/permission denied/i);
   });
 
-  it("only a ticket that is waiting for review can be reopened — nothing else changes status through it", async () => {
-    for (const status of ["open", "in_progress", "resolved", "closed"]) {
+  it("a ticket that is already being worked on cannot be 'reopened' — it is not closed", async () => {
+    for (const status of ["open", "in_progress"]) {
       await as({ id: U.admin, admin: true });
       await db.exec(`update public.tickets set status = '${status}' where id = '${T_FIN}'`);
       await as({ id: U.leadFin });
       expect(await reopen(T_FIN)).toBe(false);
       expect(await statusOf(T_FIN)).toBe(status);
     }
+  });
+
+  it("a resolved or closed ticket can be reopened, but only by someone who may write in it", async () => {
+    for (const status of ["resolved", "closed"]) {
+      await as({ id: U.admin, admin: true });
+      await db.exec(`update public.tickets set status = '${status}' where id = '${T_FIN}'`);
+      await as({ id: U.memberOps }); // not their area
+      expect(await reopen(T_FIN)).toBe(false);
+      await as({ id: U.ceo }); // view-only
+      expect(await reopen(T_FIN)).toBe(false);
+      expect(await statusOf(T_FIN)).toBe(status);
+      await as({ id: U.leadFin });
+      expect(await reopen(T_FIN)).toBe(true);
+      expect(await statusOf(T_FIN)).toBe("open");
+    }
+  });
+
+  it("the project log shows a closed ticket being reopened", async () => {
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.tickets set status = 'closed' where id = '${T_FIN}'`);
+    await as({ id: U.leadFin });
+    await reopen(T_FIN);
+    const [event] = await rows<{ from_status: string; to_status: string; actor_id: string }>(
+      `select from_status, to_status, actor_id from public.project_events
+       where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'open' order by created_at desc limit 1`
+    );
+    expect(event).toEqual({ from_status: "closed", to_status: "open", actor_id: U.leadFin });
   });
 
   it("does not open the door to editing tickets directly", async () => {
@@ -1045,6 +1074,47 @@ describe("sending a fixed ticket back ('still broken')", () => {
        where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'open'`
     );
     expect(event).toEqual({ from_status: "needs_review", to_status: "open", actor_id: U.leadFin });
+  });
+});
+
+describe("a closed ticket takes no more messages", () => {
+  const comment = (who: string, ticket: string) =>
+    rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${ticket}', '${who}', 'one more thing')`);
+  const setStatus = async (ticket: string, status: string) => {
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.tickets set status = '${status}' where id = '${ticket}'`);
+  };
+
+  it("people cannot comment on a resolved or closed ticket", async () => {
+    for (const status of ["resolved", "closed"]) {
+      await setStatus(T_FIN, status);
+      for (const who of [U.leadFin, U.leadAll, U.cfo]) {
+        await as({ id: who });
+        expect(await comment(who, T_FIN)).toMatch(/row-level security/i);
+      }
+    }
+  });
+
+  it("they can comment on every ticket that is still open, in progress or waiting for review", async () => {
+    for (const status of ["open", "in_progress", "needs_review"]) {
+      await setStatus(T_FIN, status);
+      await as({ id: U.leadFin });
+      expect(await comment(U.leadFin, T_FIN)).toBeNull();
+    }
+  });
+
+  it("reopening first, then writing, works", async () => {
+    await setStatus(T_FIN, "closed");
+    await as({ id: U.leadFin });
+    expect(await comment(U.leadFin, T_FIN)).toMatch(/row-level security/i);
+    expect((await rows<{ ok: boolean }>(`select public.reopen_ticket('${T_FIN}') as ok`))[0].ok).toBe(true);
+    expect(await comment(U.leadFin, T_FIN)).toBeNull();
+  });
+
+  it("the owner can still leave a note on a closed ticket", async () => {
+    await setStatus(T_FIN, "closed");
+    await as({ id: U.admin, admin: true });
+    expect(await comment(U.admin, T_FIN)).toBeNull();
   });
 });
 
@@ -1106,5 +1176,83 @@ describe("closing a fixed ticket ('it works')", () => {
        where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'closed'`
     );
     expect(event).toEqual({ from_status: "needs_review", to_status: "closed", actor_id: U.leadFin });
+  });
+});
+
+describe("the project log is for leaders", () => {
+  const visible = async (kind: string) => (await rows(`select 1 from public.project_events where kind = '${kind}'`)).length;
+  const asOwner = () => as({ id: U.admin, admin: true });
+
+  /** Finance ticket and Finance plan item both change status, as the owner. */
+  async function seedActivity() {
+    await asOwner();
+    await db.exec(`update public.tickets set status = 'in_progress' where id = '${T_FIN}'`);
+    await db.exec(`update public.project_milestones set status = 'completed' where title = 'Invoice automation'`);
+  }
+
+  it("leads (project-wide or one folder) and the owner read the plan-progress events of their folders", async () => {
+    await seedActivity();
+    await asOwner();
+    expect(await visible("plan_status")).toBeGreaterThan(0);
+    await as({ id: U.leadAll });
+    expect(await visible("plan_status")).toBeGreaterThan(0);
+    await as({ id: U.leadFin }); // lead of Finance only: Finance's item is visible to them
+    expect(await visible("plan_status")).toBeGreaterThan(0);
+  });
+
+  it("executives, view-only ones included, read the log", async () => {
+    await seedActivity();
+    for (const who of [U.cfo, U.ceo]) {
+      await as({ id: who });
+      expect(await visible("plan_status")).toBeGreaterThan(0);
+      expect(await visible("ticket_status")).toBeGreaterThan(0);
+    }
+  });
+
+  it("a regular member does not get plan-progress events, even from their own folder", async () => {
+    await seedActivity();
+    await as({ id: U.multi }); // member of Finance + Operations
+    expect(await visible("plan_status")).toBe(0);
+    await as({ id: U.memberOps });
+    expect(await visible("plan_status")).toBe(0);
+  });
+
+  it("but a member still sees the history of tickets they can see (so a ticket can show its own story)", async () => {
+    await seedActivity();
+    await as({ id: U.multi });
+    const own = await rows<{ ticket_id: string }>(`select ticket_id from public.project_events where ticket_id = '${T_FIN}'`);
+    expect(own.length).toBeGreaterThan(0); // opened, status change, comment
+    await as({ id: U.memberOps }); // Operations only: Finance's ticket history stays invisible
+    expect(await rows(`select 1 from public.project_events where ticket_id = '${T_FIN}'`)).toHaveLength(0);
+  });
+
+  it("people from another company and strangers see nothing of this project's log", async () => {
+    await seedActivity();
+    for (const who of [U.outsider, U.betaExec, U.nobody]) {
+      await as({ id: who });
+      expect(await rows(`select 1 from public.project_events where project_id = '${P1}'`)).toHaveLength(0);
+    }
+  });
+
+  it("records that the owner made a change, without needing anyone to see the owner's profile", async () => {
+    await seedActivity();
+    await as({ id: U.leadFin });
+    const [change] = await rows<{ by_owner: boolean }>(
+      `select by_owner from public.project_events where kind = 'ticket_status' and ticket_id = '${T_FIN}'`
+    );
+    expect(change.by_owner).toBe(true);
+    // ...while the owner's own profile stays hidden from this person:
+    expect(await rows(`select 1 from public.profiles where id = '${U.admin}'`)).toHaveLength(0);
+  });
+
+  it("does not mark a person's own action as the owner's", async () => {
+    await asOwner();
+    await db.exec(`update public.tickets set status = 'needs_review' where id = '${T_FIN}'`);
+    await as({ id: U.leadFin });
+    await db.query(`select public.reopen_ticket('${T_FIN}')`);
+    const [reopened] = await rows<{ by_owner: boolean; actor_id: string }>(
+      `select by_owner, actor_id from public.project_events where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'open'`
+    );
+    expect(reopened).toEqual({ by_owner: false, actor_id: U.leadFin });
   });
 });

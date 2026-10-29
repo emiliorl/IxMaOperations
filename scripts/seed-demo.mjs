@@ -26,13 +26,15 @@
 import { execFileSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 
+// Real-looking names: the role is NOT part of the name (it would show up in the portal header and on every ticket).
+// It is listed in the summary printed at the end instead.
 const DEMO_PEOPLE = [
-  ["ana@demo-co.test", "Ana (all folders, lead)"],
-  ["fede@demo-co.test", "Fede (Finance only)"],
-  ["marta@demo-co.test", "Marta (Finance + Operations)"],
-  ["omar@demo-co.test", "Omar (Operations only)"],
-  ["carla@demo-co.test", "Carla (CFO, full access)"],
-  ["cesar@demo-co.test", "Cesar (CEO, view only)"],
+  ["ana@demo-co.test", "Ana Morales", "team lead, all areas (sees the project log)"],
+  ["fede@demo-co.test", "Fede Castellanos", "team lead, Finance only (sees the project log)"],
+  ["marta@demo-co.test", "Marta Vega", "member, Finance + Operations (no project log)"],
+  ["omar@demo-co.test", "Omar Ríos", "member, Operations only (no project log)"],
+  ["carla@demo-co.test", "Carla Méndez", "CFO, company-wide full access"],
+  ["cesar@demo-co.test", "César Soto", "CEO, company-wide view only"],
 ];
 
 const cli = (...args) =>
@@ -92,5 +94,6 @@ run("exec", "demo-co", "carla@demo-co.test", "--access", "full");
 run("exec", "demo-co", "cesar@demo-co.test", "--access", "view");
 
 console.log("\n  One-time passwords (shown once; sign in at /portal/login):\n");
-for (const [email, password] of passwords) console.log(`    ${email.padEnd(22)} ${password}`);
+const roleOf = new Map(DEMO_PEOPLE.map(([email, name, role]) => [email, `${name} — ${role}`]));
+for (const [email, password] of passwords) console.log(`    ${email.padEnd(22)} ${password}   ${roleOf.get(email)}`);
 console.log("\n  Remove all of this later with:  node --env-file=.env.local scripts/seed-demo.mjs --wipe\n");

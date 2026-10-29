@@ -8,6 +8,7 @@ import { sendOwnerAlert } from "@/lib/email";
 import { blindIndex, decryptLoose, encryptField, encryptOptional } from "@/lib/field-crypto";
 import { requireUser } from "@/lib/portal/auth";
 import { prepareFiles, type FileProblem } from "@/lib/portal/attachments";
+import { isActiveTicket } from "@/lib/portal/plan";
 import { validateNewPassword } from "@/lib/portal/password";
 import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
 import { saveAttachments } from "@/lib/portal/save-attachments";
@@ -44,6 +45,7 @@ export type ActionError =
   | "rate"
   | "unavailable"
   | "denied"
+  | "closed"
   | "generic"
   | "files_too_many"
   | "files_too_big"
@@ -216,6 +218,12 @@ export async function addComment(_prev: FormState, formData: FormData): Promise<
   if (!files.ok) return { error: fileError(files.error) };
   if (internal && files.files.length > 0) return { error: "invalid" }; // internal notes carry no files
 
+  // A resolved or closed ticket takes no more messages until it is reopened (the owner may still leave a note).
+  if (!isAdmin) {
+    const { data: current } = await supabase.from("tickets").select("status").eq("id", input.ticketId).maybeSingle();
+    if (current && !isActiveTicket(current.status)) return { error: "closed" };
+  }
+
   const { data: comment, error } = await supabase
     .from("ticket_comments")
     .insert({
@@ -255,12 +263,14 @@ export async function addComment(_prev: FormState, formData: FormData): Promise<
 }
 
 /**
- * "Still broken": the owner marked a ticket as fixed ("Needs your review") and
- * the person found it is not. Their note is saved first, as an ordinary comment
- * (so the owner always sees why), then the ticket goes back to "open" through
- * the reopen_ticket() database function — the only way a non-owner can change a
- * status, and it can only do this one move for people who may write in the
- * ticket's folder. The status change lands in the project log automatically.
+ * Reopen a ticket: either "still broken" (the owner marked it fixed, "Needs your
+ * review", and the person found it is not) or a person coming back to a resolved
+ * or closed ticket. The ticket goes back to "open" through the reopen_ticket()
+ * database function — the only way a non-owner can change a status, and it can
+ * only do this one move for people who may write in the ticket's folder. Their
+ * note is saved right after, as an ordinary comment, so the owner sees why (it
+ * can't come first: a closed ticket takes no comments). The status change lands
+ * in the project log automatically.
  */
 export async function reopenTicket(_prev: FormState, formData: FormData): Promise<FormState> {
   const locale = pickLocale(formData.get("locale"));
@@ -273,27 +283,31 @@ export async function reopenTicket(_prev: FormState, formData: FormData): Promis
   const files = await prepareFiles(uploadedFiles(formData));
   if (!files.ok) return { error: fileError(files.error) };
 
-  // Only a ticket that is waiting for review can be sent back (the database insists too).
+  // Only a ticket that is waiting for review, resolved or closed can be reopened (the database insists too).
   const { data: ticket } = await supabase.from("tickets").select("ticket_number,title,status").eq("id", input.ticketId).maybeSingle();
   if (!ticket) return { error: "denied" };
-  if (ticket.status !== "needs_review") return { error: "invalid" };
+  if (ticket.status === "open" || ticket.status === "in_progress") return { error: "invalid" };
+
+  const { data: reopened, error: reopenError } = await supabase.rpc("reopen_ticket", { p_ticket: input.ticketId });
+  if (reopenError) return { error: "generic" };
+  if (reopened !== true) return { error: "denied" };
 
   const { data: comment, error } = await supabase
     .from("ticket_comments")
     .insert({ ticket_id: input.ticketId, author_id: user.id, message: encryptField(input.message), is_internal: false })
     .select("id")
     .single();
+  // The ticket is open now, so the person can simply add the message as a normal comment.
   if (error || !comment) return { error: error ? classify(error) : "generic" };
 
   const failedFiles = await saveAttachments({ supabase, userId: user.id, ticketId: input.ticketId, commentId: comment.id, files: files.files });
 
-  const { data: reopened, error: reopenError } = await supabase.rpc("reopen_ticket", { p_ticket: input.ticketId });
-  if (reopenError) return { error: "generic" };
-  if (reopened !== true) return { error: "denied" };
-
   if (!isAdmin) {
-    await sendOwnerAlert(`Ticket #${ticket.ticket_number} is still broken`, [
-      `${user.email} says "${decryptLoose(ticket.title) ?? "a ticket"}" is still not fixed, and reopened it:`,
+    const backAfterClosing = ticket.status !== "needs_review";
+    await sendOwnerAlert(`Ticket #${ticket.ticket_number} ${backAfterClosing ? "was reopened" : "is still broken"}`, [
+      backAfterClosing
+        ? `${user.email} reopened "${decryptLoose(ticket.title) ?? "a ticket"}":`
+        : `${user.email} says "${decryptLoose(ticket.title) ?? "a ticket"}" is still not fixed, and reopened it:`,
       "",
       input.message,
       files.files.length > 0 ? `\nFiles attached: ${files.files.length - failedFiles}` : "",
@@ -387,7 +401,7 @@ type Supabase = Awaited<ReturnType<typeof requireUser>>["supabase"];
 
 /** Back to the project page with a one-word result the page turns into a message. */
 function backToAccess(locale: string, slug: string, result: "saved" | "error"): never {
-  return redirect({ href: { pathname: `/portal/projects/${slug}`, query: { access: result } }, locale });
+  return redirect({ href: { pathname: `/portal/projects/${slug}`, query: { tab: "team", access: result } }, locale });
 }
 
 /**

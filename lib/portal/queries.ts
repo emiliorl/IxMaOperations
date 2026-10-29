@@ -2,7 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { decryptLoose } from "@/lib/field-crypto";
 import { INLINE_TYPES } from "./attachments";
 import type { LogEvent } from "./log";
+import { ticketBucket } from "./filters";
 import { parseResources, type ProblemPriority, type ResourceLink } from "./plan";
+import { milestoneProgress } from "./progress";
 import type {
   MilestoneStatus,
   ProjectStatus,
@@ -30,6 +32,11 @@ export interface ProjectSummary {
   slug: string;
   status: ProjectStatus;
   organization: string | null;
+  /** Plan progress, counted over what the viewer can see (the database limits it to their areas). */
+  progress: { done: number; total: number; percent: number };
+  /** Tickets still being worked on / waiting for the viewer to check the fix. */
+  open: number;
+  review: number;
 }
 
 export interface Department {
@@ -75,8 +82,12 @@ export interface TicketSummary {
   /** The plan item (problem) this ticket is about, if any. */
   milestoneId: string | null;
   createdAt: string;
+  /** Last change to the ticket (status, priority…), so a list can show what moved most recently. */
+  updatedAt: string;
   /** Who opened it. Null when unknown or when the viewer isn't allowed to see the name. */
   createdByName: string | null;
+  /** Who opened it, so a person can filter to their own tickets. */
+  createdById: string | null;
 }
 
 export interface ProjectDetail {
@@ -113,17 +124,42 @@ function one<T>(value: T | T[] | null | undefined): T | null {
 }
 
 export async function listProjects(supabase: SupabaseClient): Promise<ProjectSummary[]> {
-  const { data, error } = await supabase
-    .from("projects")
-    .select("id,name,slug,status,organizations(name)");
-  if (error) throw new Error(`Failed to load projects: ${error.message}`);
-  return (data ?? [])
+  // One query per table for ALL projects (not one per project). Row-level
+  // security limits each to what this person may see, so the numbers on a card
+  // are the numbers they would find inside the project.
+  const [projects, plan, tickets] = await Promise.all([
+    supabase.from("projects").select("id,name,slug,status,organizations(name)"),
+    supabase.from("project_milestones").select("project_id,status"),
+    supabase.from("tickets").select("project_id,status"),
+  ]);
+  if (projects.error) throw new Error(`Failed to load projects: ${projects.error.message}`);
+  // The counts are a convenience: if they can't be read, show the cards without them.
+  if (plan.error) console.warn(`[portal] plan progress unavailable: ${plan.error.message}`);
+  if (tickets.error) console.warn(`[portal] ticket counts unavailable: ${tickets.error.message}`);
+
+  const planByProject = new Map<string, { status: MilestoneStatus }[]>();
+  for (const row of plan.error ? [] : (plan.data ?? [])) {
+    planByProject.set(row.project_id, [...(planByProject.get(row.project_id) ?? []), { status: row.status }]);
+  }
+  const ticketsByProject = new Map<string, { open: number; review: number }>();
+  for (const row of tickets.error ? [] : (tickets.data ?? [])) {
+    const entry = ticketsByProject.get(row.project_id) ?? { open: 0, review: 0 };
+    const bucket = ticketBucket(row.status);
+    if (bucket === "open") entry.open++;
+    if (bucket === "review") entry.review++;
+    ticketsByProject.set(row.project_id, entry);
+  }
+
+  return (projects.data ?? [])
     .map((row) => ({
       id: row.id,
       name: plain(row.name),
       slug: row.slug,
       status: row.status,
       organization: plainOrNull(one<{ name: string }>(row.organizations as never)?.name),
+      progress: milestoneProgress(planByProject.get(row.id) ?? []),
+      open: ticketsByProject.get(row.id)?.open ?? 0,
+      review: ticketsByProject.get(row.id)?.review ?? 0,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -210,6 +246,8 @@ interface ProjectDetailRow {
         department_id: string | null;
         milestone_id: string | null;
         created_at: string;
+        updated_at: string;
+        created_by: string | null;
         profiles: unknown;
       }[]
     | null;
@@ -219,7 +257,7 @@ const PROJECT_CORE =
   "id,organization_id,name,slug,description,status,staging_url,production_url,office_label,office_address,organizations(name)," +
   "project_departments(departments(id,name))," +
   "project_members(user_id,role,all_departments,profiles(display_name),project_member_departments(department_id))," +
-  "tickets(id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,profiles!created_by(display_name))";
+  "tickets(id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,updated_at,created_by,profiles!created_by(display_name))";
 
 /**
  * Everything for the project page in ONE request: the project, its folders,
@@ -302,7 +340,9 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       departmentId: t.department_id,
       milestoneId: t.milestone_id,
       createdAt: t.created_at,
+      updatedAt: t.updated_at ?? t.created_at,
       createdByName: plainOrNull(one<{ display_name: string }>(t.profiles as never)?.display_name),
+      createdById: t.created_by,
     })),
   };
 }
@@ -310,6 +350,8 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
 export interface ProjectAccess {
   /** Directly on this project's team. */
   isMember: boolean;
+  /** Their role on the team, or null if they are not directly on it. */
+  role: "lead" | "member" | null;
   allDepartments: boolean;
   departmentIds: string[];
   /** Company-wide access held by the viewer for this project's company, if any. */
@@ -329,16 +371,28 @@ export async function getProjectAccess(
   organizationId: string
 ): Promise<ProjectAccess> {
   const [member, folders, org] = await Promise.all([
-    supabase.from("project_members").select("all_departments").eq("project_id", projectId).eq("user_id", userId).maybeSingle(),
+    supabase.from("project_members").select("role,all_departments").eq("project_id", projectId).eq("user_id", userId).maybeSingle(),
     supabase.from("project_member_departments").select("department_id").eq("project_id", projectId).eq("user_id", userId),
     supabase.from("organization_members").select("access_level").eq("organization_id", organizationId).eq("user_id", userId).maybeSingle(),
   ]);
   return {
     isMember: Boolean(member.data),
+    role: (member.data?.role as "lead" | "member" | undefined) ?? null,
     allDepartments: Boolean(member.data?.all_departments),
     departmentIds: (folders.data ?? []).map((row) => row.department_id),
     orgLevel: (org.data?.access_level as OrgAccessLevel | undefined) ?? null,
   };
+}
+
+/**
+ * Who may open the project log and the activity feeds: the owner, company-wide
+ * executives and team leads. Regular members see their own tickets and
+ * deliverables, not an audit trail of everyone's activity. The database applies
+ * the same rule to the events themselves (project_events_read); this only
+ * decides whether to OFFER the page.
+ */
+export function canViewProjectLog(access: ProjectAccess, isAdmin: boolean): boolean {
+  return isAdmin || access.orgLevel !== null || access.role === "lead";
 }
 
 /** Can this person open tickets / comment in the given folder (null = project-wide)? */
@@ -395,6 +449,7 @@ export interface TicketDetail {
   planItemCode: string | null;
   attachments: AttachmentInfo[];
   createdAt: string;
+  updatedAt: string;
   createdByName: string | null;
   project: { id: string; organizationId: string; name: string; slug: string };
   comments: TicketComment[];
@@ -404,7 +459,7 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
   const { data: ticket, error } = await supabase
     .from("tickets")
     .select(
-      "id,ticket_number,title,description,status,priority,category,environment,affected_url,department_id,milestone_id,created_at,created_by,projects(id,organization_id,name,slug)"
+      "id,ticket_number,title,description,status,priority,category,environment,affected_url,department_id,milestone_id,created_at,updated_at,created_by,projects(id,organization_id,name,slug)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -456,6 +511,7 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
     departmentId: ticket.department_id,
     departmentName: plainOrNull((department.data as { name: string } | null)?.name),
     createdAt: ticket.created_at,
+    updatedAt: ticket.updated_at ?? ticket.created_at,
     createdByName: plainOrNull((author.data as { display_name: string } | null)?.display_name),
     planItem: plainOrNull((planItem.data as { title: string } | null)?.title),
     planItemId: ticket.milestone_id,
@@ -570,7 +626,7 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
     supabase.from("problem_costs").select("cost_note").eq("milestone_id", milestoneId).maybeSingle(),
     supabase
       .from("tickets")
-      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,profiles!created_by(display_name)")
+      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,updated_at,created_by,profiles!created_by(display_name)")
       .eq("project_id", projectId)
       .eq("milestone_id", milestoneId)
       .order("created_at", { ascending: false })
@@ -616,7 +672,9 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
       departmentId: t.department_id,
       milestoneId: t.milestone_id,
       createdAt: t.created_at,
+      updatedAt: t.updated_at ?? t.created_at,
       createdByName: plainOrNull(one<{ display_name: string }>(t.profiles as never)?.display_name),
+      createdById: t.created_by,
     })),
   };
 }
@@ -645,30 +703,36 @@ export async function getProjectEvents(
   range: { from: number; to: number } | null,
   limit = 500,
   /** Narrow in the database (not after the fact) so a busy project can't push an item's own history past the limit. */
-  only: { milestoneId?: string; excludeKind?: LogEvent["kind"] } = {}
+  only: { milestoneId?: string; ticketId?: string; excludeKind?: LogEvent["kind"] } = {}
 ): Promise<LogEntry[]> {
   // The ticket, plan item and person behind each event come along in the same
   // request (embedded through the foreign keys), so there are no follow-up
   // lookups and no long id lists in the URL. Row-level security applies to the
   // embedded rows too: anything the viewer can't see comes back as null.
-  const run = (itemColumns: string) => {
+  const run = (itemColumns: string, withOwner: boolean) => {
     let query = supabase
       .from("project_events")
       .select(
-        `id,kind,ticket_id,milestone_id,department_id,from_status,to_status,actor_id,created_at,tickets(ticket_number,title),project_milestones(${itemColumns}),profiles(display_name)`
+        `id,kind,ticket_id,milestone_id,department_id,from_status,to_status,actor_id,created_at${withOwner ? ",by_owner" : ""},tickets(ticket_number,title),project_milestones(${itemColumns}),profiles(display_name)`
       )
       .eq("project_id", projectId)
       .order("created_at", { ascending: false })
       .limit(limit);
     if (only.milestoneId) query = query.eq("milestone_id", only.milestoneId);
+    if (only.ticketId) query = query.eq("ticket_id", only.ticketId);
     if (only.excludeKind) query = query.neq("kind", only.excludeKind);
     if (range) query = query.gte("created_at", new Date(range.from).toISOString()).lt("created_at", new Date(range.to).toISOString());
     return query;
   };
 
-  let { data, error } = await run("title,code");
-  // Before the problem-details migration `code` doesn't exist: retry without it.
-  if (error) ({ data, error } = await run("title"));
+  // A database that hasn't had the newer migrations yet lacks `code` (problem details)
+  // and/or `by_owner` (leader logs): fall back to what it has instead of failing.
+  let data: unknown[] | null = null;
+  let error: { message: string } | null = null;
+  for (const [itemColumns, withOwner] of [["title,code", true], ["title", true], ["title,code", false], ["title", false]] as const) {
+    ({ data, error } = await run(itemColumns, withOwner));
+    if (!error) break;
+  }
   if (error) {
     // Before the log migration the table doesn't exist: show an empty log rather than an error page.
     console.warn(`[portal] project log unavailable: ${error.message}`);
@@ -685,6 +749,7 @@ export async function getProjectEvents(
     to_status: LogEvent["toStatus"];
     actor_id: string | null;
     created_at: string;
+    by_owner?: boolean;
     tickets: unknown;
     project_milestones: unknown;
     profiles: unknown;
@@ -704,6 +769,7 @@ export async function getProjectEvents(
       toStatus: r.to_status,
       actorId: r.actor_id,
       createdAt: r.created_at,
+      byOwner: r.by_owner === true,
       ticketNumber: ticket ? ticket.ticket_number : null,
       ticketTitle: ticket ? plain(ticket.title) : null,
       problemCode: plainOrNull(item?.code),
@@ -711,4 +777,19 @@ export async function getProjectEvents(
       actorName: plainOrNull(actor?.display_name),
     };
   });
+}
+
+/**
+ * Plan items that have a cost note, for the small "Cost" marker on the plan. Only
+ * the ids are read (never the note itself), and the database returns rows only to
+ * people allowed to see costs, so for everyone else this is simply empty.
+ */
+export async function listCostMilestoneIds(supabase: SupabaseClient): Promise<Set<string>> {
+  const { data, error } = await supabase.from("problem_costs").select("milestone_id");
+  if (error) {
+    // Before the problem-details migration the table doesn't exist: no markers, no error page.
+    console.warn(`[portal] costs unavailable: ${error.message}`);
+    return new Set();
+  }
+  return new Set((data ?? []).map((row) => row.milestone_id as string));
 }
