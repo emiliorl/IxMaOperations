@@ -36,6 +36,135 @@ export interface RequestEmailPayload {
   survey?: RequestEmailSurvey;
 }
 
+export interface BookingEmailPayload {
+  mode: "online" | "in_person";
+  guestName: string;
+  guestEmail: string;
+  /** Epoch ms of the meeting start/end. */
+  start: number;
+  end: number;
+  /** Visitor's timezone (guest email) and the host's (owner email). */
+  visitorTimezone: string;
+  hostTimezone: string;
+  locale: "en" | "es";
+  meetLink: string | null;
+  location?: string;
+  notes?: string;
+  /** On-site heads-up lines (lib/onsite.ts describeOnSiteDay) appended to the owner's email. */
+  ownerNotes?: string[];
+}
+
+function formatWhen(start: number, end: number, timeZone: string, locale: "en" | "es") {
+  const date = new Intl.DateTimeFormat(locale === "es" ? "es-MX" : "en-US", {
+    timeZone,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(start);
+  const time = new Intl.DateTimeFormat(locale === "es" ? "es-MX" : "en-US", {
+    timeZone,
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+  return `${date}, ${time.format(start)} – ${time.format(end)}`;
+}
+
+/**
+ * Booking notifications. The owner email is the one that must arrive; the
+ * guest email is best-effort (Google also sends the guest a calendar
+ * invitation, and Resend's sandbox sender can only reach the owner until a
+ * sending domain is verified — see the TODO on `from` below). Each send is
+ * independent and never throws, so a failed email can't undo a booking.
+ */
+export async function sendBookingEmails(payload: BookingEmailPayload): Promise<{ owner: boolean; guest: boolean }> {
+  const ownerEmail = process.env.OWNER_EMAIL;
+  const modeLabel = payload.mode === "online" ? "Online (Google Meet)" : "In person";
+  const where = payload.mode === "online" ? payload.meetLink ?? "(Meet link in the calendar invite)" : payload.location ?? "";
+
+  const send = async (to: string, subject: string, lines: string[], replyTo?: string): Promise<boolean> => {
+    try {
+      const result = await getResendClient().emails.send({
+        // TODO: swap to a verified sending domain once one exists for this project.
+        from: "IxMaOperations Scheduling <onboarding@resend.dev>",
+        to,
+        replyTo,
+        subject,
+        text: lines.join("\n"),
+      });
+      if (result.error) throw new Error(result.error.message);
+      return true;
+    } catch (error) {
+      console.error(`[email] booking email to ${to === ownerEmail ? "owner" : "guest"} failed:`, error);
+      return false;
+    }
+  };
+
+  const owner = ownerEmail
+    ? await send(
+        ownerEmail,
+        `New booking: ${payload.guestName} — ${modeLabel}`,
+        [
+          `${payload.guestName} <${payload.guestEmail}> booked a meeting.`,
+          "",
+          `When: ${formatWhen(payload.start, payload.end, payload.hostTimezone, "en")}`,
+          `Format: ${modeLabel}`,
+          `${payload.mode === "online" ? "Link" : "Address"}: ${where}`,
+          `Visitor timezone: ${payload.visitorTimezone}`,
+          payload.notes ? `\nNotes:\n${payload.notes}` : "",
+          ...(payload.ownerNotes?.length ? ["", "--- On-site heads-up ---", ...payload.ownerNotes] : []),
+        ],
+        payload.guestEmail
+      )
+    : false;
+
+  const es = payload.locale === "es";
+  const guest = await send(
+    payload.guestEmail,
+    es ? "Tu reunión con IxMaOperations está confirmada" : "Your meeting with IxMaOperations is confirmed",
+    [
+      es ? `Hola ${payload.guestName},` : `Hi ${payload.guestName},`,
+      "",
+      es ? "Tu reunión quedó confirmada." : "Your meeting is confirmed.",
+      "",
+      `${es ? "Cuándo" : "When"}: ${formatWhen(payload.start, payload.end, payload.visitorTimezone, payload.locale)}`,
+      payload.mode === "online"
+        ? `${es ? "Enlace de Google Meet" : "Google Meet link"}: ${where}`
+        : `${es ? "Lugar" : "Location"}: ${where}`,
+      "",
+      es
+        ? "También recibirás una invitación de Google Calendar. Para cancelar o reprogramar, responde a ese correo o escribe a eramirez@ixmaoperations.com."
+        : "You will also get a Google Calendar invitation. To cancel or reschedule, reply to that email or write to eramirez@ixmaoperations.com.",
+    ]
+  );
+
+  return { owner, guest };
+}
+
+/**
+ * A plain alert to the owner (e.g. the daily on-site digest). Never throws;
+ * returns whether Resend accepted it.
+ */
+export async function sendOwnerAlert(subject: string, lines: string[]): Promise<boolean> {
+  const ownerEmail = process.env.OWNER_EMAIL;
+  if (!ownerEmail) return false;
+  try {
+    const result = await getResendClient().emails.send({
+      // TODO: swap to a verified sending domain once one exists for this project.
+      from: "IxMaOperations Scheduling <onboarding@resend.dev>",
+      to: ownerEmail,
+      subject,
+      text: lines.join("\n"),
+    });
+    if (result.error) throw new Error(result.error.message);
+    return true;
+  } catch (error) {
+    console.error("[email] owner alert failed:", error);
+    return false;
+  }
+}
+
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
