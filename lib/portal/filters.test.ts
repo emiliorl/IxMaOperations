@@ -5,6 +5,7 @@ import {
   matchesQuery,
   matchesTicketFilter,
   parseProjectTab,
+  findMatches,
   nextPlanSort,
   parsePlanSort,
   parseSearch,
@@ -13,6 +14,8 @@ import {
   planSortParam,
   projectFilterHref,
   resolveFolderFilter,
+  searchHit,
+  snippet,
   sortProblems,
   sortTickets,
   ticketBucket,
@@ -171,6 +174,85 @@ describe("ticket queue order", () => {
   it("links keep the sort and 'mine', and leave out the defaults", () => {
     expect(projectFilterHref("acme", { sort: "priority", mine: true }).query).toEqual({ sort: "priority", mine: "1" });
     expect(projectFilterHref("acme", { sort: "activity", mine: false }).query).toEqual({});
+  });
+});
+
+describe("finding the words in a text", () => {
+  it("marks the words as written, ignoring case and accents", () => {
+    const text = "La Facturación mensual";
+    const found = findMatches(text, "facturacion");
+    expect(found).toEqual([[3, 14]]);
+    expect(text.slice(found[0][0], found[0][1])).toBe("Facturación");
+  });
+  it("marks every word, and merges the ones that touch", () => {
+    expect(findMatches("invoice automation", "auto invoice")).toEqual([
+      [0, 7],
+      [8, 12],
+    ]);
+    expect(findMatches("abcd", "ab bc")).toEqual([[0, 3]]);
+  });
+  it("finds nothing in an empty search or an empty text", () => {
+    expect(findMatches("hello", "")).toEqual([]);
+    expect(findMatches("", "hello")).toEqual([]);
+    expect(findMatches("hello", "xyz")).toEqual([]);
+  });
+  it("works on text that has accents written as separate marks", () => {
+    const text = "Facturacio\u0301n"; // o + combining accent
+    const [[start, end]] = findMatches(text, "facturacion");
+    expect(text.slice(start, end)).toBe(text);
+  });
+});
+
+describe("a short piece around the match", () => {
+  const long = "Lorem ipsum dolor sit amet, ".repeat(6) + "the invoice export fails on Fridays " + "consectetur adipiscing elit. ".repeat(6);
+  it("is centred on the first match and marks where it was cut", () => {
+    const piece = snippet(long, "invoice")!;
+    expect(piece).toContain("invoice export fails");
+    expect(piece.startsWith("…")).toBe(true);
+    expect(piece.endsWith("…")).toBe(true);
+    expect(piece.length).toBeLessThan(180);
+  });
+  it("keeps a short text whole, on one line", () => {
+    expect(snippet("one\n  two invoice", "invoice")).toBe("one two invoice");
+  });
+  it("is null when nothing matches", () => {
+    expect(snippet("nothing here", "invoice")).toBeNull();
+  });
+});
+
+describe("how well a problem or ticket matches", () => {
+  const ticket = {
+    ids: [12, "#12"],
+    title: "Invoice export fails",
+    fields: ["Ana Morales"],
+    extras: [
+      { source: "description", text: "Every Friday the export to the bank stops halfway." },
+      { source: "comment", text: "We tried again with the new certificate and it works." },
+    ],
+  };
+  it("does not match when a word is nowhere", () => {
+    expect(searchHit("invoice payroll", ticket)).toBeNull();
+    expect(searchHit("", ticket)).toBeNull();
+  });
+  it("ranks the exact ID first, then the title, then other fields, then the long texts", () => {
+    expect(searchHit("#12", ticket)?.score).toBe(4);
+    expect(searchHit("12", ticket)?.score).toBe(4);
+    expect(searchHit("invoice", ticket)?.score).toBe(3);
+    expect(searchHit("morales", ticket)?.score).toBe(2);
+    expect(searchHit("certificate", ticket)?.score).toBe(1);
+  });
+  it("says where it found it when the title does not show it", () => {
+    expect(searchHit("certificate", ticket)?.extra).toEqual({ source: "comment", snippet: "We tried again with the new certificate and it works." });
+    expect(searchHit("friday", ticket)?.extra?.source).toBe("description");
+    expect(searchHit("invoice", ticket)?.extra).toBeNull();
+  });
+  it("finds a problem by its ID", () => {
+    const problem = { ids: ["FIN-1"], title: "Invoice automation", fields: [], extras: [] };
+    expect(searchHit("fin-1", problem)?.score).toBe(4);
+    expect(searchHit("FIN-10", problem)).toBeNull();
+  });
+  it("words can come from different places", () => {
+    expect(searchHit("invoice friday", ticket)?.score).toBe(1);
   });
 });
 

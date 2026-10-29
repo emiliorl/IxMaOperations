@@ -347,6 +347,55 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
   };
 }
 
+/** The longer texts a search also looks in, by ticket / problem id. Each is labelled with where it came from. */
+export interface SearchText {
+  tickets: Map<string, { source: string; text: string }[]>;
+  problems: Map<string, { source: string; text: string }[]>;
+}
+
+const SEARCH_TICKET_LIMIT = 200;
+const SEARCH_COMMENTS_PER_TICKET = 20;
+
+/**
+ * Descriptions and comments of the project's tickets and the action plan of its
+ * problems. Read only when someone searches (they are long and encrypted, so the
+ * project page does not carry them). Row-level security applies as always: a
+ * person only gets the text of what they may open, and a client never gets the
+ * owner's internal notes.
+ */
+export async function getSearchText(supabase: SupabaseClient, projectId: string): Promise<SearchText> {
+  const [tickets, problems] = await Promise.all([
+    supabase
+      .from("tickets")
+      .select("id,description,ticket_comments(message)")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false })
+      .limit(SEARCH_TICKET_LIMIT)
+      .limit(SEARCH_COMMENTS_PER_TICKET, { referencedTable: "ticket_comments" }),
+    // Own query so a database without the problem-details migration still searches the rest.
+    supabase.from("project_milestones").select("id,solution").eq("project_id", projectId),
+  ]);
+  if (tickets.error) console.warn(`[portal] ticket text unavailable for search: ${tickets.error.message}`);
+  if (problems.error) console.warn(`[portal] action plans unavailable for search: ${problems.error.message}`);
+
+  const result: SearchText = { tickets: new Map(), problems: new Map() };
+  for (const row of (tickets.data ?? []) as unknown as { id: string; description: string | null; ticket_comments: { message: string }[] | null }[]) {
+    const texts: { source: string; text: string }[] = [];
+    const description = plainOrNull(row.description);
+    if (description) texts.push({ source: "description", text: description });
+    for (const comment of row.ticket_comments ?? []) {
+      const message = plainOrNull(comment.message);
+      if (message) texts.push({ source: "comment", text: message });
+    }
+    result.tickets.set(row.id, texts);
+  }
+  for (const row of (problems.data ?? []) as unknown as { id: string; solution?: string | null }[]) {
+    const solution = plainOrNull(row.solution);
+    if (solution) result.problems.set(row.id, [{ source: "plan", text: solution }]);
+  }
+  return result;
+}
+
 export interface ProjectAccess {
   /** Directly on this project's team. */
   isMember: boolean;

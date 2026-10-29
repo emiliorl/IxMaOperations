@@ -74,10 +74,116 @@ export function parseSearch(value: string | undefined): string {
  * accents ("facturacion" finds "Facturación"), and a leading "#" so "#3" finds ticket 3.
  */
 export function matchesQuery(query: string, fields: (string | number | null | undefined)[]): boolean {
-  const words = fold(query).replace(/#/g, "").split(/\s+/).filter(Boolean);
+  const words = searchWords(query);
   if (words.length === 0) return true;
   const haystack = fold(fields.filter((f) => f !== null && f !== undefined).join(" "));
   return words.every((word) => haystack.includes(word));
+}
+
+/** The words of a search, without case or accents; "#3" is the word "3". */
+export function searchWords(query: string): string[] {
+  return fold(query).replace(/#/g, " ").split(/\s+/).filter(Boolean);
+}
+
+/**
+ * Where the searched words are in a text, as [start, end) positions in the text
+ * AS WRITTEN (so "facturacion" marks "Facturación"), overlapping ones merged.
+ */
+export function findMatches(text: string, query: string): [number, number][] {
+  const words = searchWords(query);
+  if (words.length === 0 || !text) return [];
+  // Fold one character at a time, remembering where each folded character came from.
+  let folded = "";
+  const origin: number[] = [];
+  for (let i = 0; i < text.length; i++) {
+    for (const ch of fold(text[i])) {
+      folded += ch;
+      origin.push(i);
+    }
+  }
+  const found: [number, number][] = [];
+  for (const word of words) {
+    for (let at = folded.indexOf(word); at !== -1; at = folded.indexOf(word, at + word.length)) {
+      found.push([origin[at], origin[at + word.length - 1] + 1]);
+    }
+  }
+  found.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+  const merged: [number, number][] = [];
+  for (const range of found) {
+    const last = merged[merged.length - 1];
+    if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]);
+    else merged.push([range[0], range[1]]);
+  }
+  return merged;
+}
+
+/** A short piece of the text around the first match, on one line; null when nothing matches. */
+export function snippet(text: string, query: string, radius = 60): string | null {
+  const flat = text.replace(/\s+/g, " ").trim();
+  const [first] = findMatches(flat, query);
+  if (!first) return null;
+  let start = Math.max(0, first[0] - radius);
+  let end = Math.min(flat.length, first[1] + radius);
+  // Don't cut a word in half at either edge.
+  if (start > 0) {
+    const space = flat.indexOf(" ", start);
+    if (space !== -1 && space < first[0]) start = space + 1;
+  }
+  if (end < flat.length) {
+    const space = flat.lastIndexOf(" ", end);
+    if (space > first[1]) end = space;
+  }
+  return (start > 0 ? "…" : "") + flat.slice(start, end) + (end < flat.length ? "…" : "");
+}
+
+export interface SearchHit {
+  /** 4 the ID itself, 3 in the title or ID, 2 in the other fields, 1 only in the longer texts. */
+  score: number;
+  /** Where the match is when the title does not show it, e.g. a comment. */
+  extra: { source: string; snippet: string } | null;
+}
+
+/**
+ * Does this problem or ticket match the search, and how well? Every word has to
+ * appear somewhere across its fields and longer texts (description, comments,
+ * action plan), so a search finds what a person remembers, not just a title.
+ */
+export function searchHit(
+  query: string,
+  item: {
+    /** What it is called: "FIN-1", 12. Typing exactly one of these is an exact match. */
+    ids: (string | number | null | undefined)[];
+    title: string;
+    fields: (string | null | undefined)[];
+    /** Longer texts, each labelled with where it is from. */
+    extras: { source: string; text: string }[];
+  }
+): SearchHit | null {
+  const words = searchWords(query);
+  if (words.length === 0) return null;
+  const ids = item.ids.filter((id): id is string | number => id !== null && id !== undefined).map(String);
+  const present = (texts: (string | null | undefined)[]) => {
+    const haystack = fold(texts.filter(Boolean).join(" "));
+    return words.every((word) => haystack.includes(word));
+  };
+  const primary = [item.title, ...ids, ...item.fields];
+  if (!present([...primary, ...item.extras.map((extra) => extra.text)])) return null;
+
+  const typed = words.join(" ");
+  const exact = ids.some((id) => fold(id).replace(/#/g, "") === typed);
+  const score = exact ? 4 : present([item.title, ...ids]) ? 3 : present(primary) ? 2 : 1;
+
+  let extra: SearchHit["extra"] = null;
+  if (score < 3) {
+    for (const candidate of item.extras) {
+      const excerpt = snippet(candidate.text, query);
+      if (excerpt) {
+        extra = { source: candidate.source, snippet: excerpt };
+        break;
+      }
+    }
+  }
+  return { score, extra };
 }
 
 function fold(text: string): string {
