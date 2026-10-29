@@ -60,10 +60,14 @@ function getLimiter(name: string, requests: number, windowSeconds: number): Rate
 /** Best-effort client IP from the headers Vercel's proxy sets. Requests
  *  with neither header (shouldn't happen on Vercel; can happen in local
  *  dev) share one "unknown" bucket rather than bypassing the limiter. */
-export function clientIp(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for");
+export function clientIpFromHeaders(headers: Pick<Headers, "get">): string {
+  const forwarded = headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
-  return req.headers.get("x-real-ip") ?? "unknown";
+  return headers.get("x-real-ip") ?? "unknown";
+}
+
+export function clientIp(req: Request): string {
+  return clientIpFromHeaders(req.headers);
 }
 
 export interface RateLimitOptions {
