@@ -44,11 +44,16 @@
  * Everything here can also be changed later from the portal itself, in the
  * "Access" panel at the bottom of a project page while signed in as the owner.
  *
+ * Everything this tool stores is ENCRYPTED with DATA_ENCRYPTION_KEY (the same key the app uses, so
+ * it must be in .env.local): names, descriptions, addresses, plan titles, people's names and emails.
+ * People are looked up by a keyed one-way fingerprint of their email, never by a readable column.
+ *
  * Before the first client: Supabase dashboard -> Authentication -> turn OFF
  * "Allow new users to sign up" so accounts only exist when you create them.
  */
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import { blindIndex, decryptLoose, encryptField, encryptOptional } from "./crypto.mjs";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SECRET_KEY;
@@ -94,39 +99,43 @@ const newPassword = () => crypto.randomBytes(15).toString("base64url");
 async function orgBySlug(slug) {
   const org = must(await db.from("organizations").select("id,name").eq("slug", slug).maybeSingle(), "Looking up company");
   if (!org) fail(`No company with slug "${slug}". Create it with: org ${slug} "<Name>"`);
-  return org;
+  return { ...org, name: decryptLoose(org.name) };
 }
 async function projectBySlug(slug) {
   const project = must(await db.from("projects").select("id,name,organization_id").eq("slug", slug).maybeSingle(), "Looking up project");
   if (!project) fail(`No project with slug "${slug}".`);
-  return project;
+  return { ...project, name: decryptLoose(project.name) };
 }
 async function departmentByName(organizationId, name) {
-  const dept = must(
-    await db.from("departments").select("id,name").eq("organization_id", organizationId).ilike("name", name).maybeSingle(),
-    "Looking up department"
-  );
+  // Names are encrypted, so compare after decrypting (a company has only a handful).
+  const all = must(await db.from("departments").select("id,name").eq("organization_id", organizationId), "Looking up department");
+  const wanted = name.trim().toLowerCase();
+  const dept = all.map((d) => ({ id: d.id, name: decryptLoose(d.name) })).find((d) => d.name.trim().toLowerCase() === wanted);
   if (!dept) fail(`No department "${name}" in that company. Create it with: dept <orgSlug> "${name}"`);
   return dept;
 }
 async function profileByEmail(email) {
-  const profile = must(await db.from("profiles").select("id,display_name").ilike("email", email).maybeSingle(), "Looking up user");
+  const profile = must(await db.from("profiles").select("id,display_name").eq("email_hash", blindIndex(email)).maybeSingle(), "Looking up user");
   if (!profile) fail(`No portal user with email ${email}. Create one with: user ${email} "<Display name>"`);
-  return profile;
+  return { ...profile, display_name: decryptLoose(profile.display_name) };
 }
 
 const commands = {
   async org() {
     need(2, 'org <slug> "<Company name>"');
     const [slug, name] = positional;
-    must(await db.from("organizations").upsert({ slug, name }, { onConflict: "slug" }), "Saving company");
+    must(await db.from("organizations").upsert({ slug, name: encryptField(name) }, { onConflict: "slug" }), "Saving company");
     console.log(`✓ Company "${name}" (${slug})`);
   },
 
   async dept() {
     need(2, 'dept <orgSlug> "<Department name>"');
     const org = await orgBySlug(positional[0]);
-    must(await db.from("departments").upsert({ organization_id: org.id, name: positional[1] }, { onConflict: "organization_id,name" }), "Saving department");
+    const existing = must(await db.from("departments").select("name").eq("organization_id", org.id), "Checking departments");
+    if (existing.some((d) => decryptLoose(d.name).trim().toLowerCase() === positional[1].trim().toLowerCase())) {
+      return console.log(`✓ Department "${positional[1]}" already exists in ${org.name}`);
+    }
+    must(await db.from("departments").insert({ organization_id: org.id, name: encryptField(positional[1]) }), "Saving department");
     console.log(`✓ Department "${positional[1]}" in ${org.name}`);
   },
 
@@ -136,10 +145,10 @@ const commands = {
     const row = {
       organization_id: org.id,
       slug: positional[1],
-      name: positional[2],
-      ...(flags.office && { office_address: flags.office }),
-      ...(flags["office-label"] && { office_label: flags["office-label"] }),
-      ...(flags.description && { description: flags.description }),
+      name: encryptField(positional[2]),
+      ...(flags.office && { office_address: encryptField(flags.office) }),
+      ...(flags["office-label"] && { office_label: encryptField(flags["office-label"]) }),
+      ...(flags.description && { description: encryptField(flags.description) }),
     };
     must(await db.from("projects").upsert(row, { onConflict: "slug" }), "Saving project");
     console.log(`✓ Project "${positional[2]}" (${positional[1]}) for ${org.name}`);
@@ -161,10 +170,18 @@ const commands = {
       email,
       password,
       email_confirm: true,
-      user_metadata: { display_name: displayName },
+      // No display name here: Supabase keeps user_metadata readable, so the name lives only in the encrypted profile.
     });
     if (error) fail(`Creating user: ${error.message}${/already/i.test(error.message) ? " (use reset-password to issue a new password)" : ""}`);
-    must(await db.from("profiles").upsert({ id: data.user.id, display_name: displayName, email }), "Saving profile");
+    must(
+      await db.from("profiles").upsert({
+        id: data.user.id,
+        display_name: encryptField(displayName),
+        email: encryptField(email),
+        email_hash: blindIndex(email),
+      }),
+      "Saving profile"
+    );
     console.log(`✓ User ${displayName} <${email}>`);
     console.log(`\n  One-time password (share it privately; it is not stored anywhere):\n\n    ${password}\n`);
   },
@@ -240,7 +257,7 @@ const commands = {
       await db.from("project_milestones").insert({
         project_id: project.id,
         department_id: dept?.id ?? null,
-        title: positional[1],
+        title: encryptField(positional[1]),
         status,
         due_date: flags.due ?? null,
         sort_order: Number(flags.order ?? 0),
@@ -263,18 +280,18 @@ const commands = {
     const orgs = must(await db.from("organizations").select("id,name,slug").order("name"), "Listing companies");
     if (orgs.length === 0) return console.log("(no companies yet)");
     for (const org of orgs) {
-      console.log(`\n${org.name}  [${org.slug}]`);
+      console.log(`\n${decryptLoose(org.name)}  [${org.slug}]`);
       const execs = must(
         await db.from("organization_members").select("access_level,profiles(display_name,email)").eq("organization_id", org.id),
         "Listing company-wide access"
       );
       for (const e of execs) {
         const who = Array.isArray(e.profiles) ? e.profiles[0] : e.profiles;
-        console.log(`  ★ ${who?.display_name} <${who?.email}> · company-wide · ${e.access_level === "full" ? "full access" : "view only"}`);
+        console.log(`  ★ ${decryptLoose(who?.display_name)} <${decryptLoose(who?.email)}> · company-wide · ${e.access_level === "full" ? "full access" : "view only"}`);
       }
       const projects = must(await db.from("projects").select("id,name,slug,office_address").eq("organization_id", org.id), "Listing projects");
       for (const project of projects) {
-        console.log(`  ▸ ${project.name}  [${project.slug}]${project.office_address ? `  @ ${project.office_address}` : ""}`);
+        console.log(`  ▸ ${decryptLoose(project.name)}  [${project.slug}]${project.office_address ? `  @ ${decryptLoose(project.office_address)}` : ""}`);
         const members = must(
           await db.from("project_members").select("user_id,role,all_departments,profiles(display_name,email)").eq("project_id", project.id),
           "Listing members"
@@ -287,10 +304,10 @@ const commands = {
           const who = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
           const names = folders
             .filter((f) => f.user_id === m.user_id)
-            .map((f) => (Array.isArray(f.departments) ? f.departments[0] : f.departments)?.name)
+            .map((f) => decryptLoose((Array.isArray(f.departments) ? f.departments[0] : f.departments)?.name))
             .filter(Boolean);
           const scope = m.all_departments ? "all folders" : names.length ? names.join(", ") : "project-wide items only";
-          console.log(`      - ${who?.display_name} <${who?.email}> · ${scope} · ${m.role}`);
+          console.log(`      - ${decryptLoose(who?.display_name)} <${decryptLoose(who?.email)}> · ${scope} · ${m.role}`);
         }
       }
     }

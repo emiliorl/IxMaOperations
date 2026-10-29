@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { decryptLoose } from "@/lib/field-crypto";
 import { redirect } from "@/i18n/navigation";
 import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server";
 
@@ -23,7 +24,7 @@ export async function requireUser(locale: string) {
   return {
     supabase,
     user: user!,
-    name: profile?.display_name ?? user!.email ?? "",
+    name: decryptLoose(profile?.display_name) ?? user!.email ?? "",
     isAdmin: user!.app_metadata?.role === "admin",
   };
 }

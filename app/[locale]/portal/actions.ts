@@ -5,6 +5,7 @@ import { hasLocale } from "next-intl";
 import { redirect } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { sendOwnerAlert } from "@/lib/email";
+import { blindIndex, decryptLoose, encryptField, encryptOptional } from "@/lib/field-crypto";
 import { requireUser } from "@/lib/portal/auth";
 import {
   commentInput,
@@ -118,12 +119,13 @@ export async function createTicket(_prev: FormState, formData: FormData): Promis
       department_id: input.departmentId || null,
       milestone_id: input.milestoneId || null,
       created_by: user.id,
-      title: input.title,
-      description: input.description,
+      // Text is encrypted before it reaches the database; only the app holds the key.
+      title: encryptField(input.title),
+      description: encryptField(input.description),
       category: input.category,
       priority: input.priority,
       environment: input.environment,
-      affected_url: input.affectedUrl || null,
+      affected_url: encryptOptional(input.affectedUrl),
     })
     .select("id,ticket_number")
     .single();
@@ -131,7 +133,7 @@ export async function createTicket(_prev: FormState, formData: FormData): Promis
 
   if (!isAdmin) {
     await sendOwnerAlert(`New ticket #${ticket.ticket_number} — ${input.title}`, [
-      `${user.email} opened ticket #${ticket.ticket_number} in "${project.name}".`,
+      `${user.email} opened ticket #${ticket.ticket_number} in "${decryptLoose(project.name)}".`,
       "",
       `Priority: ${input.priority} · Type: ${input.category} · Environment: ${input.environment}`,
       "",
@@ -159,7 +161,7 @@ export async function addComment(_prev: FormState, formData: FormData): Promise<
   const { error } = await supabase.from("ticket_comments").insert({
     ticket_id: input.ticketId,
     author_id: user.id,
-    message: input.message,
+    message: encryptField(input.message),
     // Only the owner can write internal notes (the database enforces it too).
     is_internal: input.internal && isAdmin,
   });
@@ -168,7 +170,7 @@ export async function addComment(_prev: FormState, formData: FormData): Promise<
   if (!isAdmin) {
     const { data: ticket } = await supabase.from("tickets").select("ticket_number,title").eq("id", input.ticketId).maybeSingle();
     await sendOwnerAlert(`New comment on ticket #${ticket?.ticket_number ?? "?"}`, [
-      `${user.email} commented on "${ticket?.title ?? "a ticket"}":`,
+      `${user.email} commented on "${decryptLoose(ticket?.title) ?? "a ticket"}":`,
       "",
       input.message,
       "",
@@ -219,12 +221,10 @@ function backToAccess(locale: string, slug: string, result: "saved" | "error"): 
   return redirect({ href: { pathname: `/portal/projects/${slug}`, query: { access: result } }, locale });
 }
 
-const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
-
 /** An existing portal user, by id or (case-insensitively, exactly) by email. */
 async function resolvePerson(supabase: Supabase, userId: string, email: string): Promise<string | null> {
   if (userId) return userId;
-  const { data } = await supabase.from("profiles").select("id").ilike("email", escapeLike(email)).maybeSingle();
+  const { data } = await supabase.from("profiles").select("id").eq("email_hash", blindIndex(email)).maybeSingle();
   return data?.id ?? null;
 }
 

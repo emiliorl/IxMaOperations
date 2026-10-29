@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { decryptLoose } from "@/lib/field-crypto";
 import type {
   MilestoneStatus,
   ProjectStatus,
@@ -83,6 +84,11 @@ export interface ProjectDetail {
   tickets: TicketSummary[];
 }
 
+/** Decrypts a text column; a missing value becomes an empty string. */
+const plain = (value: string | null | undefined): string => decryptLoose(value) ?? "";
+/** Same, but keeps "no value" as null. */
+const plainOrNull = (value: string | null | undefined): string | null => decryptLoose(value);
+
 // PostgREST types an embedded to-one relation as an object or an array
 // depending on the client's generics; normalise either shape.
 function one<T>(value: T | T[] | null | undefined): T | null {
@@ -93,16 +99,17 @@ function one<T>(value: T | T[] | null | undefined): T | null {
 export async function listProjects(supabase: SupabaseClient): Promise<ProjectSummary[]> {
   const { data, error } = await supabase
     .from("projects")
-    .select("id,name,slug,status,organizations(name)")
-    .order("name");
+    .select("id,name,slug,status,organizations(name)");
   if (error) throw new Error(`Failed to load projects: ${error.message}`);
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    status: row.status,
-    organization: one<{ name: string }>(row.organizations as never)?.name ?? null,
-  }));
+  return (data ?? [])
+    .map((row) => ({
+      id: row.id,
+      name: plain(row.name),
+      slug: row.slug,
+      status: row.status,
+      organization: plainOrNull(one<{ name: string }>(row.organizations as never)?.name),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getProjectDetail(supabase: SupabaseClient, slug: string): Promise<ProjectDetail | null> {
@@ -145,23 +152,24 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
   return {
     id: project.id,
     organizationId: project.organization_id,
-    name: project.name,
+    name: plain(project.name),
     slug: project.slug,
-    description: project.description,
+    description: plainOrNull(project.description),
     status: project.status,
-    organization: one<{ name: string }>(project.organizations as never)?.name ?? null,
-    stagingUrl: project.staging_url,
-    productionUrl: project.production_url,
-    officeLabel: project.office_label,
-    officeAddress: project.office_address,
+    organization: plainOrNull(one<{ name: string }>(project.organizations as never)?.name),
+    stagingUrl: plainOrNull(project.staging_url),
+    productionUrl: plainOrNull(project.production_url),
+    officeLabel: plainOrNull(project.office_label),
+    officeAddress: plainOrNull(project.office_address),
     departments: (departments.data ?? [])
       .map((row) => one<Department>(row.departments as never))
       .filter((d): d is Department => d !== null)
+      .map((d) => ({ id: d.id, name: plain(d.name) }))
       .sort((a, b) => a.name.localeCompare(b.name)),
     milestones: (milestones.data ?? []).map((m) => ({
       id: m.id,
-      title: m.title,
-      description: m.description,
+      title: plain(m.title),
+      description: plainOrNull(m.description),
       status: m.status,
       departmentId: m.department_id,
       dueDate: m.due_date,
@@ -169,7 +177,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
     })),
     team: (members.data ?? []).map((m) => ({
       userId: m.user_id,
-      name: one<{ display_name: string }>(m.profiles as never)?.display_name ?? "—",
+      name: plainOrNull(one<{ display_name: string }>(m.profiles as never)?.display_name) ?? "—",
       role: m.role,
       allDepartments: m.all_departments,
       departmentIds: foldersByUser.get(m.user_id) ?? [],
@@ -177,7 +185,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
     tickets: (tickets.data ?? []).map((t) => ({
       id: t.id,
       number: t.ticket_number,
-      title: t.title,
+      title: plain(t.title),
       status: t.status,
       priority: t.priority,
       category: t.category,
@@ -296,23 +304,23 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
   return {
     id: ticket.id,
     number: ticket.ticket_number,
-    title: ticket.title,
-    description: ticket.description,
+    title: plain(ticket.title),
+    description: plain(ticket.description),
     status: ticket.status,
     priority: ticket.priority,
     category: ticket.category,
     environment: ticket.environment,
-    affectedUrl: ticket.affected_url,
+    affectedUrl: plainOrNull(ticket.affected_url),
     departmentId: ticket.department_id,
-    departmentName: (department.data as { name: string } | null)?.name ?? null,
+    departmentName: plainOrNull((department.data as { name: string } | null)?.name),
     createdAt: ticket.created_at,
-    createdByName: (author.data as { display_name: string } | null)?.display_name ?? null,
-    project: { id: project.id, organizationId: project.organization_id, name: project.name, slug: project.slug },
+    createdByName: plainOrNull((author.data as { display_name: string } | null)?.display_name),
+    project: { id: project.id, organizationId: project.organization_id, name: plain(project.name), slug: project.slug },
     comments: (comments.data ?? []).map((c) => ({
       id: c.id,
-      message: c.message,
+      message: plain(c.message),
       internal: c.is_internal,
-      authorName: one<{ display_name: string }>(c.profiles as never)?.display_name ?? "—",
+      authorName: plainOrNull(one<{ display_name: string }>(c.profiles as never)?.display_name) ?? "—",
       createdAt: c.created_at,
     })),
   };
@@ -339,8 +347,8 @@ export async function listCompanyAccess(supabase: SupabaseClient, organizationId
       const profile = one<{ display_name: string; email: string }>(row.profiles as never);
       return {
         userId: row.user_id,
-        name: profile?.display_name ?? "—",
-        email: profile?.email ?? "",
+        name: plainOrNull(profile?.display_name) ?? "—",
+        email: plain(profile?.email),
         level: row.access_level as OrgAccessLevel,
       };
     })

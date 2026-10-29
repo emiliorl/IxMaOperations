@@ -23,7 +23,7 @@
  * in Vercel's environment variables. Generate with:
  *   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
  */
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHmac, randomBytes } from "node:crypto";
 
 const VERSION = "v1";
 
@@ -60,4 +60,37 @@ export function encryptOptional(value: string | null | undefined): string | null
 
 export function decryptOptional(token: string | null | undefined): string | null {
   return token ? decryptField(token) : null;
+}
+
+// --------------------------------------------------------------- portal data
+
+/** Shape of a stored ciphertext: `v1.<iv>.<tag>.<ciphertext>` (all base64url). */
+const CIPHERTEXT_SHAPE = /^v1\.[A-Za-z0-9_-]{16}\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]*$/;
+
+export function isCiphertext(value: string): boolean {
+  return CIPHERTEXT_SHAPE.test(value);
+}
+
+/**
+ * Reads a portal text column. Ciphertext is decrypted — and if it fails to
+ * authenticate (wrong key, tampering) this THROWS rather than showing garbage.
+ * Anything not shaped like ciphertext is treated as legacy plaintext written
+ * before encryption was switched on, and returned unchanged, so existing rows
+ * keep working. Human text can't match the ciphertext shape (no spaces, a
+ * fixed-length base64url header), so the two never get confused.
+ */
+export function decryptLoose(value: string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  return isCiphertext(value) ? decryptField(value) : value;
+}
+
+/**
+ * A keyed fingerprint for exact-match lookups of encrypted values (we look
+ * people up by email without storing the email in readable form). HMAC-SHA256
+ * with a subkey derived from the data key; case- and whitespace-insensitive.
+ * One-way: it can confirm a guess, it cannot be turned back into the email.
+ */
+export function blindIndex(value: string): string {
+  const subkey = createHmac("sha256", getKey()).update("blind-index-v1").digest();
+  return createHmac("sha256", subkey).update(value.trim().toLowerCase()).digest("hex");
 }

@@ -116,6 +116,7 @@ beforeAll(async () => {
   await db.exec(sql("20261028000000_meetings.sql"));
   await db.exec(sql("20261029000000_portal.sql"));
   await db.exec(sql("20261029000100_access_model.sql"));
+  await db.exec(sql("20261029000200_encrypted_content.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -607,6 +608,31 @@ describe("data integrity", () => {
     await db.exec("reset role");
     await db.exec(`delete from public.project_members where project_id = '${P1}' and user_id = '${U.multi}'`);
     expect(await rows(`select 1 from public.project_member_departments where user_id = '${U.multi}'`)).toHaveLength(0);
+  });
+
+  it("encrypted text is accepted at its real stored length (the old 200-character title limit would have rejected it)", async () => {
+    // A 200-character title becomes roughly 310 characters once encrypted.
+    const stored = "v1." + "A".repeat(16) + "." + "B".repeat(22) + "." + "C".repeat(270);
+    await as({ id: U.leadFin });
+    expect(
+      await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description)
+                       values ('${P1}', '${DEPT_FIN}', '${U.leadFin}', '${stored}', '${stored}')`)
+    ).toBeNull();
+  });
+
+  it("still refuses empty or absurdly large content", async () => {
+    await as({ id: U.leadFin });
+    expect(await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description) values ('${P1}', '${DEPT_FIN}', '${U.leadFin}', '', 'x')`)).toMatch(/check constraint/i);
+    expect(await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description) values ('${P1}', '${DEPT_FIN}', '${U.leadFin}', '${"x".repeat(2001)}', 'x')`)).toMatch(/check constraint/i);
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_FIN}', '${U.leadFin}', '')`)).toMatch(/check constraint/i);
+  });
+
+  it("each email fingerprint belongs to one person only", async () => {
+    await db.exec("reset role");
+    await db.exec(`update public.profiles set email_hash = 'abc123' where id = '${U.leadAll}'`);
+    expect(await rejection(`update public.profiles set email_hash = 'abc123' where id = '${U.leadFin}'`)).toMatch(/unique|duplicate/i);
+    // people without a fingerprint yet (before backfill) do not collide with each other
+    expect(await rejection(`update public.profiles set email_hash = null where id in ('${U.leadAll}', '${U.leadFin}')`)).toBeNull();
   });
 
   it("the meetings table stays unreadable to every signed-in user", async () => {
