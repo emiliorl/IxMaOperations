@@ -31,3 +31,11 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Internal blueprints, architecture plans, and proprietary docs
+*_PLAN.md
+PROJECT_BLUEPRINT.md
+CURRENT_STAGE.md
+PLAN_PROGRESS.md
+STANDARDS.md
+docs/internal/
