@@ -6,7 +6,17 @@ import { redirect } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { sendOwnerAlert } from "@/lib/email";
 import { requireUser } from "@/lib/portal/auth";
-import { commentInput, loginInput, milestoneStatusInput, ticketInput, ticketStatusInput } from "@/lib/portal/schemas";
+import {
+  commentInput,
+  companyAccessInput,
+  loginInput,
+  memberAccessInput,
+  milestoneStatusInput,
+  removeCompanyAccessInput,
+  removeMemberInput,
+  ticketInput,
+  ticketStatusInput,
+} from "@/lib/portal/schemas";
 import { checkRateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
 import { SITE_URL } from "@/lib/site-url";
 import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server";
@@ -198,4 +208,119 @@ export async function updateMilestoneStatus(formData: FormData): Promise<void> {
       .select("id");
     redirect({ href: `/portal/projects/${slug}`, locale });
   }
+}
+
+// ------------------------------------------------- owner: who can see what
+
+type Supabase = Awaited<ReturnType<typeof requireUser>>["supabase"];
+
+/** Back to the project page with a one-word result the page turns into a message. */
+function backToAccess(locale: string, slug: string, result: "saved" | "error"): never {
+  return redirect({ href: { pathname: `/portal/projects/${slug}`, query: { access: result } }, locale });
+}
+
+const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
+
+/** An existing portal user, by id or (case-insensitively, exactly) by email. */
+async function resolvePerson(supabase: Supabase, userId: string, email: string): Promise<string | null> {
+  if (userId) return userId;
+  const { data } = await supabase.from("profiles").select("id").ilike("email", escapeLike(email)).maybeSingle();
+  return data?.id ?? null;
+}
+
+/**
+ * Owner: set which folders a person can open on a project (one, several, or
+ * all) and their role. Adds them to the project if they weren't on it. The
+ * folder list is replaced wholesale; if the second step failed the person
+ * would end up with fewer folders, never more.
+ */
+export async function saveMemberAccess(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const parsed = memberAccessInput.safeParse({
+    projectSlug: slug,
+    userId: text(formData, "userId"),
+    email: text(formData, "email"),
+    role: text(formData, "role"),
+    allDepartments: formData.get("allDepartments") === "on",
+    departmentIds: formData.getAll("departmentId").filter((v): v is string => typeof v === "string"),
+  });
+  if (!isAdmin || !parsed.success || !SLUG.test(slug)) return backToAccess(locale, SLUG.test(slug) ? slug : "", "error");
+  const input = parsed.data;
+
+  const { data: project } = await supabase.from("projects").select("id").eq("slug", input.projectSlug).maybeSingle();
+  const userId = await resolvePerson(supabase, input.userId, input.email);
+  if (!project || !userId) return backToAccess(locale, slug, "error");
+
+  const member = await supabase
+    .from("project_members")
+    .upsert({ project_id: project.id, user_id: userId, role: input.role, all_departments: input.allDepartments });
+  if (member.error) return backToAccess(locale, slug, "error");
+
+  const cleared = await supabase.from("project_member_departments").delete().eq("project_id", project.id).eq("user_id", userId);
+  if (cleared.error) return backToAccess(locale, slug, "error");
+  if (!input.allDepartments && input.departmentIds.length > 0) {
+    const granted = await supabase
+      .from("project_member_departments")
+      .insert(input.departmentIds.map((department_id) => ({ project_id: project.id, user_id: userId, department_id })));
+    if (granted.error) return backToAccess(locale, slug, "error");
+  }
+  return backToAccess(locale, slug, "saved");
+}
+
+/** Owner: take a person off a project (their folder grants go with them). */
+export async function removeMemberAccess(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const parsed = removeMemberInput.safeParse({ projectSlug: slug, userId: text(formData, "userId") });
+  if (!isAdmin || !parsed.success) return backToAccess(locale, SLUG.test(slug) ? slug : "", "error");
+
+  const { data: project } = await supabase.from("projects").select("id").eq("slug", parsed.data.projectSlug).maybeSingle();
+  if (!project) return backToAccess(locale, slug, "error");
+  const removed = await supabase.from("project_members").delete().eq("project_id", project.id).eq("user_id", parsed.data.userId);
+  return backToAccess(locale, slug, removed.error ? "error" : "saved");
+}
+
+/** Owner: grant or change company-wide access (CEO / CFO ...). */
+export async function saveCompanyAccess(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const parsed = companyAccessInput.safeParse({
+    projectSlug: slug,
+    organizationId: text(formData, "organizationId"),
+    userId: text(formData, "userId"),
+    email: text(formData, "email"),
+    level: text(formData, "level"),
+  });
+  if (!isAdmin || !parsed.success) return backToAccess(locale, SLUG.test(slug) ? slug : "", "error");
+  const input = parsed.data;
+
+  const userId = await resolvePerson(supabase, input.userId, input.email);
+  if (!userId) return backToAccess(locale, slug, "error");
+  const saved = await supabase
+    .from("organization_members")
+    .upsert({ organization_id: input.organizationId, user_id: userId, access_level: input.level });
+  return backToAccess(locale, slug, saved.error ? "error" : "saved");
+}
+
+/** Owner: revoke company-wide access. */
+export async function removeCompanyAccess(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const parsed = removeCompanyAccessInput.safeParse({
+    projectSlug: slug,
+    organizationId: text(formData, "organizationId"),
+    userId: text(formData, "userId"),
+  });
+  if (!isAdmin || !parsed.success) return backToAccess(locale, SLUG.test(slug) ? slug : "", "error");
+  const removed = await supabase
+    .from("organization_members")
+    .delete()
+    .eq("organization_id", parsed.data.organizationId)
+    .eq("user_id", parsed.data.userId);
+  return backToAccess(locale, slug, removed.error ? "error" : "saved");
 }

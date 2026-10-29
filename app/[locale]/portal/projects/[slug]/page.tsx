@@ -2,14 +2,15 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
+import { AccessPanel } from "@/components/portal/AccessPanel";
+import { selectClass } from "@/components/portal/Field";
 import { Pill } from "@/components/portal/Pills";
 import { PortalBar } from "@/components/portal/PortalBar";
-import { selectClass } from "@/components/portal/Field";
 import { buttonVariants } from "@/components/ui/Button";
 import { MILESTONE_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
 import { milestoneProgress } from "@/lib/portal/progress";
-import { getProjectDetail } from "@/lib/portal/queries";
+import { canOpenTickets, getProjectAccess, getProjectDetail, listCompanyAccess } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -17,10 +18,10 @@ const panel = "rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidd
 
 export default async function ProjectPage(props: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ dept?: string }>;
+  searchParams: Promise<{ dept?: string; access?: string }>;
 }) {
   const { locale, slug } = await props.params;
-  const { dept } = await props.searchParams;
+  const { dept, access: accessNotice } = await props.searchParams;
   setRequestLocale(locale);
 
   const { supabase, user, name, isAdmin } = await requireUser(locale);
@@ -28,28 +29,42 @@ export default async function ProjectPage(props: {
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
   const t = await getTranslations("Portal");
+  const access = await getProjectAccess(supabase, user.id, project.id, project.organizationId);
   const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
-  const me = project.team.find((member) => member.userId === user.id);
-  const deptName = new Map(project.departments.map((d) => [d.id, d.name]));
+  // `project.departments` is already limited by the database to the folders this
+  // person can open, so everything below only ever shows what they were given.
+  const folderName = new Map(project.departments.map((d) => [d.id, d.name]));
+  const hasEveryFolder = isAdmin || access.allDepartments || access.orgLevel !== null;
 
-  // Filter: no choice yet → the person's own department; "all" → everything.
-  const filterDept =
-    dept === "all" ? null : dept && deptName.has(dept) ? dept : dept === undefined ? (me?.departmentId ?? null) : null;
-  const matches = (departmentId: string | null) => filterDept === null || departmentId === null || departmentId === filterDept;
+  // Filter: no choice yet → the person's own folder when they have exactly one;
+  // "all" → everything they can see.
+  const defaultFolder = !hasEveryFolder && access.departmentIds.length === 1 ? access.departmentIds[0] : null;
+  const filterFolder = dept === "all" ? null : dept && folderName.has(dept) ? dept : dept === undefined ? defaultFolder : null;
+  const matches = (departmentId: string | null) => filterFolder === null || departmentId === null || departmentId === filterFolder;
 
   const progress = milestoneProgress(project.milestones);
   const milestones = project.milestones.filter((m) => matches(m.departmentId));
   const tickets = project.tickets.filter((ticket) => matches(ticket.departmentId));
   const staging = safeHttpUrl(project.stagingUrl);
   const production = safeHttpUrl(project.productionUrl);
+  const mayOpenTickets = canOpenTickets(access, isAdmin);
+  const folderLabel = (departmentId: string | null) => (departmentId ? (folderName.get(departmentId) ?? "—") : t("deptProjectWide"));
+
+  const memberFolders = (member: (typeof project.team)[number]) => {
+    if (member.allDepartments) return t("allFolders");
+    const names = member.departmentIds.map((id) => folderName.get(id)).filter((n): n is string => Boolean(n));
+    return names.length > 0 ? names.join(", ") : t("noFolders");
+  };
 
   const chip = (active: boolean) =>
     cn(
       "rounded-md border px-3 py-1.5 text-xs transition-colors",
       active ? "border-zinc-600 bg-zinc-800 text-zinc-100" : "border-zinc-800 bg-zinc-900 text-zinc-500 hover:text-zinc-200"
     );
+
+  const companyAccess = isAdmin ? await listCompanyAccess(supabase, project.organizationId) : [];
 
   return (
     <>
@@ -96,23 +111,30 @@ export default async function ProjectPage(props: {
                 )}
               </dl>
             )}
+            {!mayOpenTickets && <p className="text-xs text-zinc-500 pt-1">{t("viewOnlyNote")}</p>}
+            {isAdmin && (accessNotice === "saved" || accessNotice === "error") && (
+              <p role="status" className={cn("text-xs pt-1", accessNotice === "saved" ? "text-green-500" : "text-red-400")}>
+                {accessNotice === "saved" ? t("accessSaved") : t("accessError")}{" "}
+                <a href="#access" className="underline underline-offset-4">{t("accessTitle")} ↓</a>
+              </p>
+            )}
           </header>
 
-          {/* Department filter */}
+          {/* Folders */}
           {project.departments.length > 0 && (
-            <nav aria-label={t("fieldDepartment")} className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500 mr-1">{t("fieldDepartment")}</span>
-              <Link href={{ pathname: `/portal/projects/${slug}`, query: { dept: "all" } }} className={chip(filterDept === null)}>
+            <nav aria-label={t("foldersLabel")} className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500 mr-1">{t("foldersLabel")}</span>
+              <Link href={{ pathname: `/portal/projects/${slug}`, query: { dept: "all" } }} className={chip(filterFolder === null)}>
                 {t("deptAll")}
               </Link>
               {project.departments.map((d) => (
                 <Link
                   key={d.id}
                   href={{ pathname: `/portal/projects/${slug}`, query: { dept: d.id } }}
-                  className={chip(filterDept === d.id)}
+                  className={chip(filterFolder === d.id)}
                 >
                   {d.name}
-                  {me?.departmentId === d.id && <span className="ml-1.5 text-zinc-600">· {t("yourDepartment")}</span>}
+                  {!hasEveryFolder && access.departmentIds.includes(d.id) && <span className="ml-1.5 text-zinc-600">· {t("yourDepartment")}</span>}
                 </Link>
               ))}
             </nav>
@@ -158,7 +180,7 @@ export default async function ProjectPage(props: {
                           <span className="text-sm text-zinc-100">{m.title}</span>
                         </div>
                         <p className="text-[11px] text-zinc-500 font-mono">
-                          {m.departmentId ? deptName.get(m.departmentId) : t("deptProjectWide")}
+                          {folderLabel(m.departmentId)}
                           {m.dueDate && ` · ${t("due", { date: dueFmt.format(Date.parse(m.dueDate)) })}`}
                         </p>
                         {m.description && <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">{m.description}</p>}
@@ -194,9 +216,11 @@ export default async function ProjectPage(props: {
                 <span className="text-zinc-600">{"// 02 "}</span>
                 {t("ticketsTitle")}
               </span>
-              <Link href={`/portal/projects/${slug}/tickets/new`} className={buttonVariants({ size: "sm" })}>
-                {t("newTicket")}
-              </Link>
+              {mayOpenTickets && (
+                <Link href={`/portal/projects/${slug}/tickets/new`} className={buttonVariants({ size: "sm" })}>
+                  {t("newTicket")}
+                </Link>
+              )}
             </div>
             {tickets.length === 0 ? (
               <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noTickets")}</p>
@@ -210,9 +234,7 @@ export default async function ProjectPage(props: {
                     >
                       <span className="font-mono text-xs text-zinc-500 w-10 shrink-0">#{ticket.number}</span>
                       <span className="flex-1 min-w-[12rem] text-sm text-zinc-100">{ticket.title}</span>
-                      <span className="font-mono text-[11px] text-zinc-500">
-                        {ticket.departmentId ? deptName.get(ticket.departmentId) : t("deptProjectWide")}
-                      </span>
+                      <span className="font-mono text-[11px] text-zinc-500">{folderLabel(ticket.departmentId)}</span>
                       <Pill kind="priority" value={ticket.priority} label={t(`priority.${ticket.priority}`)} />
                       <Pill kind="ticketStatus" value={ticket.status} label={t(`ticketStatus.${ticket.status}`)} />
                       <span className="font-mono text-[11px] text-zinc-600 w-24 text-right">{dateFmt.format(Date.parse(ticket.createdAt))}</span>
@@ -236,12 +258,25 @@ export default async function ProjectPage(props: {
                 <li key={member.userId} className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-3">
                   <span className="text-sm text-zinc-100">{member.name}</span>
                   <span className="font-mono text-[11px] text-zinc-500">
-                    {t(`memberRole.${member.role}`)} · {member.departmentId ? deptName.get(member.departmentId) : t("deptProjectWide")}
+                    {t(`memberRole.${member.role}`)} · {memberFolders(member)}
                   </span>
                 </li>
               ))}
             </ul>
           </section>
+
+          {/* 04 Access — owner only */}
+          {isAdmin && (
+            <AccessPanel
+              locale={locale}
+              projectSlug={slug}
+              organizationId={project.organizationId}
+              departments={project.departments}
+              team={project.team}
+              companyAccess={companyAccess}
+              notice={accessNotice === "saved" || accessNotice === "error" ? accessNotice : null}
+            />
+          )}
         </div>
       </div>
     </>

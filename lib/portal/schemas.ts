@@ -48,4 +48,45 @@ export const milestoneStatusInput = z.object({
   status: z.enum(MILESTONE_STATUSES),
 });
 
+const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
+const optionalEmail = z
+  .string()
+  .trim()
+  .max(254)
+  .refine((v) => v === "" || z.string().email().safeParse(v).success, "Invalid email.");
+
+/** Owner: give someone folders on a project. Identify the person by id (existing row) or email (new). */
+export const memberAccessInput = z
+  .object({
+    projectSlug: z.string().trim().regex(SLUG),
+    userId: uuidOrEmpty,
+    email: optionalEmail,
+    role: z.enum(["lead", "member"]),
+    allDepartments: z.boolean(),
+    departmentIds: z.array(z.string().uuid()).max(100),
+  })
+  .refine((v) => v.userId !== "" || v.email !== "", "Choose a person.");
+
+export const removeMemberInput = z.object({
+  projectSlug: z.string().trim().regex(SLUG),
+  userId: z.string().uuid(),
+});
+
+/** Owner: company-wide access (CEO / CFO ...). */
+export const companyAccessInput = z
+  .object({
+    projectSlug: z.string().trim().regex(SLUG),
+    organizationId: z.string().uuid(),
+    userId: uuidOrEmpty,
+    email: optionalEmail,
+    level: z.enum(["view", "full"]),
+  })
+  .refine((v) => v.userId !== "" || v.email !== "", "Choose a person.");
+
+export const removeCompanyAccessInput = z.object({
+  projectSlug: z.string().trim().regex(SLUG),
+  organizationId: z.string().uuid(),
+  userId: z.string().uuid(),
+});
+
 export type TicketInput = z.infer<typeof ticketInput>;

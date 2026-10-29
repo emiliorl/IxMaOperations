@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { PortalBar } from "@/components/portal/PortalBar";
 import { TicketForm } from "@/components/portal/TicketForm";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { requireUser } from "@/lib/portal/auth";
-import { getProjectDetail } from "@/lib/portal/queries";
+import { canOpenTickets, getProjectAccess, getProjectDetail, writableDepartments } from "@/lib/portal/queries";
 
 export default async function NewTicketPage(props: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await props.params;
@@ -15,13 +15,16 @@ export default async function NewTicketPage(props: { params: Promise<{ locale: s
   const project = await getProjectDetail(supabase, slug);
   if (!project) notFound();
 
+  // A view-only executive can read everything but not open tickets (the
+  // database refuses it too); send them back instead of showing a dead form.
+  const access = await getProjectAccess(supabase, user.id, project.id, project.organizationId);
+  if (!canOpenTickets(access, isAdmin)) redirect({ href: `/portal/projects/${slug}`, locale });
+
   const t = await getTranslations("Portal");
 
-  // Someone who belongs to one department may only open tickets for it (the
-  // database enforces this too); project-wide members and the owner can pick any.
-  const me = project.team.find((member) => member.userId === user.id);
-  const lockedDepartment = !isAdmin && me?.departmentId ? me.departmentId : null;
-  const departments = lockedDepartment ? project.departments.filter((d) => d.id === lockedDepartment) : project.departments;
+  // Only the folders this person may write in. With exactly one, it's pre-selected.
+  const folders = writableDepartments(access, isAdmin, project.departments);
+  const onlyFolder = folders.length === 1 && !isAdmin && access.orgLevel === null && !access.allDepartments ? folders[0].id : "";
 
   return (
     <>
@@ -41,9 +44,9 @@ export default async function NewTicketPage(props: { params: Promise<{ locale: s
           <TicketForm
             locale={locale}
             projectSlug={slug}
-            departments={departments}
+            departments={folders}
             milestones={project.milestones.map((m) => ({ id: m.id, title: m.title }))}
-            defaultDepartmentId={lockedDepartment ?? ""}
+            defaultDepartmentId={onlyFolder}
             canPickProjectWide
           />
         </div>

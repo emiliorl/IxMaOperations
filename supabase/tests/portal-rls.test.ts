@@ -1,9 +1,13 @@
 /**
  * Proves the portal's access rules against a real Postgres engine (PGlite),
  * with Supabase's `auth.uid()` / `auth.jwt()` and its `anon` / `authenticated`
- * roles recreated, and BOTH migrations applied exactly as written. Every test
+ * roles recreated, and ALL migrations applied exactly as written. Every test
  * runs as a specific kind of user and tries to read or write something it
  * should (or should not) be able to. Run: npm test
+ *
+ * Model under test: a project belongs to a company; each department is a
+ * FOLDER inside it; a person has one, several or all folders; company-wide
+ * executives (CFO/CEO) are granted 'full' or 'view' access by the owner.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -14,24 +18,32 @@ const sql = (file: string) => readFileSync(fileURLToPath(new URL(`../migrations/
 
 // Fixed ids so the assertions read clearly.
 const U = {
-  leadAll: "00000000-0000-0000-0000-0000000000a1", // project-wide lead, project P1
-  leadFin: "00000000-0000-0000-0000-0000000000a2", // Finance lead, P1
-  memberOps: "00000000-0000-0000-0000-0000000000a3", // Operations member, P1
+  leadAll: "00000000-0000-0000-0000-0000000000a1", // project P1, ALL folders
+  leadFin: "00000000-0000-0000-0000-0000000000a2", // P1, Finance folder only
+  memberOps: "00000000-0000-0000-0000-0000000000a3", // P1, Operations folder only
+  multi: "00000000-0000-0000-0000-0000000000a4", // P1, Finance + Operations folders (not HR)
   outsider: "00000000-0000-0000-0000-0000000000b1", // member of a different company's project P2
   admin: "00000000-0000-0000-0000-0000000000ff", // the owner
-  nobody: "00000000-0000-0000-0000-0000000000c1", // authenticated, belongs to no project
+  nobody: "00000000-0000-0000-0000-0000000000c1", // signed in, on no project
+  cfo: "00000000-0000-0000-0000-0000000000d1", // company-wide FULL access to Acme
+  ceo: "00000000-0000-0000-0000-0000000000d2", // company-wide VIEW-ONLY access to Acme
+  betaExec: "00000000-0000-0000-0000-0000000000d3", // company-wide FULL access to Beta
 };
 const ORG_A = "10000000-0000-0000-0000-000000000001";
 const ORG_B = "10000000-0000-0000-0000-000000000002";
 const DEPT_FIN = "20000000-0000-0000-0000-000000000001";
 const DEPT_OPS = "20000000-0000-0000-0000-000000000002";
 const DEPT_B = "20000000-0000-0000-0000-000000000003";
+const DEPT_HR = "20000000-0000-0000-0000-000000000004";
 const P1 = "30000000-0000-0000-0000-000000000001";
 const P2 = "30000000-0000-0000-0000-000000000002";
+const P3 = "30000000-0000-0000-0000-000000000003"; // a second Acme project
 const T_FIN = "40000000-0000-0000-0000-000000000001";
 const T_OPS = "40000000-0000-0000-0000-000000000002";
 const T_ALL = "40000000-0000-0000-0000-000000000003";
 const T_B = "40000000-0000-0000-0000-000000000004";
+const T_HR = "40000000-0000-0000-0000-000000000005";
+const T_P3 = "40000000-0000-0000-0000-000000000006";
 
 let db: PGlite;
 
@@ -61,6 +73,8 @@ const rows = async <T = Record<string, unknown>>(query: string, params: unknown[
 const ids = async (table: string, column = "id") =>
   (await rows<Record<string, string>>(`select ${column} as v from public.${table} order by 1`)).map((r) => r.v);
 
+const sorted = (list: string[]) => [...list].sort();
+
 /** Runs a statement that must be rejected; returns the error message (or null if it succeeded). */
 async function rejection(query: string, params: unknown[] = []): Promise<string | null> {
   await db.exec("savepoint probe");
@@ -76,6 +90,10 @@ async function rejection(query: string, params: unknown[] = []): Promise<string 
 
 /** Rows a write statement actually changed (RLS silently filters the rest). */
 const affected = async (query: string, params: unknown[] = []) => (await db.query(query, params)).affectedRows ?? 0;
+
+const newTicket = (project: string, dept: string | null, by: string, title = "Test ticket") =>
+  `insert into public.tickets (project_id, department_id, created_by, title, description)
+   values ('${project}', ${dept ? `'${dept}'` : "null"}, '${by}', '${title}', 'x')`;
 
 beforeAll(async () => {
   db = new PGlite();
@@ -97,41 +115,63 @@ beforeAll(async () => {
   `);
   await db.exec(sql("20261028000000_meetings.sql"));
   await db.exec(sql("20261029000000_portal.sql"));
+  await db.exec(sql("20261029000100_access_model.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
     insert into auth.users (id) values
-      ('${U.leadAll}'), ('${U.leadFin}'), ('${U.memberOps}'), ('${U.outsider}'), ('${U.admin}'), ('${U.nobody}');
+      ('${U.leadAll}'), ('${U.leadFin}'), ('${U.memberOps}'), ('${U.multi}'), ('${U.outsider}'),
+      ('${U.admin}'), ('${U.nobody}'), ('${U.cfo}'), ('${U.ceo}'), ('${U.betaExec}');
     insert into public.profiles (id, display_name, email) values
       ('${U.leadAll}', 'Ana (project lead)', 'ana@acme.test'),
       ('${U.leadFin}', 'Fede (finance lead)', 'fede@acme.test'),
       ('${U.memberOps}', 'Omar (ops)', 'omar@acme.test'),
+      ('${U.multi}', 'Marta (finance + ops)', 'marta@acme.test'),
       ('${U.outsider}', 'Bea (other company)', 'bea@beta.test'),
       ('${U.admin}', 'Owner', 'owner@ixma.test'),
-      ('${U.nobody}', 'No project', 'nobody@x.test');
+      ('${U.nobody}', 'No project', 'nobody@x.test'),
+      ('${U.cfo}', 'Carla (CFO)', 'cfo@acme.test'),
+      ('${U.ceo}', 'Cesar (CEO)', 'ceo@acme.test'),
+      ('${U.betaExec}', 'Beto (Beta exec)', 'exec@beta.test');
     insert into public.organizations (id, name, slug) values
       ('${ORG_A}', 'Acme', 'acme'), ('${ORG_B}', 'Beta', 'beta');
     insert into public.departments (id, organization_id, name) values
-      ('${DEPT_FIN}', '${ORG_A}', 'Finance'), ('${DEPT_OPS}', '${ORG_A}', 'Operations'), ('${DEPT_B}', '${ORG_B}', 'Sales');
+      ('${DEPT_FIN}', '${ORG_A}', 'Finance'), ('${DEPT_OPS}', '${ORG_A}', 'Operations'),
+      ('${DEPT_HR}', '${ORG_A}', 'HR'), ('${DEPT_B}', '${ORG_B}', 'Sales');
     insert into public.projects (id, organization_id, name, slug, office_address) values
       ('${P1}', '${ORG_A}', 'Acme Automation', 'acme-automation', 'Av. Reforma 100'),
-      ('${P2}', '${ORG_B}', 'Beta Portal', 'beta-portal', 'Calle 5');
+      ('${P2}', '${ORG_B}', 'Beta Portal', 'beta-portal', 'Calle 5'),
+      ('${P3}', '${ORG_A}', 'Acme Reporting', 'acme-reporting', null);
     insert into public.project_departments (project_id, department_id) values
-      ('${P1}', '${DEPT_FIN}'), ('${P1}', '${DEPT_OPS}'), ('${P2}', '${DEPT_B}');
-    insert into public.project_members (project_id, user_id, department_id, role) values
-      ('${P1}', '${U.leadAll}', null, 'lead'),
-      ('${P1}', '${U.leadFin}', '${DEPT_FIN}', 'lead'),
-      ('${P1}', '${U.memberOps}', '${DEPT_OPS}', 'member'),
-      ('${P2}', '${U.outsider}', '${DEPT_B}', 'lead');
+      ('${P1}', '${DEPT_FIN}'), ('${P1}', '${DEPT_OPS}'), ('${P1}', '${DEPT_HR}'),
+      ('${P2}', '${DEPT_B}'), ('${P3}', '${DEPT_FIN}');
+    insert into public.project_members (project_id, user_id, role, all_departments) values
+      ('${P1}', '${U.leadAll}', 'lead', true),
+      ('${P1}', '${U.leadFin}', 'lead', false),
+      ('${P1}', '${U.memberOps}', 'member', false),
+      ('${P1}', '${U.multi}', 'member', false),
+      ('${P2}', '${U.outsider}', 'lead', true);
+    insert into public.project_member_departments (project_id, user_id, department_id) values
+      ('${P1}', '${U.leadFin}', '${DEPT_FIN}'),
+      ('${P1}', '${U.memberOps}', '${DEPT_OPS}'),
+      ('${P1}', '${U.multi}', '${DEPT_FIN}'),
+      ('${P1}', '${U.multi}', '${DEPT_OPS}');
+    insert into public.organization_members (organization_id, user_id, access_level) values
+      ('${ORG_A}', '${U.cfo}', 'full'),
+      ('${ORG_A}', '${U.ceo}', 'view'),
+      ('${ORG_B}', '${U.betaExec}', 'full');
     insert into public.project_milestones (project_id, department_id, title, status) values
       ('${P1}', null, 'Kickoff', 'completed'),
       ('${P1}', '${DEPT_FIN}', 'Invoice automation', 'in_progress'),
+      ('${P1}', '${DEPT_HR}', 'HR onboarding', 'pending'),
       ('${P2}', null, 'Beta secret plan', 'pending');
     insert into public.tickets (id, project_id, department_id, created_by, title, description) values
       ('${T_FIN}', '${P1}', '${DEPT_FIN}', '${U.leadFin}', 'Finance ticket', 'finance only'),
       ('${T_OPS}', '${P1}', '${DEPT_OPS}', '${U.memberOps}', 'Ops ticket', 'ops only'),
       ('${T_ALL}', '${P1}', null, '${U.leadAll}', 'Project-wide ticket', 'everyone on P1'),
-      ('${T_B}', '${P2}', '${DEPT_B}', '${U.outsider}', 'Beta ticket', 'other company');
+      ('${T_B}', '${P2}', '${DEPT_B}', '${U.outsider}', 'Beta ticket', 'other company'),
+      ('${T_HR}', '${P1}', '${DEPT_HR}', '${U.leadAll}', 'HR ticket', 'hr only'),
+      ('${T_P3}', '${P3}', '${DEPT_FIN}', null, 'Reporting ticket', 'second Acme project');
     insert into public.ticket_comments (ticket_id, author_id, message, is_internal) values
       ('${T_FIN}', '${U.leadFin}', 'public comment', false),
       ('${T_FIN}', '${U.admin}', 'PRIVATE owner note', true);
@@ -154,101 +194,94 @@ afterEach(async () => {
 describe("not signed in (public API key)", () => {
   it("can read nothing at all", async () => {
     await as(null);
-    for (const table of ["organizations", "profiles", "departments", "projects", "project_departments", "project_members", "project_milestones", "tickets", "ticket_comments", "meetings"]) {
+    for (const table of [
+      "organizations", "profiles", "departments", "projects", "project_departments", "project_members",
+      "project_member_departments", "organization_members", "project_milestones", "tickets", "ticket_comments", "meetings",
+    ]) {
       expect(await rejection(`select * from public.${table}`), table).toMatch(/permission denied/i);
     }
   });
 
   it("cannot create a ticket or comment", async () => {
     await as(null);
-    expect(await rejection(`insert into public.tickets (project_id, title, description) values ('${P1}', 'spam', 'x')`)).toMatch(/permission denied/i);
+    expect(await rejection(newTicket(P1, null, U.leadAll))).toMatch(/permission denied/i);
     expect(await rejection(`insert into public.ticket_comments (ticket_id, message) values ('${T_ALL}', 'spam')`)).toMatch(/permission denied/i);
   });
 });
 
-describe("project-wide lead (sees the whole project)", () => {
+describe("a person with ALL folders", () => {
   beforeEach(async () => as({ id: U.leadAll }));
 
-  it("sees their project, plan and team, but not another company's", async () => {
+  it("sees their project, every folder, and nothing of another company", async () => {
     expect(await ids("projects")).toEqual([P1]);
-    expect(await ids("project_milestones", "title")).toEqual(["Invoice automation", "Kickoff"]);
-    expect((await ids("project_members", "user_id")).sort()).toEqual([U.leadAll, U.leadFin, U.memberOps].sort());
     expect(await ids("organizations")).toEqual([ORG_A]);
+    expect(sorted(await ids("departments"))).toEqual(sorted([DEPT_FIN, DEPT_OPS, DEPT_HR]));
+    expect(sorted(await ids("project_departments", "department_id"))).toEqual(sorted([DEPT_FIN, DEPT_OPS, DEPT_HR]));
   });
 
-  it("sees every ticket of the project (all departments + project-wide)", async () => {
-    expect((await ids("tickets")).sort()).toEqual([T_FIN, T_OPS, T_ALL].sort());
+  it("sees the whole plan and every ticket of the project", async () => {
+    expect(await ids("project_milestones", "title")).toEqual(["HR onboarding", "Invoice automation", "Kickoff"]);
+    expect(sorted(await ids("tickets"))).toEqual(sorted([T_FIN, T_OPS, T_HR, T_ALL]));
   });
 
-  it("sees teammates' names but not people from other companies", async () => {
-    expect((await ids("profiles")).sort()).toEqual([U.leadAll, U.leadFin, U.memberOps].sort());
+  it("sees the team", async () => {
+    expect(sorted(await ids("project_members", "user_id"))).toEqual(sorted([U.leadAll, U.leadFin, U.memberOps, U.multi]));
+    expect(sorted(await ids("profiles"))).toEqual(sorted([U.leadAll, U.leadFin, U.memberOps, U.multi]));
   });
 });
 
-describe("department lead (Finance)", () => {
+describe("a person with ONE folder (Finance)", () => {
   beforeEach(async () => as({ id: U.leadFin }));
 
-  it("sees Finance and project-wide tickets, NOT Operations tickets", async () => {
-    expect((await ids("tickets")).sort()).toEqual([T_FIN, T_ALL].sort());
-    expect(await rows(`select 1 from public.tickets where id = '${T_OPS}'`)).toHaveLength(0);
+  it("sees Finance and project-wide tickets — not Operations or HR", async () => {
+    expect(sorted(await ids("tickets"))).toEqual(sorted([T_FIN, T_ALL]));
+    expect(await rows(`select 1 from public.tickets where id in ('${T_OPS}', '${T_HR}')`)).toHaveLength(0);
   });
 
-  it("still sees the whole project plan and team", async () => {
-    expect(await ids("projects")).toEqual([P1]);
+  it("sees project-wide and Finance plan items, NOT other folders' plan items", async () => {
     expect(await ids("project_milestones", "title")).toEqual(["Invoice automation", "Kickoff"]);
+    expect(await rows(`select 1 from public.project_milestones where title = 'HR onboarding'`)).toHaveLength(0);
   });
 
-  it("can open a ticket for their own department, numbered per project", async () => {
+  it("does not even see the names of folders they have no access to", async () => {
+    expect(await ids("departments")).toEqual([DEPT_FIN]);
+    expect(await ids("project_departments", "department_id")).toEqual([DEPT_FIN]);
+  });
+
+  it("does not see who else belongs to other folders", async () => {
+    const visible = await rows<{ user_id: string; department_id: string }>(
+      `select user_id, department_id from public.project_member_departments order by 1, 2`
+    );
+    expect(visible.every((r) => r.department_id === DEPT_FIN)).toBe(true);
+    expect(visible.some((r) => r.user_id === U.memberOps)).toBe(false);
+  });
+
+  it("can open a ticket in their own folder or project-wide, numbered per project", async () => {
     const created = await rows<{ ticket_number: number; status: string }>(
-      `insert into public.tickets (project_id, department_id, created_by, title, description, category, priority)
-       values ('${P1}', '${DEPT_FIN}', '${U.leadFin}', 'New finance bug', 'it broke', 'bug', 'high')
-       returning ticket_number, status`
+      `${newTicket(P1, DEPT_FIN, U.leadFin, "New finance bug")} returning ticket_number, status`
     );
     expect(created[0].status).toBe("open");
-    expect(created[0].ticket_number).toBe(4); // T_FIN, T_OPS, T_ALL already took 1-3 in P1
+    expect(created[0].ticket_number).toBe(5); // four tickets already exist in P1
+    expect(await rejection(newTicket(P1, null, U.leadFin, "Wide"))).toBeNull();
   });
 
-  it("can open a project-wide ticket", async () => {
-    expect(
-      await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description)
-                       values ('${P1}', null, '${U.leadFin}', 'Wide', 'ok')`)
-    ).toBeNull();
+  it("CANNOT open a ticket in another folder, another company's project, or as someone else", async () => {
+    expect(await rejection(newTicket(P1, DEPT_OPS, U.leadFin))).toMatch(/row-level security/i);
+    expect(await rejection(newTicket(P1, DEPT_HR, U.leadFin))).toMatch(/row-level security/i);
+    expect(await rejection(newTicket(P2, DEPT_B, U.leadFin))).toMatch(/row-level security/i);
+    expect(await rejection(newTicket(P1, DEPT_FIN, U.leadAll))).toMatch(/row-level security/i);
   });
 
-  it("CANNOT open a ticket for another department", async () => {
-    expect(
-      await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description)
-                       values ('${P1}', '${DEPT_OPS}', '${U.leadFin}', 'Sneaky', 'ops ticket')`)
-    ).toMatch(/row-level security/i);
-  });
-
-  it("CANNOT open a ticket in another company's project", async () => {
-    expect(
-      await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description)
-                       values ('${P2}', '${DEPT_B}', '${U.leadFin}', 'Cross-tenant', 'nope')`)
-    ).toMatch(/row-level security/i);
-  });
-
-  it("CANNOT spoof who created a ticket", async () => {
-    expect(
-      await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description)
-                       values ('${P1}', '${DEPT_FIN}', '${U.leadAll}', 'Forged', 'as someone else')`)
-    ).toMatch(/row-level security/i);
-  });
-
-  it("CANNOT create an already-closed ticket", async () => {
+  it("CANNOT create an already-closed ticket or choose their own ticket number", async () => {
     expect(
       await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description, status)
                        values ('${P1}', '${DEPT_FIN}', '${U.leadFin}', 'Pre-closed', 'x', 'closed')`)
     ).toMatch(/row-level security/i);
-  });
-
-  it("cannot pick their own ticket number", async () => {
     const created = await rows<{ ticket_number: number }>(
       `insert into public.tickets (project_id, department_id, created_by, title, description, ticket_number)
        values ('${P1}', '${DEPT_FIN}', '${U.leadFin}', 'Number grab', 'x', 999) returning ticket_number`
     );
-    expect(created[0].ticket_number).toBe(4);
+    expect(created[0].ticket_number).toBe(5);
   });
 
   it("CANNOT change ticket status, edit or delete tickets", async () => {
@@ -257,41 +290,29 @@ describe("department lead (Finance)", () => {
     expect(await affected(`delete from public.tickets where id = '${T_FIN}'`)).toBe(0);
   });
 
-  it("can read and write public comments on a visible ticket", async () => {
+  it("can read and write public comments on a visible ticket, never internal ones", async () => {
     expect(await ids("ticket_comments", "message")).toEqual(["public comment"]);
-    expect(
-      await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_FIN}', '${U.leadFin}', 'thanks')`)
-    ).toBeNull();
-  });
-
-  it("NEVER sees the owner's internal notes, and cannot write one", async () => {
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_FIN}', '${U.leadFin}', 'thanks')`)).toBeNull();
     expect(await rows(`select 1 from public.ticket_comments where message = 'PRIVATE owner note'`)).toHaveLength(0);
     expect(
-      await rejection(`insert into public.ticket_comments (ticket_id, author_id, message, is_internal)
-                       values ('${T_FIN}', '${U.leadFin}', 'sneaky internal', true)`)
+      await rejection(`insert into public.ticket_comments (ticket_id, author_id, message, is_internal) values ('${T_FIN}', '${U.leadFin}', 'x', true)`)
     ).toMatch(/row-level security/i);
   });
 
-  it("CANNOT comment on a ticket they cannot see", async () => {
-    expect(
-      await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_OPS}', '${U.leadFin}', 'peeking')`)
-    ).toMatch(/row-level security/i);
+  it("CANNOT comment on a ticket in a folder they cannot see, or impersonate an author", async () => {
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_OPS}', '${U.leadFin}', 'peeking')`)).toMatch(/row-level security/i);
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_FIN}', '${U.leadAll}', 'forged')`)).toMatch(/row-level security/i);
   });
 
-  it("CANNOT impersonate another author in a comment", async () => {
-    expect(
-      await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_FIN}', '${U.leadAll}', 'forged')`)
-    ).toMatch(/row-level security/i);
-  });
-
-  it("CANNOT edit the project, its plan, the team, or grant themselves access", async () => {
+  it("CANNOT edit the project, the plan, the team, or give themselves more folders", async () => {
     expect(await affected(`update public.projects set name = 'hacked' where id = '${P1}'`)).toBe(0);
     expect(await affected(`update public.project_milestones set status = 'completed'`)).toBe(0);
     expect(await affected(`delete from public.project_milestones`)).toBe(0);
-    expect(await affected(`update public.project_members set department_id = null, role = 'lead' where user_id = '${U.leadFin}'`)).toBe(0);
+    expect(await affected(`update public.project_members set all_departments = true, role = 'lead' where user_id = '${U.leadFin}'`)).toBe(0);
     expect(
-      await rejection(`insert into public.project_members (project_id, user_id, role) values ('${P2}', '${U.leadFin}', 'lead')`)
+      await rejection(`insert into public.project_member_departments (project_id, user_id, department_id) values ('${P1}', '${U.leadFin}', '${DEPT_HR}')`)
     ).toMatch(/row-level security/i);
+    expect(await rejection(`insert into public.project_members (project_id, user_id, role) values ('${P2}', '${U.leadFin}', 'lead')`)).toMatch(/row-level security/i);
   });
 
   it("can rename themselves but not edit their email or anyone else", async () => {
@@ -301,11 +322,38 @@ describe("department lead (Finance)", () => {
   });
 });
 
-describe("department member (Operations)", () => {
+describe("a person with SEVERAL folders (Finance + Operations, not HR)", () => {
+  beforeEach(async () => as({ id: U.multi }));
+
+  it("sees both folders' tickets and project-wide ones — but not HR", async () => {
+    expect(sorted(await ids("tickets"))).toEqual(sorted([T_FIN, T_OPS, T_ALL]));
+    expect(await rows(`select 1 from public.tickets where id = '${T_HR}'`)).toHaveLength(0);
+  });
+
+  it("sees both folders' names and plan items, not HR's", async () => {
+    expect(sorted(await ids("departments"))).toEqual(sorted([DEPT_FIN, DEPT_OPS]));
+    expect(await ids("project_milestones", "title")).toEqual(["Invoice automation", "Kickoff"]);
+  });
+
+  it("can open tickets in either granted folder and project-wide, but not HR", async () => {
+    expect(await rejection(newTicket(P1, DEPT_FIN, U.multi))).toBeNull();
+    expect(await rejection(newTicket(P1, DEPT_OPS, U.multi))).toBeNull();
+    expect(await rejection(newTicket(P1, null, U.multi))).toBeNull();
+    expect(await rejection(newTicket(P1, DEPT_HR, U.multi))).toMatch(/row-level security/i);
+  });
+
+  it("can comment in both granted folders, not in HR", async () => {
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_OPS}', '${U.multi}', 'ok')`)).toBeNull();
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_HR}', '${U.multi}', 'no')`)).toMatch(/row-level security/i);
+  });
+});
+
+describe("a person with one folder (Operations)", () => {
   beforeEach(async () => as({ id: U.memberOps }));
 
-  it("sees Operations and project-wide tickets only", async () => {
-    expect((await ids("tickets")).sort()).toEqual([T_OPS, T_ALL].sort());
+  it("sees Operations and project-wide tickets only, and only project-wide plan items", async () => {
+    expect(sorted(await ids("tickets"))).toEqual(sorted([T_OPS, T_ALL]));
+    expect(await ids("project_milestones", "title")).toEqual(["Kickoff"]);
   });
 
   it("cannot see Finance's conversation", async () => {
@@ -322,30 +370,25 @@ describe("a different company", () => {
     expect(await ids("project_milestones", "title")).toEqual(["Beta secret plan"]);
     expect(await ids("organizations")).toEqual([ORG_B]);
     expect(await ids("profiles")).toEqual([U.outsider]);
+    expect(await ids("departments")).toEqual([DEPT_B]);
   });
 
   it("cannot reach project P1 in any way", async () => {
     expect(await rows(`select 1 from public.projects where id = '${P1}'`)).toHaveLength(0);
     expect(await rows(`select 1 from public.tickets where project_id = '${P1}'`)).toHaveLength(0);
     expect(await rows(`select 1 from public.project_members where project_id = '${P1}'`)).toHaveLength(0);
-    expect(
-      await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description)
-                       values ('${P1}', null, '${U.outsider}', 'Cross-tenant', 'nope')`)
-    ).toMatch(/row-level security/i);
+    expect(await rejection(newTicket(P1, null, U.outsider))).toMatch(/row-level security/i);
   });
 });
 
 describe("signed in but on no project", () => {
   it("sees nothing and can create nothing", async () => {
     await as({ id: U.nobody });
-    expect(await ids("projects")).toEqual([]);
-    expect(await ids("tickets")).toEqual([]);
-    expect(await ids("organizations")).toEqual([]);
+    for (const table of ["projects", "tickets", "organizations", "departments", "project_milestones"]) {
+      expect(await ids(table), table).toEqual([]);
+    }
     expect(await ids("profiles")).toEqual([U.nobody]);
-    expect(
-      await rejection(`insert into public.tickets (project_id, department_id, created_by, title, description)
-                       values ('${P1}', null, '${U.nobody}', 'Uninvited', 'x')`)
-    ).toMatch(/row-level security/i);
+    expect(await rejection(newTicket(P1, null, U.nobody))).toMatch(/row-level security/i);
   });
 });
 
@@ -360,6 +403,124 @@ describe("privilege escalation attempts", () => {
   it("helper functions are not callable by the public key", async () => {
     await as(null);
     expect(await rejection(`select public.is_admin()`)).toMatch(/permission denied/i);
+    expect(await rejection(`select public.org_access_to_project('${P1}', true)`)).toMatch(/permission denied/i);
+  });
+});
+
+describe("company-wide access: CFO with FULL access", () => {
+  beforeEach(async () => as({ id: U.cfo }));
+
+  it("sees every project of their company — and nothing of another company", async () => {
+    expect(sorted(await ids("projects"))).toEqual(sorted([P1, P3]));
+    expect(await ids("organizations")).toEqual([ORG_A]);
+    expect(sorted(await ids("departments"))).toEqual(sorted([DEPT_FIN, DEPT_OPS, DEPT_HR]));
+    expect(await rows(`select 1 from public.projects where id = '${P2}'`)).toHaveLength(0);
+  });
+
+  it("sees every folder's tickets, the whole plan and the team", async () => {
+    expect(sorted(await ids("tickets"))).toEqual(sorted([T_FIN, T_OPS, T_HR, T_ALL, T_P3]));
+    expect(await rows(`select 1 from public.tickets where id = '${T_B}'`)).toHaveLength(0);
+    expect(await ids("project_milestones", "title")).toEqual(["HR onboarding", "Invoice automation", "Kickoff"]);
+    expect(sorted(await ids("project_members", "user_id"))).toEqual(sorted([U.leadAll, U.leadFin, U.memberOps, U.multi]));
+  });
+
+  it("can open a ticket in ANY folder, or project-wide, in any project of the company", async () => {
+    for (const [project, dept] of [[P1, DEPT_OPS], [P1, DEPT_FIN], [P1, DEPT_HR], [P1, null], [P3, DEPT_FIN]] as const) {
+      expect(await rejection(newTicket(project, dept, U.cfo, "From the CFO"))).toBeNull();
+    }
+  });
+
+  it("CANNOT open a ticket in another company, or forge the author", async () => {
+    expect(await rejection(newTicket(P2, DEPT_B, U.cfo))).toMatch(/row-level security/i);
+    expect(await rejection(newTicket(P1, null, U.leadAll))).toMatch(/row-level security/i);
+  });
+
+  it("can comment in a folder they don't belong to — but never write an internal note", async () => {
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_OPS}', '${U.cfo}', 'question for ops')`)).toBeNull();
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message, is_internal) values ('${T_OPS}', '${U.cfo}', 'x', true)`)).toMatch(/row-level security/i);
+    expect(await rows(`select 1 from public.ticket_comments where message = 'PRIVATE owner note'`)).toHaveLength(0);
+  });
+
+  it("CANNOT edit tickets, the plan, the teams, the folders or the project", async () => {
+    expect(await affected(`update public.tickets set status = 'closed'`)).toBe(0);
+    expect(await affected(`update public.project_milestones set status = 'completed'`)).toBe(0);
+    expect(await affected(`update public.projects set name = 'hacked'`)).toBe(0);
+    expect(await affected(`delete from public.project_members`)).toBe(0);
+    expect(await rejection(`insert into public.project_members (project_id, user_id, role) values ('${P1}', '${U.cfo}', 'lead')`)).toMatch(/row-level security/i);
+    expect(
+      await rejection(`insert into public.project_member_departments (project_id, user_id, department_id) values ('${P1}', '${U.leadFin}', '${DEPT_HR}')`)
+    ).toMatch(/row-level security/i);
+  });
+
+  it("CANNOT grant themselves more access, add others, or see who else holds it", async () => {
+    expect(await affected(`update public.organization_members set access_level = 'full'`)).toBe(0);
+    expect(await rejection(`insert into public.organization_members (organization_id, user_id) values ('${ORG_B}', '${U.cfo}')`)).toMatch(/row-level security/i);
+    expect(await rejection(`insert into public.organization_members (organization_id, user_id) values ('${ORG_A}', '${U.leadFin}')`)).toMatch(/row-level security/i);
+    expect(await ids("organization_members", "user_id")).toEqual([U.cfo]); // only their own row
+  });
+});
+
+describe("company-wide access: CEO with VIEW-ONLY access", () => {
+  beforeEach(async () => as({ id: U.ceo }));
+
+  it("sees everything the full level sees", async () => {
+    expect(sorted(await ids("projects"))).toEqual(sorted([P1, P3]));
+    expect(sorted(await ids("tickets"))).toEqual(sorted([T_FIN, T_OPS, T_HR, T_ALL, T_P3]));
+    expect(await ids("project_milestones", "title")).toEqual(["HR onboarding", "Invoice automation", "Kickoff"]);
+  });
+
+  it("CANNOT open a ticket anywhere", async () => {
+    for (const dept of [DEPT_FIN, DEPT_OPS, DEPT_HR, null]) {
+      expect(await rejection(newTicket(P1, dept, U.ceo)), String(dept)).toMatch(/row-level security/i);
+    }
+  });
+
+  it("CANNOT comment on any ticket", async () => {
+    expect(await rejection(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_FIN}', '${U.ceo}', 'hi')`)).toMatch(/row-level security/i);
+  });
+});
+
+describe("company-wide access: a different company's executive", () => {
+  it("sees only their own company", async () => {
+    await as({ id: U.betaExec });
+    expect(await ids("projects")).toEqual([P2]);
+    expect(await ids("tickets")).toEqual([T_B]);
+    expect(await ids("organizations")).toEqual([ORG_B]);
+    expect(await ids("project_milestones", "title")).toEqual(["Beta secret plan"]);
+    expect(await ids("departments")).toEqual([DEPT_B]);
+  });
+});
+
+describe("who can see whose name", () => {
+  it("team members cannot see who holds company-wide access", async () => {
+    await as({ id: U.leadFin });
+    expect(await ids("organization_members", "user_id")).toEqual([]);
+  });
+
+  it("a person sees an executive's name only once that executive authors something they can see", async () => {
+    await as({ id: U.leadFin });
+    expect(await rows(`select 1 from public.profiles where id = '${U.cfo}'`)).toHaveLength(0);
+
+    await as({ id: U.cfo });
+    await db.exec(newTicket(P1, DEPT_FIN, U.cfo, "Finance question"));
+
+    await as({ id: U.leadFin });
+    expect(await rows(`select display_name from public.profiles where id = '${U.cfo}'`)).toEqual([{ display_name: "Carla (CFO)" }]);
+
+    // The Operations member can't see that Finance ticket, so still can't see the CFO.
+    await as({ id: U.memberOps });
+    expect(await rows(`select 1 from public.profiles where id = '${U.cfo}'`)).toHaveLength(0);
+  });
+
+  it("clients see the owner's name on replies, but never because of an internal note", async () => {
+    await as({ id: U.leadFin });
+    expect(await rows(`select 1 from public.profiles where id = '${U.admin}'`)).toHaveLength(0);
+
+    await as({ id: U.admin, admin: true });
+    await db.exec(`insert into public.ticket_comments (ticket_id, author_id, message) values ('${T_FIN}', '${U.admin}', 'Fixed on staging')`);
+
+    await as({ id: U.leadFin });
+    expect(await rows(`select display_name from public.profiles where id = '${U.admin}'`)).toEqual([{ display_name: "Owner" }]);
   });
 });
 
@@ -367,48 +528,85 @@ describe("the owner (admin)", () => {
   beforeEach(async () => as({ id: U.admin, admin: true }));
 
   it("sees everything across companies, including internal notes", async () => {
-    expect((await ids("projects")).sort()).toEqual([P1, P2].sort());
-    expect(await ids("tickets")).toHaveLength(4);
+    expect(sorted(await ids("projects"))).toEqual(sorted([P1, P2, P3]));
+    expect(await ids("tickets")).toHaveLength(6);
     expect(await rows(`select 1 from public.ticket_comments where is_internal`)).toHaveLength(1);
     expect(await ids("organizations")).toHaveLength(2);
+    expect(await ids("departments")).toHaveLength(4);
   });
 
-  it("can move a ticket through its lifecycle and write internal notes", async () => {
+  it("can move a ticket through its lifecycle, write internal notes and update the plan", async () => {
     expect(await affected(`update public.tickets set status = 'in_progress' where id = '${T_FIN}'`)).toBe(1);
     expect(
-      await rejection(`insert into public.ticket_comments (ticket_id, author_id, message, is_internal)
-                       values ('${T_FIN}', '${U.admin}', 'note to self', true)`)
+      await rejection(`insert into public.ticket_comments (ticket_id, author_id, message, is_internal) values ('${T_FIN}', '${U.admin}', 'note to self', true)`)
     ).toBeNull();
+    expect(await affected(`update public.project_milestones set status = 'completed' where title = 'Invoice automation'`)).toBe(1);
+  });
+});
+
+describe("the owner manages who can see what", () => {
+  it("raises, lowers and revokes company-wide access — and it takes effect immediately", async () => {
+    await as({ id: U.admin, admin: true });
+    expect(await affected(`update public.organization_members set access_level = 'view' where user_id = '${U.cfo}'`)).toBe(1);
+    await as({ id: U.cfo });
+    expect(await rejection(newTicket(P1, null, U.cfo, "Now read-only"))).toMatch(/row-level security/i);
+
+    await as({ id: U.admin, admin: true });
+    expect(await affected(`delete from public.organization_members where user_id = '${U.cfo}'`)).toBe(1);
+    await as({ id: U.cfo });
+    expect(await ids("projects")).toEqual([]);
   });
 
-  it("can update the plan", async () => {
-    expect(await affected(`update public.project_milestones set status = 'completed' where title = 'Invoice automation'`)).toBe(1);
+  it("grants and removes a folder for a person — and it takes effect immediately", async () => {
+    await as({ id: U.memberOps });
+    expect(await rows(`select 1 from public.tickets where id = '${T_FIN}'`)).toHaveLength(0);
+
+    await as({ id: U.admin, admin: true });
+    await db.exec(`insert into public.project_member_departments (project_id, user_id, department_id) values ('${P1}', '${U.memberOps}', '${DEPT_FIN}')`);
+    await as({ id: U.memberOps });
+    expect(await rows(`select 1 from public.tickets where id = '${T_FIN}'`)).toHaveLength(1);
+    expect(await ids("project_milestones", "title")).toEqual(["Invoice automation", "Kickoff"]);
+
+    await as({ id: U.admin, admin: true });
+    await db.exec(`delete from public.project_member_departments where user_id = '${U.memberOps}' and department_id = '${DEPT_FIN}'`);
+    await as({ id: U.memberOps });
+    expect(await rows(`select 1 from public.tickets where id = '${T_FIN}'`)).toHaveLength(0);
+  });
+
+  it("can switch a person to all folders, which opens HR to them", async () => {
+    await as({ id: U.admin, admin: true });
+    expect(await affected(`update public.project_members set all_departments = true where user_id = '${U.leadFin}'`)).toBe(1);
+    await as({ id: U.leadFin });
+    expect(await rows(`select 1 from public.tickets where id = '${T_HR}'`)).toHaveLength(1);
   });
 });
 
 describe("data integrity", () => {
   it("ticket numbers are per project and independent between projects", async () => {
     await as({ id: U.outsider });
-    const created = await rows<{ ticket_number: number }>(
-      `insert into public.tickets (project_id, department_id, created_by, title, description)
-       values ('${P2}', '${DEPT_B}', '${U.outsider}', 'Beta second', 'x') returning ticket_number`
-    );
-    expect(created[0].ticket_number).toBe(2); // T_B was #1 in P2, independent of P1's counter
+    const created = await rows<{ ticket_number: number }>(`${newTicket(P2, DEPT_B, U.outsider, "Beta second")} returning ticket_number`);
+    expect(created[0].ticket_number).toBe(2); // T_B was #1 in P2
   });
 
-  it("a ticket cannot target a department that is not part of the project", async () => {
+  it("a ticket cannot target a folder that is not part of the project", async () => {
+    await db.exec("reset role");
+    expect(await rejection(newTicket(P1, DEPT_B, U.leadAll))).toMatch(/foreign key/i);
+  });
+
+  it("a person cannot be given a folder outside the project, or a folder without being on the project", async () => {
     await db.exec("reset role");
     expect(
-      await rejection(`insert into public.tickets (project_id, department_id, title, description)
-                       values ('${P1}', '${DEPT_B}', 'wrong dept', 'x')`)
+      await rejection(`insert into public.project_member_departments (project_id, user_id, department_id) values ('${P1}', '${U.memberOps}', '${DEPT_B}')`)
+    ).toMatch(/foreign key/i);
+    expect(
+      await rejection(`insert into public.project_member_departments (project_id, user_id, department_id) values ('${P1}', '${U.nobody}', '${DEPT_FIN}')`)
     ).toMatch(/foreign key/i);
   });
 
-  it("a member cannot be attached to a department outside the project", async () => {
+  it("removing someone from a project removes their folder grants too", async () => {
     await db.exec("reset role");
-    expect(
-      await rejection(`insert into public.project_members (project_id, user_id, department_id) values ('${P1}', '${U.nobody}', '${DEPT_B}')`)
-    ).toMatch(/foreign key/i);
+    await db.exec(`delete from public.project_members where project_id = '${P1}' and user_id = '${U.multi}'`);
+    expect(await rows(`select 1 from public.project_member_departments where user_id = '${U.multi}'`)).toHaveLength(0);
   });
 
   it("the meetings table stays unreadable to every signed-in user", async () => {

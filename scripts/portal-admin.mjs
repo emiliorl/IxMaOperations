@@ -14,8 +14,14 @@
  *   project-dept <projectSlug> "<Department name>"      attach a department to a project
  *   user <email> "<Display name>"                       create a login; prints a one-time password
  *   reset-password <email>                              new one-time password for an existing user
- *   member <projectSlug> <email> [--dept "<name>"] [--role lead|member]
- *                                                       no --dept = project-wide access
+ *   member <projectSlug> <email> [--dept "<name>" ...] [--all] [--role lead|member]
+ *                                                       which FOLDERS they can open: repeat --dept for several,
+ *                                                       or --all (also the default when no --dept is given)
+ *   unmember <projectSlug> <email>                      take someone off a project
+ *   exec <orgSlug> <email> [--access full|view]         company-wide access (CEO / CFO): every project and
+ *                                                       folder of that company. full = can also open tickets
+ *                                                       and comment; view = read only. Default full.
+ *   unexec <orgSlug> <email>                            revoke company-wide access
  *   milestone <projectSlug> "<Title>" [--dept "<name>"] [--due YYYY-MM-DD]
  *                                     [--status pending|in_progress|completed|blocked] [--order N]
  *   make-admin <email>                                  mark yourself as the owner (sign in again afterwards)
@@ -30,7 +36,13 @@
  *   project-dept acme-automation "Operations"
  *   user ana@acme.com "Ana Pérez"
  *   member acme-automation ana@acme.com --dept "Finance" --role lead
+ *   member acme-automation luis@acme.com --dept "Finance" --dept "Operations"   (two folders)
+ *   user carla@acme.com "Carla Ruiz"
+ *   exec acme carla@acme.com --access full                                     (the CFO sees everything)
  *   milestone acme-automation "Kickoff and access" --due 2026-11-15
+ *
+ * Everything here can also be changed later from the portal itself, in the
+ * "Access" panel at the bottom of a project page while signed in as the owner.
  *
  * Before the first client: Supabase dashboard -> Authentication -> turn OFF
  * "Allow new users to sign up" so accounts only exist when you create them.
@@ -49,9 +61,21 @@ const db = createClient(url, key, { auth: { persistSession: false, autoRefreshTo
 const [command, ...rest] = process.argv.slice(2);
 const positional = [];
 const flags = {};
+const multi = {}; // repeated flags, e.g. --dept "A" --dept "B"
+const BOOLEAN_FLAGS = new Set(["all"]);
 for (let i = 0; i < rest.length; i++) {
-  if (rest[i].startsWith("--")) flags[rest[i].slice(2)] = rest[++i];
-  else positional.push(rest[i]);
+  if (!rest[i].startsWith("--")) {
+    positional.push(rest[i]);
+    continue;
+  }
+  const name = rest[i].slice(2);
+  if (BOOLEAN_FLAGS.has(name)) {
+    flags[name] = true;
+    continue;
+  }
+  const value = rest[++i];
+  flags[name] = value;
+  (multi[name] ??= []).push(value);
 }
 
 function fail(message) {
@@ -155,17 +179,55 @@ const commands = {
   },
 
   async member() {
-    need(2, 'member <projectSlug> <email> [--dept "<name>"] [--role lead|member]');
+    need(2, 'member <projectSlug> <email> [--dept "<name>" ...] [--all] [--role lead|member]');
     const role = flags.role ?? "member";
     if (!["lead", "member"].includes(role)) fail('--role must be "lead" or "member".');
     const project = await projectBySlug(positional[0]);
     const profile = await profileByEmail(positional[1]);
-    const dept = flags.dept ? await departmentByName(project.organization_id, flags.dept) : null;
+
+    const names = multi.dept ?? [];
+    const allFolders = flags.all === true || names.length === 0; // no folders named = every folder
+    const folders = allFolders ? [] : await Promise.all(names.map((n) => departmentByName(project.organization_id, n)));
+
     must(
-      await db.from("project_members").upsert({ project_id: project.id, user_id: profile.id, department_id: dept?.id ?? null, role }),
-      "Adding to project (is the department attached to the project? use project-dept)"
+      await db.from("project_members").upsert({ project_id: project.id, user_id: profile.id, role, all_departments: allFolders }),
+      "Adding to project"
     );
-    console.log(`✓ ${profile.display_name} → ${project.name} · ${dept ? dept.name : "project-wide"} · ${role}`);
+    // Replace the folder list wholesale (a failure here leaves fewer folders, never more).
+    must(await db.from("project_member_departments").delete().eq("project_id", project.id).eq("user_id", profile.id), "Clearing old folders");
+    if (folders.length > 0) {
+      must(
+        await db.from("project_member_departments").insert(folders.map((f) => ({ project_id: project.id, user_id: profile.id, department_id: f.id }))),
+        "Granting folders (is each department attached to the project? use project-dept)"
+      );
+    }
+    console.log(`✓ ${profile.display_name} → ${project.name} · ${allFolders ? "all folders" : folders.map((f) => f.name).join(", ")} · ${role}`);
+  },
+
+  async unmember() {
+    need(2, "unmember <projectSlug> <email>");
+    const project = await projectBySlug(positional[0]);
+    const profile = await profileByEmail(positional[1]);
+    must(await db.from("project_members").delete().eq("project_id", project.id).eq("user_id", profile.id), "Removing from project");
+    console.log(`✓ ${profile.display_name} removed from ${project.name} (their folder access went with them)`);
+  },
+
+  async exec() {
+    need(2, "exec <orgSlug> <email> [--access full|view]");
+    const level = flags.access ?? "full";
+    if (!["full", "view"].includes(level)) fail('--access must be "full" or "view".');
+    const org = await orgBySlug(positional[0]);
+    const profile = await profileByEmail(positional[1]);
+    must(await db.from("organization_members").upsert({ organization_id: org.id, user_id: profile.id, access_level: level }), "Saving company-wide access");
+    console.log(`✓ ${profile.display_name} now has ${level === "full" ? "FULL" : "VIEW-ONLY"} company-wide access to ${org.name}`);
+  },
+
+  async unexec() {
+    need(2, "unexec <orgSlug> <email>");
+    const org = await orgBySlug(positional[0]);
+    const profile = await profileByEmail(positional[1]);
+    must(await db.from("organization_members").delete().eq("organization_id", org.id).eq("user_id", profile.id), "Revoking company-wide access");
+    console.log(`✓ ${profile.display_name} no longer has company-wide access to ${org.name}`);
   },
 
   async milestone() {
@@ -202,17 +264,33 @@ const commands = {
     if (orgs.length === 0) return console.log("(no companies yet)");
     for (const org of orgs) {
       console.log(`\n${org.name}  [${org.slug}]`);
+      const execs = must(
+        await db.from("organization_members").select("access_level,profiles(display_name,email)").eq("organization_id", org.id),
+        "Listing company-wide access"
+      );
+      for (const e of execs) {
+        const who = Array.isArray(e.profiles) ? e.profiles[0] : e.profiles;
+        console.log(`  ★ ${who?.display_name} <${who?.email}> · company-wide · ${e.access_level === "full" ? "full access" : "view only"}`);
+      }
       const projects = must(await db.from("projects").select("id,name,slug,office_address").eq("organization_id", org.id), "Listing projects");
       for (const project of projects) {
         console.log(`  ▸ ${project.name}  [${project.slug}]${project.office_address ? `  @ ${project.office_address}` : ""}`);
         const members = must(
-          await db.from("project_members").select("role,departments(name),profiles(display_name,email)").eq("project_id", project.id),
+          await db.from("project_members").select("user_id,role,all_departments,profiles(display_name,email)").eq("project_id", project.id),
           "Listing members"
         );
+        const folders = must(
+          await db.from("project_member_departments").select("user_id,departments(name)").eq("project_id", project.id),
+          "Listing folders"
+        );
         for (const m of members) {
-          const dept = Array.isArray(m.departments) ? m.departments[0] : m.departments;
           const who = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
-          console.log(`      - ${who?.display_name} <${who?.email}> · ${dept?.name ?? "project-wide"} · ${m.role}`);
+          const names = folders
+            .filter((f) => f.user_id === m.user_id)
+            .map((f) => (Array.isArray(f.departments) ? f.departments[0] : f.departments)?.name)
+            .filter(Boolean);
+          const scope = m.all_departments ? "all folders" : names.length ? names.join(", ") : "project-wide items only";
+          console.log(`      - ${who?.display_name} <${who?.email}> · ${scope} · ${m.role}`);
         }
       }
     }

@@ -9,7 +9,7 @@ import { PortalBar } from "@/components/portal/PortalBar";
 import { buttonVariants } from "@/components/ui/Button";
 import { TICKET_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
-import { getTicketDetail } from "@/lib/portal/queries";
+import { canWriteIn, getProjectAccess, getTicketDetail } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -23,9 +23,14 @@ export default async function TicketPage(props: { params: Promise<{ locale: stri
   setRequestLocale(locale);
   if (!UUID.test(id)) notFound();
 
-  const { supabase, name, isAdmin } = await requireUser(locale);
+  const { supabase, user, name, isAdmin } = await requireUser(locale);
   const ticket = await getTicketDetail(supabase, id);
   if (!ticket) notFound(); // a ticket you can't see looks exactly like one that doesn't exist
+
+  // Whether to OFFER a comment box (a view-only executive can read but not write;
+  // the database refuses their comment either way).
+  const access = await getProjectAccess(supabase, user.id, ticket.project.id, ticket.project.organizationId);
+  const mayComment = canWriteIn(access, isAdmin, ticket.departmentId);
 
   const t = await getTranslations("Portal");
   const stamp = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
@@ -143,7 +148,11 @@ export default async function TicketPage(props: { params: Promise<{ locale: stri
                 </ul>
               )}
               <div className="border-t border-zinc-800 pt-6">
-                <CommentForm locale={locale} ticketId={ticket.id} isAdmin={isAdmin} />
+                {mayComment ? (
+                  <CommentForm locale={locale} ticketId={ticket.id} isAdmin={isAdmin} />
+                ) : (
+                  <p className="text-xs text-zinc-500">{t("viewOnlyNote")}</p>
+                )}
               </div>
             </div>
           </section>

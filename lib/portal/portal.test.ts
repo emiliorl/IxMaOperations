@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { safeHttpUrl } from "./constants";
 import { milestoneProgress } from "./progress";
+import { canOpenTickets, canWriteIn, writableDepartments } from "./queries";
 import { commentInput, loginInput, ticketInput } from "./schemas";
 
 describe("milestoneProgress", () => {
@@ -79,5 +80,52 @@ describe("input validation", () => {
     expect(loginInput.safeParse({ email: "ana@acme.test", password: "pw" }).success).toBe(true);
     expect(loginInput.safeParse({ email: "nope", password: "pw" }).success).toBe(false);
     expect(loginInput.safeParse({ email: "ana@acme.test", password: "" }).success).toBe(false);
+  });
+});
+
+describe("what the page offers each kind of person", () => {
+  const FIN = { id: "f", name: "Finance" };
+  const OPS = { id: "o", name: "Operations" };
+  const HR = { id: "h", name: "HR" };
+  const folders = [FIN, OPS, HR];
+  const none = { isMember: false, allDepartments: false, departmentIds: [] as string[], orgLevel: null };
+
+  it("a person with one folder can write only there and project-wide", () => {
+    const one = { ...none, isMember: true, departmentIds: ["f"] };
+    expect(canWriteIn(one, false, "f")).toBe(true);
+    expect(canWriteIn(one, false, null)).toBe(true);
+    expect(canWriteIn(one, false, "o")).toBe(false);
+    expect(writableDepartments(one, false, [FIN])).toEqual([FIN]);
+  });
+
+  it("a person with several folders can write in each of them, not the rest", () => {
+    const several = { ...none, isMember: true, departmentIds: ["f", "o"] };
+    expect(canWriteIn(several, false, "f")).toBe(true);
+    expect(canWriteIn(several, false, "o")).toBe(true);
+    expect(canWriteIn(several, false, "h")).toBe(false);
+    expect(writableDepartments(several, false, folders)).toEqual([FIN, OPS]);
+  });
+
+  it("all-folders members and full executives can write anywhere; the owner too", () => {
+    expect(canWriteIn({ ...none, isMember: true, allDepartments: true }, false, "h")).toBe(true);
+    expect(canWriteIn({ ...none, orgLevel: "full" }, false, "h")).toBe(true);
+    expect(canWriteIn(none, true, "h")).toBe(true);
+    expect(writableDepartments({ ...none, orgLevel: "full" }, false, folders)).toEqual(folders);
+  });
+
+  it("a view-only executive and a stranger can write nowhere", () => {
+    const view = { ...none, orgLevel: "view" as const };
+    for (const dept of ["f", "o", null]) {
+      expect(canWriteIn(view, false, dept)).toBe(false);
+      expect(canWriteIn(none, false, dept)).toBe(false);
+    }
+    expect(canOpenTickets(view, false)).toBe(false);
+    expect(canOpenTickets(none, false)).toBe(false);
+  });
+
+  it("who is offered the 'New ticket' button", () => {
+    expect(canOpenTickets({ ...none, isMember: true }, false)).toBe(true);
+    expect(canOpenTickets({ ...none, orgLevel: "full" }, false)).toBe(true);
+    expect(canOpenTickets(none, true)).toBe(true);
   });
 });

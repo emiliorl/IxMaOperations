@@ -12,9 +12,13 @@ import type {
  * Read queries for the portal. They run on the SIGNED-IN USER's client, so
  * Postgres row-level security returns only what that person may see — these
  * functions deliberately do no access filtering of their own. A row the user
- * can't see simply isn't returned (a hidden project looks identical to one
- * that doesn't exist, so nothing leaks through error messages).
+ * can't see simply isn't returned (a hidden project, folder or ticket looks
+ * identical to one that doesn't exist, so nothing leaks through error
+ * messages). In particular, `departments` below is the list of FOLDERS the
+ * viewer can open, not every department on the project.
  */
+
+export type OrgAccessLevel = "view" | "full";
 
 export interface ProjectSummary {
   id: string;
@@ -43,7 +47,10 @@ export interface TeamMember {
   userId: string;
   name: string;
   role: "lead" | "member";
-  departmentId: string | null;
+  /** Has every folder of the project. */
+  allDepartments: boolean;
+  /** Folders granted to this person that the viewer is allowed to see. */
+  departmentIds: string[];
 }
 
 export interface TicketSummary {
@@ -59,6 +66,7 @@ export interface TicketSummary {
 
 export interface ProjectDetail {
   id: string;
+  organizationId: string;
   name: string;
   slug: string;
   description: string | null;
@@ -68,6 +76,7 @@ export interface ProjectDetail {
   productionUrl: string | null;
   officeLabel: string | null;
   officeAddress: string | null;
+  /** The folders the viewer can open. */
   departments: Department[];
   milestones: Milestone[];
   team: TeamMember[];
@@ -100,14 +109,14 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
   const { data: project, error } = await supabase
     .from("projects")
     .select(
-      "id,name,slug,description,status,staging_url,production_url,office_label,office_address,organizations(name)"
+      "id,organization_id,name,slug,description,status,staging_url,production_url,office_label,office_address,organizations(name)"
     )
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw new Error(`Failed to load project: ${error.message}`);
   if (!project) return null;
 
-  const [departments, milestones, members, tickets] = await Promise.all([
+  const [departments, milestones, members, memberFolders, tickets] = await Promise.all([
     supabase.from("project_departments").select("departments(id,name)").eq("project_id", project.id),
     supabase
       .from("project_milestones")
@@ -115,7 +124,8 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       .eq("project_id", project.id)
       .order("sort_order")
       .order("due_date", { nullsFirst: false }),
-    supabase.from("project_members").select("user_id,role,department_id,profiles(display_name)").eq("project_id", project.id),
+    supabase.from("project_members").select("user_id,role,all_departments,profiles(display_name)").eq("project_id", project.id),
+    supabase.from("project_member_departments").select("user_id,department_id").eq("project_id", project.id),
     supabase
       .from("tickets")
       .select("id,ticket_number,title,status,priority,category,department_id,created_at")
@@ -123,12 +133,18 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       .order("created_at", { ascending: false })
       .limit(200),
   ]);
-  for (const result of [departments, milestones, members, tickets]) {
+  for (const result of [departments, milestones, members, memberFolders, tickets]) {
     if (result.error) throw new Error(`Failed to load project data: ${result.error.message}`);
+  }
+
+  const foldersByUser = new Map<string, string[]>();
+  for (const row of memberFolders.data ?? []) {
+    foldersByUser.set(row.user_id, [...(foldersByUser.get(row.user_id) ?? []), row.department_id]);
   }
 
   return {
     id: project.id,
+    organizationId: project.organization_id,
     name: project.name,
     slug: project.slug,
     description: project.description,
@@ -155,7 +171,8 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       userId: m.user_id,
       name: one<{ display_name: string }>(m.profiles as never)?.display_name ?? "—",
       role: m.role,
-      departmentId: m.department_id,
+      allDepartments: m.all_departments,
+      departmentIds: foldersByUser.get(m.user_id) ?? [],
     })),
     tickets: (tickets.data ?? []).map((t) => ({
       id: t.id,
@@ -168,6 +185,57 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       createdAt: t.created_at,
     })),
   };
+}
+
+export interface ProjectAccess {
+  /** Directly on this project's team. */
+  isMember: boolean;
+  allDepartments: boolean;
+  departmentIds: string[];
+  /** Company-wide access held by the viewer for this project's company, if any. */
+  orgLevel: OrgAccessLevel | null;
+}
+
+/**
+ * What the viewer's own access to a project looks like. Used only to decide
+ * what to SHOW (hide "New ticket" from a view-only executive, lock a folder
+ * picker). It is never the security check — the database refuses a forbidden
+ * write regardless of what the page showed.
+ */
+export async function getProjectAccess(
+  supabase: SupabaseClient,
+  userId: string,
+  projectId: string,
+  organizationId: string
+): Promise<ProjectAccess> {
+  const [member, folders, org] = await Promise.all([
+    supabase.from("project_members").select("all_departments").eq("project_id", projectId).eq("user_id", userId).maybeSingle(),
+    supabase.from("project_member_departments").select("department_id").eq("project_id", projectId).eq("user_id", userId),
+    supabase.from("organization_members").select("access_level").eq("organization_id", organizationId).eq("user_id", userId).maybeSingle(),
+  ]);
+  return {
+    isMember: Boolean(member.data),
+    allDepartments: Boolean(member.data?.all_departments),
+    departmentIds: (folders.data ?? []).map((row) => row.department_id),
+    orgLevel: (org.data?.access_level as OrgAccessLevel | undefined) ?? null,
+  };
+}
+
+/** Can this person open tickets / comment in the given folder (null = project-wide)? */
+export function canWriteIn(access: ProjectAccess, isAdmin: boolean, departmentId: string | null): boolean {
+  if (isAdmin || access.orgLevel === "full") return true;
+  if (!access.isMember) return false;
+  return departmentId === null || access.allDepartments || access.departmentIds.includes(departmentId);
+}
+
+/** The folders a person may open tickets in (project-wide is always allowed to members). */
+export function writableDepartments(access: ProjectAccess, isAdmin: boolean, folders: Department[]): Department[] {
+  if (isAdmin || access.orgLevel === "full" || access.allDepartments) return folders;
+  return folders.filter((d) => access.departmentIds.includes(d.id));
+}
+
+export function canOpenTickets(access: ProjectAccess, isAdmin: boolean): boolean {
+  return isAdmin || access.orgLevel === "full" || access.isMember;
 }
 
 export interface TicketComment {
@@ -192,7 +260,7 @@ export interface TicketDetail {
   departmentName: string | null;
   createdAt: string;
   createdByName: string | null;
-  project: { id: string; name: string; slug: string };
+  project: { id: string; organizationId: string; name: string; slug: string };
   comments: TicketComment[];
 }
 
@@ -200,7 +268,7 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
   const { data: ticket, error } = await supabase
     .from("tickets")
     .select(
-      "id,ticket_number,title,description,status,priority,category,environment,affected_url,department_id,created_at,created_by,projects(id,name,slug)"
+      "id,ticket_number,title,description,status,priority,category,environment,affected_url,department_id,created_at,created_by,projects(id,organization_id,name,slug)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -222,7 +290,7 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
   ]);
   if (comments.error) throw new Error(`Failed to load comments: ${comments.error.message}`);
 
-  const project = one<{ id: string; name: string; slug: string }>(ticket.projects as never);
+  const project = one<{ id: string; organization_id: string; name: string; slug: string }>(ticket.projects as never);
   if (!project) return null;
 
   return {
@@ -239,7 +307,7 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
     departmentName: (department.data as { name: string } | null)?.name ?? null,
     createdAt: ticket.created_at,
     createdByName: (author.data as { display_name: string } | null)?.display_name ?? null,
-    project,
+    project: { id: project.id, organizationId: project.organization_id, name: project.name, slug: project.slug },
     comments: (comments.data ?? []).map((c) => ({
       id: c.id,
       message: c.message,
@@ -248,4 +316,33 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
       createdAt: c.created_at,
     })),
   };
+}
+
+// ---------------------------------------------------------------- owner view
+
+export interface CompanyAccessEntry {
+  userId: string;
+  name: string;
+  email: string;
+  level: OrgAccessLevel;
+}
+
+/** Everyone with company-wide access to a company. Only the owner can read these rows. */
+export async function listCompanyAccess(supabase: SupabaseClient, organizationId: string): Promise<CompanyAccessEntry[]> {
+  const { data, error } = await supabase
+    .from("organization_members")
+    .select("user_id,access_level,profiles(display_name,email)")
+    .eq("organization_id", organizationId);
+  if (error) throw new Error(`Failed to load company access: ${error.message}`);
+  return (data ?? [])
+    .map((row) => {
+      const profile = one<{ display_name: string; email: string }>(row.profiles as never);
+      return {
+        userId: row.user_id,
+        name: profile?.display_name ?? "—",
+        email: profile?.email ?? "",
+        level: row.access_level as OrgAccessLevel,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
