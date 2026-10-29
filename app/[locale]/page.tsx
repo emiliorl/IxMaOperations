@@ -1,3 +1,4 @@
+import { use } from "react";
 import { useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
@@ -28,7 +29,8 @@ import { ArrowRight } from "lucide-react";
  * a one-screen configurator and gets the full 6xl width; the closing CTA is
  * a left-aligned sheet in Emilio's own voice.
  */
-export default function HomePage({ params }: { params: { locale: string } }) {
+export default function HomePage(props: { params: Promise<{ locale: string }> }) {
+  const params = use(props.params);
   setRequestLocale(params.locale);
   const t = useTranslations("HomeScoper");
   const tCta = useTranslations("ClosingCta");

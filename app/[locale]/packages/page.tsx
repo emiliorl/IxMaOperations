@@ -4,11 +4,12 @@ import { PACKAGES } from "@/lib/packages";
 import { PackageCard } from "@/components/packages/PackageCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { locale: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ locale: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const t = await getTranslations({ locale: params.locale, namespace: "Packages" });
   return {
     title: `${t("listTitle")} — IxMaOperations`,
@@ -23,7 +24,8 @@ export async function generateMetadata({
  * links to its detail page, which links into the shared request flow
  * (Stage 11).
  */
-export default async function PackagesPage({ params }: { params: { locale: string } }) {
+export default async function PackagesPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("Packages");
 

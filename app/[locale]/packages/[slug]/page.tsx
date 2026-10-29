@@ -16,11 +16,12 @@ export function generateStaticParams() {
   return routing.locales.flatMap((locale) => PACKAGES.map((pkg) => ({ locale, slug: pkg.slug })));
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { locale: string; slug: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ locale: string; slug: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const pkg = getPackageBySlug(params.slug);
   if (!pkg) return {};
   const t = await getTranslations({ locale: params.locale, namespace: `Packages.items.${pkg.slug}` });
@@ -46,11 +47,12 @@ export async function generateMetadata({
  * (`components/home/ExamplesSection.tsx`), which only shows a lightweight
  * animated preview now. See `PROJECT_BLUEPRINT.md` Section 4.
  */
-export default async function PackageDetailPage({
-  params,
-}: {
-  params: { locale: string; slug: string };
-}) {
+export default async function PackageDetailPage(
+  props: {
+    params: Promise<{ locale: string; slug: string }>;
+  }
+) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const pkg = getPackageBySlug(params.slug);
   if (!pkg) notFound();

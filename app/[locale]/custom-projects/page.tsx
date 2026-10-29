@@ -6,11 +6,12 @@ import { getPackageBySlug } from "@/lib/packages";
 import { parseSurveyAnswers } from "@/lib/estimator-logic";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { locale: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ locale: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const t = await getTranslations({ locale: params.locale, namespace: "CustomProjects" });
   return {
     title: `${t("titleDefault")} — IxMaOperations`,
@@ -33,13 +34,14 @@ export async function generateMetadata({
  * messages/<locale>.json's `Packages.items` namespace (getPackageBySlug
  * itself still only resolves the canonical English slug/turnaround record).
  */
-export default async function CustomProjectsPage({
-  params,
-  searchParams,
-}: {
-  params: { locale: string };
-  searchParams: { package?: string; category?: string; complexity?: string; deliverable?: string; urgency?: string };
-}) {
+export default async function CustomProjectsPage(
+  props: {
+    params: Promise<{ locale: string }>;
+    searchParams: Promise<{ package?: string; category?: string; complexity?: string; deliverable?: string; urgency?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("CustomProjects");
   const tPkg = await getTranslations("Packages.items");
