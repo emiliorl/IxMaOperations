@@ -20,7 +20,9 @@ export const ticketInput = z.object({
   /** "" = project-wide ticket. */
   departmentId: uuidOrEmpty,
   milestoneId: uuidOrEmpty,
-  title: z.string().trim().min(3).max(200),
+  // May be empty when the ticket is tied to a plan item (it is named after the item);
+  // lib/portal/ticket-title.ts decides, because it needs to know about the item.
+  title: z.string().trim().max(200),
   description: z.string().trim().min(1).max(5000),
   category: z.enum(TICKET_CATEGORIES),
   priority: z.enum(TICKET_PRIORITIES),
@@ -61,6 +63,8 @@ export const memberAccessInput = z
     projectSlug: z.string().trim().regex(SLUG),
     userId: uuidOrEmpty,
     email: optionalEmail,
+    /** Only used when the email has no login yet; the account is created with this name. */
+    displayName: z.string().trim().max(120),
     role: z.enum(["lead", "member"]),
     allDepartments: z.boolean(),
     departmentIds: z.array(z.string().uuid()).max(100),
@@ -79,6 +83,7 @@ export const companyAccessInput = z
     organizationId: z.string().uuid(),
     userId: uuidOrEmpty,
     email: optionalEmail,
+    displayName: z.string().trim().max(120),
     level: z.enum(["view", "full"]),
   })
   .refine((v) => v.userId !== "" || v.email !== "", "Choose a person.");

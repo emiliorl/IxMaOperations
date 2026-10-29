@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { decryptLoose } from "@/lib/field-crypto";
+import { INLINE_TYPES } from "./attachments";
 import type {
   MilestoneStatus,
   ProjectStatus,
@@ -246,6 +247,17 @@ export function canOpenTickets(access: ProjectAccess, isAdmin: boolean): boolean
   return isAdmin || access.orgLevel === "full" || access.isMember;
 }
 
+export interface AttachmentInfo {
+  id: string;
+  /** null = attached to the ticket itself; otherwise the comment it belongs to. */
+  commentId: string | null;
+  name: string;
+  mime: string;
+  size: number;
+  /** Safe to display as a thumbnail (never SVG). */
+  isImage: boolean;
+}
+
 export interface TicketComment {
   id: string;
   message: string;
@@ -266,6 +278,9 @@ export interface TicketDetail {
   affectedUrl: string | null;
   departmentId: string | null;
   departmentName: string | null;
+  /** Title of the plan item this ticket is about, if any. */
+  planItem: string | null;
+  attachments: AttachmentInfo[];
   createdAt: string;
   createdByName: string | null;
   project: { id: string; organizationId: string; name: string; slug: string };
@@ -276,14 +291,14 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
   const { data: ticket, error } = await supabase
     .from("tickets")
     .select(
-      "id,ticket_number,title,description,status,priority,category,environment,affected_url,department_id,created_at,created_by,projects(id,organization_id,name,slug)"
+      "id,ticket_number,title,description,status,priority,category,environment,affected_url,department_id,milestone_id,created_at,created_by,projects(id,organization_id,name,slug)"
     )
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(`Failed to load ticket: ${error.message}`);
   if (!ticket) return null;
 
-  const [comments, department, author] = await Promise.all([
+  const [comments, department, author, planItem, files] = await Promise.all([
     supabase
       .from("ticket_comments")
       .select("id,message,is_internal,created_at,profiles(display_name)")
@@ -295,8 +310,18 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
     ticket.created_by
       ? supabase.from("profiles").select("display_name").eq("id", ticket.created_by).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    ticket.milestone_id
+      ? supabase.from("project_milestones").select("title").eq("id", ticket.milestone_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from("ticket_attachments")
+      .select("id,comment_id,file_name,mime_type,size_bytes")
+      .eq("ticket_id", ticket.id)
+      .order("created_at"),
   ]);
   if (comments.error) throw new Error(`Failed to load comments: ${comments.error.message}`);
+  // A problem loading files must not take the whole ticket down: log it, show the ticket without them.
+  if (files.error) console.error(`[portal] could not load attachments for ticket ${ticket.id}: ${files.error.message}`);
 
   const project = one<{ id: string; organization_id: string; name: string; slug: string }>(ticket.projects as never);
   if (!project) return null;
@@ -315,6 +340,18 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
     departmentName: plainOrNull((department.data as { name: string } | null)?.name),
     createdAt: ticket.created_at,
     createdByName: plainOrNull((author.data as { display_name: string } | null)?.display_name),
+    planItem: plainOrNull((planItem.data as { title: string } | null)?.title),
+    attachments: (files.data ?? []).map((row) => {
+      const mime = plain(row.mime_type);
+      return {
+        id: row.id,
+        commentId: row.comment_id,
+        name: plain(row.file_name) || "file",
+        mime,
+        size: row.size_bytes,
+        isImage: INLINE_TYPES.has(mime),
+      };
+    }),
     project: { id: project.id, organizationId: project.organization_id, name: plain(project.name), slug: project.slug },
     comments: (comments.data ?? []).map((c) => ({
       id: c.id,

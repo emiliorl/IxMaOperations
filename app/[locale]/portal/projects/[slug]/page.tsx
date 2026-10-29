@@ -5,12 +5,11 @@ import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { AccessPanel } from "@/components/portal/AccessPanel";
 import { selectClass } from "@/components/portal/Field";
 import { Pill } from "@/components/portal/Pills";
-import { PortalBar } from "@/components/portal/PortalBar";
 import { buttonVariants } from "@/components/ui/Button";
 import { MILESTONE_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
 import { milestoneProgress } from "@/lib/portal/progress";
-import { canOpenTickets, getProjectAccess, getProjectDetail, listCompanyAccess } from "@/lib/portal/queries";
+import { canOpenTickets, canWriteIn, getProjectAccess, getProjectDetail, listCompanyAccess } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -24,7 +23,7 @@ export default async function ProjectPage(props: {
   const { dept, access: accessNotice } = await props.searchParams;
   setRequestLocale(locale);
 
-  const { supabase, user, name, isAdmin } = await requireUser(locale);
+  const { supabase, user, isAdmin } = await requireUser(locale);
   const project = await getProjectDetail(supabase, slug);
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
@@ -68,7 +67,6 @@ export default async function ProjectPage(props: {
 
   return (
     <>
-      <PortalBar name={name} isAdmin={isAdmin} locale={locale} />
       <div className="py-10 md:py-14">
         <div className="container mx-auto px-6 max-w-5xl space-y-8">
           {/* Heading */}
@@ -184,6 +182,14 @@ export default async function ProjectPage(props: {
                           {m.dueDate && ` · ${t("due", { date: dueFmt.format(Date.parse(m.dueDate)) })}`}
                         </p>
                         {m.description && <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">{m.description}</p>}
+                        {mayOpenTickets && canWriteIn(access, isAdmin, m.departmentId) && (
+                          <Link
+                            href={{ pathname: `/portal/projects/${slug}/tickets/new`, query: { item: m.id } }}
+                            className="inline-block pt-1 text-[11px] text-zinc-500 hover:text-zinc-100 underline underline-offset-4"
+                          >
+                            {t("reportProblem")} →
+                          </Link>
+                        )}
                       </div>
                       {isAdmin && (
                         <form action={updateMilestoneStatus} className="flex items-center gap-2">

@@ -94,3 +94,24 @@ export function blindIndex(value: string): string {
   const subkey = createHmac("sha256", getKey()).update("blind-index-v1").digest();
   return createHmac("sha256", subkey).update(value.trim().toLowerCase()).digest("hex");
 }
+
+// ------------------------------------------------------------- file contents
+
+/**
+ * Encrypts raw file bytes (screenshots, logs, PDFs): AES-256-GCM, stored as
+ * iv(12) | auth tag(16) | ciphertext. Same key as the text fields. The file
+ * only ever exists in readable form inside the app server, in memory.
+ */
+export function encryptBuffer(plain: Buffer): Buffer {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", getKey(), iv);
+  const ciphertext = Buffer.concat([cipher.update(plain), cipher.final()]);
+  return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]);
+}
+
+export function decryptBuffer(stored: Buffer): Buffer {
+  if (stored.length < 28) throw new Error("Encrypted file is too short to be valid.");
+  const decipher = createDecipheriv("aes-256-gcm", getKey(), stored.subarray(0, 12));
+  decipher.setAuthTag(stored.subarray(12, 28));
+  return Buffer.concat([decipher.update(stored.subarray(28)), decipher.final()]);
+}

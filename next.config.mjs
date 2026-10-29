@@ -78,6 +78,13 @@ const SECURITY_HEADERS = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Ticket attachments are uploaded through server actions (the server encrypts
+  // them before storage). The default 1 MB limit would reject a normal
+  // screenshot. We allow 5 MB of request body; lib/portal/attachments.ts caps a
+  // submission at 4 MB of files, which also fits Vercel's ~4.5 MB request limit.
+  experimental: {
+    serverActions: { bodySizeLimit: "5mb" },
+  },
   // Minification is on by default in production; this additionally keeps
   // source maps off the deployed site so DevTools can't "pretty-print"
   // minified bundles back into readable original source. Client-side JS is

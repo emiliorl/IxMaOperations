@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { blindIndex, decryptField, decryptLoose, decryptOptional, encryptField, encryptOptional, isCiphertext } from "./field-crypto";
+import { blindIndex, decryptBuffer, decryptField, decryptLoose, decryptOptional, encryptBuffer, encryptField, encryptOptional, isCiphertext } from "./field-crypto";
 
 const ORIGINAL_KEY = process.env.DATA_ENCRYPTION_KEY;
 
@@ -102,5 +102,31 @@ describe("portal text columns", () => {
     expect(cli.decryptField(encryptField("written by the app"))).toBe("written by the app");
     expect(cli.decryptLoose("plain legacy text")).toBe("plain legacy text");
     expect(cli.blindIndex("Ana@Acme.com")).toBe(blindIndex("ana@acme.com"));
+  });
+});
+
+describe("file contents", () => {
+  it("round-trips bytes of any kind, including an empty file", () => {
+    const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 255, 128, 7]);
+    expect(decryptBuffer(encryptBuffer(bytes)).equals(bytes)).toBe(true);
+    expect(decryptBuffer(encryptBuffer(Buffer.alloc(0))).length).toBe(0);
+  });
+
+  it("never contains the original bytes and differs every time", () => {
+    const secret = Buffer.from("password=hunter2 password=hunter2");
+    const a = encryptBuffer(secret);
+    expect(a.includes(Buffer.from("hunter2"))).toBe(false);
+    expect(a.equals(encryptBuffer(secret))).toBe(false);
+    expect(a.length).toBe(secret.length + 28);
+  });
+
+  it("detects tampering and the wrong key", () => {
+    const stored = encryptBuffer(Buffer.from("a screenshot"));
+    const tampered = Buffer.from(stored);
+    tampered[tampered.length - 1] ^= 0xff;
+    expect(() => decryptBuffer(tampered)).toThrow();
+    expect(() => decryptBuffer(stored.subarray(0, 10))).toThrow(/too short/);
+    process.env.DATA_ENCRYPTION_KEY = randomBytes(32).toString("base64");
+    expect(() => decryptBuffer(stored)).toThrow();
   });
 });

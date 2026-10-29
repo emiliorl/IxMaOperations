@@ -7,6 +7,11 @@ import { routing } from "@/i18n/routing";
 import { sendOwnerAlert } from "@/lib/email";
 import { blindIndex, decryptLoose, encryptField, encryptOptional } from "@/lib/field-crypto";
 import { requireUser } from "@/lib/portal/auth";
+import { prepareFiles, type FileProblem } from "@/lib/portal/attachments";
+import { validateNewPassword } from "@/lib/portal/password";
+import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
+import { saveAttachments } from "@/lib/portal/save-attachments";
+import { resolveTicketFolder, resolveTicketTitle } from "@/lib/portal/ticket-title";
 import {
   commentInput,
   companyAccessInput,
@@ -21,6 +26,7 @@ import {
 import { checkRateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
 import { SITE_URL } from "@/lib/site-url";
 import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 /**
  * Every portal write goes through here, on the SIGNED-IN USER's Supabase
@@ -31,7 +37,15 @@ import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server"
  * are re-checked before being used in a redirect.
  */
 
-export type ActionError = "invalid" | "rate" | "unavailable" | "denied" | "generic";
+export type ActionError =
+  | "invalid"
+  | "rate"
+  | "unavailable"
+  | "denied"
+  | "generic"
+  | "files_too_many"
+  | "files_too_big"
+  | "files_bad_type";
 export interface FormState {
   error?: ActionError;
 }
@@ -46,6 +60,14 @@ const text = (formData: FormData, key: string) => {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
 };
+
+/** The non-empty files a form submitted (an untouched file input sends one empty, nameless file). */
+function uploadedFiles(formData: FormData): File[] {
+  return formData.getAll("files").filter((value): value is File => typeof value !== "string" && value.size > 0);
+}
+
+const fileError = (problem: FileProblem): ActionError =>
+  problem === "too_many" ? "files_too_many" : problem === "too_big" ? "files_too_big" : "files_bad_type";
 
 function classify(error: { code?: string }): ActionError {
   if (error.code === RLS_VIOLATION) return "denied";
@@ -109,18 +131,39 @@ export async function createTicket(_prev: FormState, formData: FormData): Promis
   if (!parsed.success || !SLUG.test(parsed.data.projectSlug)) return { error: "invalid" };
   const input = parsed.data;
 
+  // Check the files BEFORE creating anything, so a rejected file doesn't cost the person their ticket.
+  const files = await prepareFiles(uploadedFiles(formData));
+  if (!files.ok) return { error: fileError(files.error) };
+
   const { data: project } = await supabase.from("projects").select("id,name").eq("slug", input.projectSlug).maybeSingle();
   if (!project) return { error: "denied" }; // hidden projects look the same as missing ones
+
+  // A ticket can be tied to a plan item (a problem from the diagnosis). It then
+  // lands in that item's folder and, if no title was typed, is named after it —
+  // that is what makes reporting a problem a couple of clicks instead of typing.
+  let planItem: { id: string; title: string; department_id: string | null } | null = null;
+  if (input.milestoneId) {
+    const { data } = await supabase
+      .from("project_milestones")
+      .select("id,title,department_id")
+      .eq("id", input.milestoneId)
+      .eq("project_id", project.id)
+      .maybeSingle();
+    if (!data) return { error: "invalid" }; // not on this project, or not visible to this person
+    planItem = data;
+  }
+  const title = resolveTicketTitle(input.title, planItem ? decryptLoose(planItem.title) : null);
+  if (!title.ok) return { error: "invalid" };
 
   const { data: ticket, error } = await supabase
     .from("tickets")
     .insert({
       project_id: project.id,
-      department_id: input.departmentId || null,
-      milestone_id: input.milestoneId || null,
+      department_id: resolveTicketFolder(planItem?.department_id, input.departmentId),
+      milestone_id: planItem?.id ?? null,
       created_by: user.id,
       // Text is encrypted before it reaches the database; only the app holds the key.
-      title: encryptField(input.title),
+      title: encryptField(title.title),
       description: encryptField(input.description),
       category: input.category,
       priority: input.priority,
@@ -131,18 +174,24 @@ export async function createTicket(_prev: FormState, formData: FormData): Promis
     .single();
   if (error || !ticket) return { error: error ? classify(error) : "generic" };
 
+  const failedFiles = await saveAttachments({ supabase, userId: user.id, ticketId: ticket.id, files: files.files });
+
   if (!isAdmin) {
-    await sendOwnerAlert(`New ticket #${ticket.ticket_number} — ${input.title}`, [
+    await sendOwnerAlert(`New ticket #${ticket.ticket_number} — ${title.title}`, [
       `${user.email} opened ticket #${ticket.ticket_number} in "${decryptLoose(project.name)}".`,
       "",
       `Priority: ${input.priority} · Type: ${input.category} · Environment: ${input.environment}`,
+      files.files.length > 0 ? `Files attached: ${files.files.length - failedFiles}` : "",
       "",
       input.description,
       "",
       `${SITE_URL}/portal/tickets/${ticket.id}`,
     ]);
   }
-  redirect({ href: `/portal/tickets/${ticket.id}`, locale });
+  redirect({
+    href: failedFiles > 0 ? { pathname: `/portal/tickets/${ticket.id}`, query: { files: "failed" } } : `/portal/tickets/${ticket.id}`,
+    locale,
+  });
   return {};
 }
 
@@ -157,15 +206,31 @@ export async function addComment(_prev: FormState, formData: FormData): Promise<
   });
   if (!parsed.success) return { error: "invalid" };
   const input = parsed.data;
+  const internal = input.internal && isAdmin; // only the owner can write internal notes (the database enforces it too)
 
-  const { error } = await supabase.from("ticket_comments").insert({
-    ticket_id: input.ticketId,
-    author_id: user.id,
-    message: encryptField(input.message),
-    // Only the owner can write internal notes (the database enforces it too).
-    is_internal: input.internal && isAdmin,
+  const files = await prepareFiles(uploadedFiles(formData));
+  if (!files.ok) return { error: fileError(files.error) };
+  if (internal && files.files.length > 0) return { error: "invalid" }; // internal notes carry no files
+
+  const { data: comment, error } = await supabase
+    .from("ticket_comments")
+    .insert({
+      ticket_id: input.ticketId,
+      author_id: user.id,
+      message: encryptField(input.message),
+      is_internal: internal,
+    })
+    .select("id")
+    .single();
+  if (error || !comment) return { error: error ? classify(error) : "generic" };
+
+  const failedFiles = await saveAttachments({
+    supabase,
+    userId: user.id,
+    ticketId: input.ticketId,
+    commentId: comment.id,
+    files: files.files,
   });
-  if (error) return { error: classify(error) };
 
   if (!isAdmin) {
     const { data: ticket } = await supabase.from("tickets").select("ticket_number,title").eq("id", input.ticketId).maybeSingle();
@@ -173,11 +238,15 @@ export async function addComment(_prev: FormState, formData: FormData): Promise<
       `${user.email} commented on "${decryptLoose(ticket?.title) ?? "a ticket"}":`,
       "",
       input.message,
+      files.files.length > 0 ? `\nFiles attached: ${files.files.length - failedFiles}` : "",
       "",
       `${SITE_URL}/portal/tickets/${input.ticketId}`,
     ]);
   }
-  redirect({ href: `/portal/tickets/${input.ticketId}`, locale });
+  redirect({
+    href: failedFiles > 0 ? { pathname: `/portal/tickets/${input.ticketId}`, query: { files: "failed" } } : `/portal/tickets/${input.ticketId}`,
+    locale,
+  });
   return {};
 }
 
@@ -221,11 +290,19 @@ function backToAccess(locale: string, slug: string, result: "saved" | "error"): 
   return redirect({ href: { pathname: `/portal/projects/${slug}`, query: { access: result } }, locale });
 }
 
-/** An existing portal user, by id or (case-insensitively, exactly) by email. */
-async function resolvePerson(supabase: Supabase, userId: string, email: string): Promise<string | null> {
+/**
+ * The person an owner action refers to: by id (an existing row), or by email.
+ * If the email has no login yet AND a name was given, the login is created
+ * (random unknown password + "must choose your own" flag) — the owner then
+ * sends them an invite link. Only ever called after the caller is verified as
+ * the owner.
+ */
+async function resolvePerson(supabase: Supabase, userId: string, email: string, displayName: string): Promise<string | null> {
   if (userId) return userId;
   const { data } = await supabase.from("profiles").select("id").eq("email_hash", blindIndex(email)).maybeSingle();
-  return data?.id ?? null;
+  if (data?.id) return data.id;
+  if (!displayName.trim()) return null;
+  return createPortalAccount({ email, displayName });
 }
 
 /**
@@ -242,6 +319,7 @@ export async function saveMemberAccess(formData: FormData): Promise<void> {
     projectSlug: slug,
     userId: text(formData, "userId"),
     email: text(formData, "email"),
+    displayName: text(formData, "displayName"),
     role: text(formData, "role"),
     allDepartments: formData.get("allDepartments") === "on",
     departmentIds: formData.getAll("departmentId").filter((v): v is string => typeof v === "string"),
@@ -250,7 +328,7 @@ export async function saveMemberAccess(formData: FormData): Promise<void> {
   const input = parsed.data;
 
   const { data: project } = await supabase.from("projects").select("id").eq("slug", input.projectSlug).maybeSingle();
-  const userId = await resolvePerson(supabase, input.userId, input.email);
+  const userId = await resolvePerson(supabase, input.userId, input.email, input.displayName);
   if (!project || !userId) return backToAccess(locale, slug, "error");
 
   const member = await supabase
@@ -293,12 +371,13 @@ export async function saveCompanyAccess(formData: FormData): Promise<void> {
     organizationId: text(formData, "organizationId"),
     userId: text(formData, "userId"),
     email: text(formData, "email"),
+    displayName: text(formData, "displayName"),
     level: text(formData, "level"),
   });
   if (!isAdmin || !parsed.success) return backToAccess(locale, SLUG.test(slug) ? slug : "", "error");
   const input = parsed.data;
 
-  const userId = await resolvePerson(supabase, input.userId, input.email);
+  const userId = await resolvePerson(supabase, input.userId, input.email, input.displayName);
   if (!userId) return backToAccess(locale, slug, "error");
   const saved = await supabase
     .from("organization_members")
@@ -323,4 +402,50 @@ export async function removeCompanyAccess(formData: FormData): Promise<void> {
     .eq("organization_id", parsed.data.organizationId)
     .eq("user_id", parsed.data.userId);
   return backToAccess(locale, slug, removed.error ? "error" : "saved");
+}
+
+// ---------------------------------------------- choosing a password / invites
+
+export interface PasswordState {
+  error?: "too_short" | "mismatch" | "weak" | "rate" | "generic";
+}
+
+/**
+ * Lets the signed-in person choose their own password. Also the page a new
+ * person is forced onto until they do: accounts created by the owner start
+ * with a flag (app_metadata.must_change_password) that sends them here from
+ * everywhere else in the portal. The flag is cleared with the owner-only key
+ * because people cannot edit app_metadata themselves.
+ */
+export async function setPassword(_prev: PasswordState, formData: FormData): Promise<PasswordState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, user } = await requireUser(locale, { allowPasswordChange: true });
+
+  const problem = validateNewPassword(text(formData, "password"), text(formData, "confirm"), user.email ?? "");
+  if (problem) return { error: problem === "too_short" ? "too_short" : problem === "mismatch" ? "mismatch" : "weak" };
+
+  const limit = await checkRateLimit("portal-password", user.id, 10, 3600, { failClosed: true });
+  if (!limit.allowed) return { error: "rate" };
+
+  const { error } = await supabase.auth.updateUser({ password: text(formData, "password") });
+  if (error) return { error: "generic" };
+
+  await supabaseAdmin().auth.admin.updateUserById(user.id, { app_metadata: { must_change_password: false } });
+  redirect({ href: "/portal", locale });
+  return {};
+}
+
+export interface InviteState {
+  link?: string;
+  error?: boolean;
+}
+
+/** Owner: a fresh one-time link that lets this person sign in and choose a password. */
+export async function createInvite(_prev: InviteState, formData: FormData): Promise<InviteState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { isAdmin } = await requireUser(locale);
+  const userId = text(formData, "userId");
+  if (!isAdmin || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) return { error: true };
+  const link = await inviteLinkFor(userId, locale);
+  return link ? { link } : { error: true };
 }

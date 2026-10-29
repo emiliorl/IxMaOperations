@@ -6,8 +6,8 @@ import { Loader2 } from "lucide-react";
 import { addComment, type FormState } from "@/app/[locale]/portal/actions";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
-
-const ERRORS = { invalid: "errorTicketInvalid", denied: "errorDenied", rate: "errorGeneric", unavailable: "errorGeneric", generic: "errorGeneric" } as const;
+import { errorMessageKey } from "./error-messages";
+import { FileField } from "./FileField";
 
 export function CommentForm({ locale, ticketId, isAdmin }: { locale: string; ticketId: string; isAdmin: boolean }) {
   const t = useTranslations("Portal");
@@ -21,6 +21,7 @@ export function CommentForm({ locale, ticketId, isAdmin }: { locale: string; tic
         {t("addComment")}
       </label>
       <Textarea id="c-message" name="message" rows={4} required maxLength={5000} />
+      <FileField id="c-files" />
       {isAdmin && (
         <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
           <input type="checkbox" name="internal" className="accent-zinc-300" />
@@ -29,7 +30,7 @@ export function CommentForm({ locale, ticketId, isAdmin }: { locale: string; tic
       )}
       {state.error && (
         <p role="alert" className="text-xs text-red-400">
-          {t(ERRORS[state.error])}
+          {t(errorMessageKey(state.error, "ticket"), { n: 5, size: "4 MB" })}
         </p>
       )}
       <Button type="submit" disabled={pending} className="gap-2">

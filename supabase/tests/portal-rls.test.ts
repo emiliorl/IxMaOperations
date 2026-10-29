@@ -44,6 +44,9 @@ const T_ALL = "40000000-0000-0000-0000-000000000003";
 const T_B = "40000000-0000-0000-0000-000000000004";
 const T_HR = "40000000-0000-0000-0000-000000000005";
 const T_P3 = "40000000-0000-0000-0000-000000000006";
+const A_FIN = "50000000-0000-0000-0000-000000000001";
+const A_OPS = "50000000-0000-0000-0000-000000000002";
+const A_INTERNAL = "50000000-0000-0000-0000-000000000003";
 
 let db: PGlite;
 
@@ -104,6 +107,8 @@ beforeAll(async () => {
       select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
     create function auth.uid() returns uuid language sql stable as $$
       select nullif((select auth.jwt()) ->> 'sub', '')::uuid $$;
+    create schema storage;
+    create table storage.buckets (id text primary key, name text not null, public boolean not null default false, file_size_limit bigint);
     create role anon nologin;
     create role authenticated nologin;
     create role service_role nologin bypassrls;
@@ -117,6 +122,7 @@ beforeAll(async () => {
   await db.exec(sql("20261029000000_portal.sql"));
   await db.exec(sql("20261029000100_access_model.sql"));
   await db.exec(sql("20261029000200_encrypted_content.sql"));
+  await db.exec(sql("20261029000300_ticket_attachments.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -177,6 +183,14 @@ beforeAll(async () => {
       ('${T_FIN}', '${U.leadFin}', 'public comment', false),
       ('${T_FIN}', '${U.admin}', 'PRIVATE owner note', true);
   `);
+
+  const internal = await db.query<{ id: string }>(`select id from public.ticket_comments where is_internal`);
+  await db.exec(`
+    insert into public.ticket_attachments (id, ticket_id, comment_id, file_name, mime_type, size_bytes, created_by) values
+      ('${A_FIN}', '${T_FIN}', null, 'enc-name', 'enc-type', 1000, '${U.leadFin}'),
+      ('${A_OPS}', '${T_OPS}', null, 'enc-name', 'enc-type', 1000, '${U.memberOps}'),
+      ('${A_INTERNAL}', '${T_FIN}', '${internal.rows[0].id}', 'enc-name', 'enc-type', 1000, '${U.admin}');
+  `);
 });
 
 afterAll(async () => {
@@ -197,7 +211,7 @@ describe("not signed in (public API key)", () => {
     await as(null);
     for (const table of [
       "organizations", "profiles", "departments", "projects", "project_departments", "project_members",
-      "project_member_departments", "organization_members", "project_milestones", "tickets", "ticket_comments", "meetings",
+      "project_member_departments", "organization_members", "project_milestones", "tickets", "ticket_comments", "ticket_attachments", "meetings",
     ]) {
       expect(await rejection(`select * from public.${table}`), table).toMatch(/permission denied/i);
     }
@@ -638,5 +652,79 @@ describe("data integrity", () => {
   it("the meetings table stays unreadable to every signed-in user", async () => {
     await as({ id: U.leadAll });
     expect(await rejection(`select * from public.meetings`)).toMatch(/permission denied/i);
+  });
+});
+
+describe("files attached to tickets", () => {
+  const attach = (ticket: string, by: string, size = 2000) =>
+    `insert into public.ticket_attachments (ticket_id, file_name, mime_type, size_bytes, created_by)
+     values ('${ticket}', 'enc-name', 'enc-type', ${size}, '${by}')`;
+
+  it("a person sees files on tickets they can see — and not on other folders' tickets", async () => {
+    await as({ id: U.leadFin });
+    expect(await ids("ticket_attachments")).toEqual([A_FIN]);
+    await as({ id: U.memberOps });
+    expect(await ids("ticket_attachments")).toEqual([A_OPS]);
+  });
+
+  it("files on the owner's internal notes are invisible to everyone else", async () => {
+    await as({ id: U.leadFin });
+    expect(await rows(`select 1 from public.ticket_attachments where id = '${A_INTERNAL}'`)).toHaveLength(0);
+    await as({ id: U.cfo });
+    expect(await rows(`select 1 from public.ticket_attachments where id = '${A_INTERNAL}'`)).toHaveLength(0);
+    await as({ id: U.admin, admin: true });
+    expect(await ids("ticket_attachments")).toHaveLength(3);
+  });
+
+  it("another company sees none", async () => {
+    await as({ id: U.outsider });
+    expect(await ids("ticket_attachments")).toEqual([]);
+  });
+
+  it("you can attach to a ticket you may write on, recorded as yours", async () => {
+    await as({ id: U.leadFin });
+    expect(await rejection(attach(T_FIN, U.leadFin))).toBeNull();
+  });
+
+  it("you CANNOT attach to a ticket in a folder you lack, or as someone else", async () => {
+    await as({ id: U.leadFin });
+    expect(await rejection(attach(T_OPS, U.leadFin))).toMatch(/row-level security/i);
+    expect(await rejection(attach(T_FIN, U.leadAll))).toMatch(/row-level security/i);
+  });
+
+  it("a view-only executive cannot attach; a full executive can attach anywhere in their company", async () => {
+    await as({ id: U.ceo });
+    expect(await rejection(attach(T_FIN, U.ceo))).toMatch(/row-level security/i);
+    await as({ id: U.cfo });
+    expect(await rejection(attach(T_OPS, U.cfo))).toBeNull();
+    expect(await rejection(attach(T_B, U.cfo))).toMatch(/row-level security/i);
+  });
+
+  it("the public key can do nothing with files", async () => {
+    await as(null);
+    expect(await rejection(`select * from public.ticket_attachments`)).toMatch(/permission denied/i);
+    expect(await rejection(attach(T_FIN, U.leadFin))).toMatch(/permission denied/i);
+  });
+
+  it("only the owner can change or delete a file record", async () => {
+    await as({ id: U.leadFin });
+    expect(await affected(`update public.ticket_attachments set size_bytes = 5 where id = '${A_FIN}'`)).toBe(0);
+    expect(await affected(`delete from public.ticket_attachments where id = '${A_FIN}'`)).toBe(0);
+    await as({ id: U.admin, admin: true });
+    expect(await affected(`delete from public.ticket_attachments where id = '${A_FIN}'`)).toBe(1);
+  });
+
+  it("refuses empty and oversized files, and removes files with their ticket", async () => {
+    await as({ id: U.leadFin });
+    expect(await rejection(attach(T_FIN, U.leadFin, 0))).toMatch(/check constraint/i);
+    expect(await rejection(attach(T_FIN, U.leadFin, 5242881))).toMatch(/check constraint/i);
+    await db.exec("reset role");
+    await db.exec(`delete from public.tickets where id = '${T_OPS}'`);
+    expect(await rows(`select 1 from public.ticket_attachments where id = '${A_OPS}'`)).toHaveLength(0);
+  });
+
+  it("the storage bucket for the files is private", async () => {
+    await db.exec("reset role");
+    expect(await rows(`select public from storage.buckets where id = 'ticket-attachments'`)).toEqual([{ public: false }]);
   });
 });

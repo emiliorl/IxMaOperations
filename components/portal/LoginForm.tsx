@@ -6,9 +6,8 @@ import { Loader2 } from "lucide-react";
 import { signIn, type FormState } from "@/app/[locale]/portal/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { errorMessageKey } from "./error-messages";
 import { Field } from "./Field";
-
-const ERRORS = { invalid: "errorInvalid", rate: "errorRate", unavailable: "errorUnavailable", denied: "errorInvalid", generic: "errorUnavailable" } as const;
 
 export function LoginForm({ locale }: { locale: string }) {
   const t = useTranslations("Portal");
@@ -30,7 +29,7 @@ export function LoginForm({ locale }: { locale: string }) {
         </Field>
         {state.error && (
           <p role="alert" className="text-xs text-red-400">
-            {t(ERRORS[state.error])}
+            {t(errorMessageKey(state.error, "login"))}
           </p>
         )}
       </div>

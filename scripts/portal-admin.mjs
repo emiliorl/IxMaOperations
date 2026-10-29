@@ -13,7 +13,9 @@
  *   project <orgSlug> <slug> "<Project name>" [--office "<address>"] [--office-label "<label>"] [--description "<text>"]
  *   project-dept <projectSlug> "<Department name>"      attach a department to a project
  *   user <email> "<Display name>"                       create a login; prints a one-time password
- *   reset-password <email>                              new one-time password for an existing user
+ *   reset-password <email>                              new one-time password; they must choose their own at next sign-in
+ *   invite-link <email> [--locale en|es]                a one-time link that signs them in and lets them choose their own
+ *                                                       password (the safest way to onboard someone — no password is shared)
  *   member <projectSlug> <email> [--dept "<name>" ...] [--all] [--role lead|member]
  *                                                       which FOLDERS they can open: repeat --dept for several,
  *                                                       or --all (also the default when no --dept is given)
@@ -170,6 +172,8 @@ const commands = {
       email,
       password,
       email_confirm: true,
+      // The person must choose their own password before anything else works.
+      app_metadata: { must_change_password: true },
       // No display name here: Supabase keeps user_metadata readable, so the name lives only in the encrypted profile.
     });
     if (error) fail(`Creating user: ${error.message}${/already/i.test(error.message) ? " (use reset-password to issue a new password)" : ""}`);
@@ -184,15 +188,31 @@ const commands = {
     );
     console.log(`✓ User ${displayName} <${email}>`);
     console.log(`\n  One-time password (share it privately; it is not stored anywhere):\n\n    ${password}\n`);
+    console.log(`  They will be asked to choose their own password at first sign-in. Safer still: skip sharing this and run\n    invite-link ${email}\n`);
   },
 
   async "reset-password"() {
     need(1, "reset-password <email>");
     const profile = await profileByEmail(positional[0]);
     const password = newPassword();
-    const { error } = await db.auth.admin.updateUserById(profile.id, { password });
+    const { error } = await db.auth.admin.updateUserById(profile.id, { password, app_metadata: { must_change_password: true } });
     if (error) fail(`Resetting password: ${error.message}`);
     console.log(`✓ New password for ${profile.display_name}\n\n    ${password}\n`);
+  },
+
+  async "invite-link"() {
+    need(1, "invite-link <email> [--locale en|es]");
+    const email = positional[0].trim();
+    const profile = await profileByEmail(email);
+    const { data, error } = await db.auth.admin.generateLink({ type: "recovery", email });
+    const token = data?.properties?.hashed_token;
+    if (error || !token) fail(`Creating the link: ${error?.message ?? "no token returned"}`);
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ixmaoperations.com";
+    const link = new URL("/api/portal/auth/confirm", base);
+    link.searchParams.set("token_hash", token);
+    link.searchParams.set("type", "recovery");
+    link.searchParams.set("locale", flags.locale === "es" ? "es" : "en");
+    console.log(`✓ Invite link for ${profile.display_name} (works once, expires in about an hour):\n\n    ${link.toString()}\n`);
   },
 
   async member() {

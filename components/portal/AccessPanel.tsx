@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import type { CompanyAccessEntry, Department, TeamMember } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 import { selectClass } from "./Field";
+import { InviteLink } from "./InviteLink";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
 const label = "font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -21,6 +22,10 @@ const check = "flex items-center gap-2 text-xs text-zinc-300 cursor-pointer";
  * change who sees what (supabase/tests/portal-rls.test.ts). Shown only to the
  * owner, but even if someone forced these forms to render, every action would
  * be refused.
+ *
+ * Adding someone by email creates their login if they don't have one yet (give
+ * a name); then use "Invite link" to hand them a one-time link where they
+ * choose their own password. No password is ever shown or sent.
  */
 export async function AccessPanel({
   locale,
@@ -79,6 +84,19 @@ export async function AccessPanel({
     </select>
   );
 
+  const newPersonFields = (prefix: string) => (
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="space-y-1.5">
+        <label htmlFor={`${prefix}-email`} className={label}>{t("personEmail")}</label>
+        <Input id={`${prefix}-email`} name="email" type="email" required className="h-8 w-60 text-xs" />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor={`${prefix}-name`} className={label}>{t("personName")}</label>
+        <Input id={`${prefix}-name`} name="displayName" maxLength={120} className="h-8 w-52 text-xs" />
+      </div>
+    </div>
+  );
+
   return (
     <section id="access" className="rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidden">
       <div className={band}>
@@ -95,6 +113,7 @@ export async function AccessPanel({
             {notice === "saved" ? t("accessSaved") : t("accessError")}
           </p>
         )}
+        <p className="text-[11px] text-zinc-500 leading-relaxed max-w-2xl">{t("newPersonHelp")}</p>
 
         {/* Company-wide */}
         <div className="space-y-3">
@@ -108,44 +127,46 @@ export async function AccessPanel({
           ) : (
             <ul className="divide-y divide-zinc-800/80 rounded-md border border-zinc-800">
               {companyAccess.map((person) => (
-                <li key={person.userId} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="text-sm text-zinc-100">{person.name}</p>
-                    <p className="text-[11px] text-zinc-500 font-mono">{person.email}</p>
+                <li key={person.userId} className="px-4 py-3 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-zinc-100">{person.name}</p>
+                      <p className="text-[11px] text-zinc-500 font-mono">{person.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <form action={saveCompanyAccess} className="flex items-center gap-2">
+                        {hidden(person.userId)}
+                        <input type="hidden" name="organizationId" value={organizationId} />
+                        {levelSelect(person.level)}
+                        <button type="submit" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+                          {t("save")}
+                        </button>
+                      </form>
+                      <form action={removeCompanyAccess}>
+                        {hidden(person.userId)}
+                        <input type="hidden" name="organizationId" value={organizationId} />
+                        <button type="submit" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                          {t("remove")}
+                        </button>
+                      </form>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <form action={saveCompanyAccess} className="flex items-center gap-2">
-                      {hidden(person.userId)}
-                      <input type="hidden" name="organizationId" value={organizationId} />
-                      {levelSelect(person.level)}
-                      <button type="submit" className={buttonVariants({ variant: "secondary", size: "sm" })}>
-                        {t("save")}
-                      </button>
-                    </form>
-                    <form action={removeCompanyAccess}>
-                      {hidden(person.userId)}
-                      <input type="hidden" name="organizationId" value={organizationId} />
-                      <button type="submit" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-                        {t("remove")}
-                      </button>
-                    </form>
-                  </div>
+                  <InviteLink locale={locale} userId={person.userId} />
                 </li>
               ))}
             </ul>
           )}
 
-          <form action={saveCompanyAccess} className="flex flex-wrap items-end gap-3">
+          <form action={saveCompanyAccess} className="space-y-3 rounded-md border border-dashed border-zinc-800 p-4">
             {hidden()}
             <input type="hidden" name="organizationId" value={organizationId} />
-            <div className="space-y-1.5">
-              <label htmlFor="company-email" className={label}>{t("personEmail")}</label>
-              <Input id="company-email" name="email" type="email" required className="h-8 w-64 text-xs" />
+            {newPersonFields("company")}
+            <div className="flex items-center gap-3">
+              {levelSelect("full")}
+              <button type="submit" className={buttonVariants({ size: "sm" })}>
+                {t("add")}
+              </button>
             </div>
-            {levelSelect("full")}
-            <button type="submit" className={buttonVariants({ size: "sm" })}>
-              {t("add")}
-            </button>
           </form>
           <p className="text-[11px] text-zinc-600 leading-relaxed max-w-2xl">
             <span className="text-zinc-500">{t("accessLevel.full")}:</span> {t("accessLevelHelp.full")}{" "}
@@ -180,19 +201,15 @@ export async function AccessPanel({
                     {t("save")}
                   </button>
                 </form>
+                <InviteLink locale={locale} userId={member.userId} />
               </li>
             ))}
           </ul>
 
           <form action={saveMemberAccess} className="space-y-3 rounded-md border border-dashed border-zinc-800 p-4">
             {hidden()}
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="space-y-1.5">
-                <label htmlFor="member-email" className={label}>{t("personEmail")}</label>
-                <Input id="member-email" name="email" type="email" required className="h-8 w-64 text-xs" />
-              </div>
-              {roleSelect("member")}
-            </div>
+            {newPersonFields("member")}
+            <div className="flex flex-wrap items-center gap-3">{roleSelect("member")}</div>
             {folderChecks()}
             <button type="submit" className={buttonVariants({ size: "sm" })}>
               {t("add")}

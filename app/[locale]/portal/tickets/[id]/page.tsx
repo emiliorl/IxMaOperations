@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { updateTicketStatus } from "@/app/[locale]/portal/actions";
+import { AttachmentList } from "@/components/portal/AttachmentList";
 import { CommentForm } from "@/components/portal/CommentForm";
 import { selectClass } from "@/components/portal/Field";
 import { Pill } from "@/components/portal/Pills";
-import { PortalBar } from "@/components/portal/PortalBar";
 import { buttonVariants } from "@/components/ui/Button";
 import { TICKET_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
@@ -18,12 +18,16 @@ const panel = "rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidd
 // A UUID is the only thing this route accepts; anything else is a 404 before any query runs.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export default async function TicketPage(props: { params: Promise<{ locale: string; id: string }> }) {
+export default async function TicketPage(props: {
+  params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ files?: string }>;
+}) {
   const { locale, id } = await props.params;
+  const { files: filesNotice } = await props.searchParams;
   setRequestLocale(locale);
   if (!UUID.test(id)) notFound();
 
-  const { supabase, user, name, isAdmin } = await requireUser(locale);
+  const { supabase, user, isAdmin } = await requireUser(locale);
   const ticket = await getTicketDetail(supabase, id);
   if (!ticket) notFound(); // a ticket you can't see looks exactly like one that doesn't exist
 
@@ -38,7 +42,6 @@ export default async function TicketPage(props: { params: Promise<{ locale: stri
 
   return (
     <>
-      <PortalBar name={name} isAdmin={isAdmin} locale={locale} />
       <div className="py-10 md:py-14">
         <div className="container mx-auto px-6 max-w-3xl space-y-8">
           <Link
@@ -59,6 +62,11 @@ export default async function TicketPage(props: { params: Promise<{ locale: stri
             <p className="text-xs text-zinc-500">
               {t("openedBy", { name: ticket.createdByName ?? "—", date: stamp.format(Date.parse(ticket.createdAt)) })}
             </p>
+            {filesNotice === "failed" && (
+              <p role="status" className="text-xs text-amber-400">
+                {t("filesUploadFailed")}
+              </p>
+            )}
           </header>
 
           <section className={panel}>
@@ -70,7 +78,14 @@ export default async function TicketPage(props: { params: Promise<{ locale: stri
             </div>
             <div className="p-5 sm:p-6 space-y-4">
               <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
+              <AttachmentList items={ticket.attachments.filter((file) => file.commentId === null)} />
               <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs border-t border-zinc-800 pt-4">
+                {ticket.planItem && (
+                  <div className="space-y-1">
+                    <dt className="font-mono uppercase tracking-wider text-zinc-500">{t("relatedItem")}</dt>
+                    <dd className="text-zinc-300">{ticket.planItem}</dd>
+                  </div>
+                )}
                 <div className="space-y-1">
                   <dt className="font-mono uppercase tracking-wider text-zinc-500">{t("fieldDepartment")}</dt>
                   <dd className="text-zinc-300">{ticket.departmentName ?? t("deptProjectWide")}</dd>
@@ -143,6 +158,7 @@ export default async function TicketPage(props: { params: Promise<{ locale: stri
                         {comment.internal && <span className="ml-2 uppercase tracking-wider text-zinc-400">· {t("internalTag")}</span>}
                       </p>
                       <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">{comment.message}</p>
+                      <AttachmentList items={ticket.attachments.filter((file) => file.commentId === comment.id)} />
                     </li>
                   ))}
                 </ul>
