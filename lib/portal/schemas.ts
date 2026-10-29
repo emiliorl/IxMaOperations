@@ -46,6 +46,9 @@ export const reopenTicketInput = z.object({
   message: z.string().trim().min(3).max(5000),
 });
 
+/** "It works": no note needed, just which ticket. */
+export const confirmFixedInput = z.object({ ticketId: z.string().uuid() });
+
 export const ticketStatusInput = z.object({
   ticketId: z.string().uuid(),
   status: z.enum(TICKET_STATUSES),

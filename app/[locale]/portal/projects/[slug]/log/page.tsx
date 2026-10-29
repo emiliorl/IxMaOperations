@@ -6,7 +6,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { requireUser } from "@/lib/portal/auth";
 import { filterEvents, parseFilter, parseWeek, recentWeeks, summarize, weekRange, type LogFilter } from "@/lib/portal/log";
-import { getProjectDetail, getProjectEvents } from "@/lib/portal/queries";
+import { getProjectEvents, getProjectShell } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 
 const EVENT_LIMIT = 500;
@@ -26,17 +26,19 @@ export default async function ProjectLogPage(props: {
   setRequestLocale(locale);
 
   const { supabase } = await requireUser(locale);
-  const project = await getProjectDetail(supabase, slug);
+  const project = await getProjectShell(supabase, slug);
   if (!project) notFound();
 
-  const t = await getTranslations("Portal");
   const timeZone = DEFAULT_AVAILABILITY.hostTimezone;
   const now = Date.now();
   const week = parseWeek(weekParam, now, timeZone);
   const filter = parseFilter(type);
 
   // Row-level security limits the events to the folders this person can open.
-  const entries = await getProjectEvents(supabase, project.id, week === "all" ? null : weekRange(week, timeZone), EVENT_LIMIT);
+  const [t, entries] = await Promise.all([
+    getTranslations("Portal"),
+    getProjectEvents(supabase, project.id, week === "all" ? null : weekRange(week, timeZone), EVENT_LIMIT),
+  ]);
   const counts = summarize(entries);
   const shown = filterEvents(entries, filter);
 

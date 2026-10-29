@@ -128,109 +128,131 @@ export async function listProjects(supabase: SupabaseClient): Promise<ProjectSum
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-interface ProblemExtras {
-  code: string | null;
-  priority: ProblemPriority;
-  delivery: string | null;
-  summary: string | null;
+/** Just enough of a project for pages that don't show its plan, tickets or team. */
+export interface ProjectShell {
+  id: string;
+  organizationId: string;
+  name: string;
+  slug: string;
+  /** The folders the viewer can open. */
+  departments: Department[];
 }
 
-/**
- * The newer plan-item columns, fetched on their own so a database that hasn't
- * had the problem-details migration yet still serves the rest of the page.
- */
-async function loadProblemExtras(supabase: SupabaseClient, projectId: string): Promise<Map<string, ProblemExtras>> {
-  const { data, error } = await supabase
-    .from("project_milestones")
-    .select("id,code,priority,delivery,summary")
-    .eq("project_id", projectId);
-  if (error) {
-    console.warn(`[portal] plan-item details unavailable: ${error.message}`);
-    return new Map();
-  }
-  return new Map(
-    (data ?? []).map((row) => [
-      row.id as string,
-      {
-        code: plainOrNull(row.code),
-        priority: (row.priority as ProblemPriority) ?? "medium",
-        delivery: plainOrNull(row.delivery),
-        summary: plainOrNull(row.summary),
-      },
-    ])
-  );
-}
-
-/**
- * Display names for ticket authors, in one query. The database only returns
- * names the viewer may see (people on their project, and authors of tickets
- * they can read); a failure just leaves the names blank — it never takes the
- * page down.
- */
-async function loadAuthorNames(supabase: SupabaseClient, tickets: { created_by: string | null }[]): Promise<Map<string, string>> {
-  const ids = Array.from(new Set(tickets.map((t) => t.created_by).filter((id): id is string => Boolean(id))));
-  if (ids.length === 0) return new Map();
-  const { data, error } = await supabase.from("profiles").select("id,display_name").in("id", ids);
-  if (error) {
-    console.warn(`[portal] ticket authors unavailable: ${error.message}`);
-    return new Map();
-  }
-  const names = new Map<string, string>();
-  for (const row of (data ?? []) as { id: string; display_name: string }[]) {
-    const name = plainOrNull(row.display_name);
-    if (name) names.set(row.id, name);
-  }
-  return names;
-}
-
-async function loadOverview(supabase: SupabaseClient, projectId: string): Promise<string | null> {
-  const { data, error } = await supabase.from("projects").select("overview").eq("id", projectId).maybeSingle();
-  if (error) {
-    console.warn(`[portal] project overview unavailable: ${error.message}`);
-    return null;
-  }
-  return plainOrNull((data as { overview: string | null } | null)?.overview);
-}
-
-export async function getProjectDetail(supabase: SupabaseClient, slug: string): Promise<ProjectDetail | null> {
+/** One request: the project row plus the folders the viewer can open (row-level security applies to both). */
+export async function getProjectShell(supabase: SupabaseClient, slug: string): Promise<ProjectShell | null> {
   const { data: project, error } = await supabase
     .from("projects")
-    .select(
-      "id,organization_id,name,slug,description,status,staging_url,production_url,office_label,office_address,organizations(name)"
-    )
+    .select("id,organization_id,name,slug,project_departments(departments(id,name))")
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw new Error(`Failed to load project: ${error.message}`);
   if (!project) return null;
+  return {
+    id: project.id,
+    organizationId: project.organization_id,
+    name: plain(project.name),
+    slug: project.slug,
+    departments: ((project.project_departments ?? []) as { departments: unknown }[])
+      .map((row) => one<Department>(row.departments as never))
+      .filter((d): d is Department => d !== null)
+      .map((d) => ({ id: d.id, name: plain(d.name) }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
 
-  const [departments, milestones, members, memberFolders, tickets, extras, overview] = await Promise.all([
-    supabase.from("project_departments").select("departments(id,name)").eq("project_id", project.id),
-    supabase
-      .from("project_milestones")
-      .select("id,title,description,status,department_id,due_date,sort_order")
-      .eq("project_id", project.id)
-      .order("sort_order")
-      .order("due_date", { nullsFirst: false }),
-    supabase.from("project_members").select("user_id,role,all_departments,profiles(display_name)").eq("project_id", project.id),
-    supabase.from("project_member_departments").select("user_id,department_id").eq("project_id", project.id),
-    supabase
-      .from("tickets")
-      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,created_by")
-      .eq("project_id", project.id)
-      .order("created_at", { ascending: false })
-      .limit(200),
-    loadProblemExtras(supabase, project.id),
-    loadOverview(supabase, project.id),
-  ]);
-  for (const result of [departments, milestones, members, memberFolders, tickets]) {
-    if (result.error) throw new Error(`Failed to load project data: ${result.error.message}`);
-  }
-  const authors = await loadAuthorNames(supabase, tickets.data ?? []);
+/** A project row with everything the project page shows, as one request returns it. */
+interface ProjectDetailRow {
+  id: string;
+  organization_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  overview?: string | null;
+  status: ProjectStatus;
+  staging_url: string | null;
+  production_url: string | null;
+  office_label: string | null;
+  office_address: string | null;
+  organizations: unknown;
+  project_departments: { departments: unknown }[] | null;
+  project_milestones:
+    | {
+        id: string;
+        title: string;
+        description: string | null;
+        status: MilestoneStatus;
+        department_id: string | null;
+        due_date: string | null;
+        sort_order: number;
+        code?: string | null;
+        priority?: ProblemPriority;
+        delivery?: string | null;
+        summary?: string | null;
+      }[]
+    | null;
+  project_members:
+    | {
+        user_id: string;
+        role: "lead" | "member";
+        all_departments: boolean;
+        profiles: unknown;
+        project_member_departments: { department_id: string }[] | null;
+      }[]
+    | null;
+  tickets:
+    | {
+        id: string;
+        ticket_number: number;
+        title: string;
+        status: TicketStatus;
+        priority: TicketPriority;
+        category: TicketCategory;
+        department_id: string | null;
+        milestone_id: string | null;
+        created_at: string;
+        profiles: unknown;
+      }[]
+    | null;
+}
 
-  const foldersByUser = new Map<string, string[]>();
-  for (const row of memberFolders.data ?? []) {
-    foldersByUser.set(row.user_id, [...(foldersByUser.get(row.user_id) ?? []), row.department_id]);
+const PROJECT_CORE =
+  "id,organization_id,name,slug,description,status,staging_url,production_url,office_label,office_address,organizations(name)," +
+  "project_departments(departments(id,name))," +
+  "project_members(user_id,role,all_departments,profiles(display_name),project_member_departments(department_id))," +
+  "tickets(id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,profiles!created_by(display_name))";
+
+/**
+ * Everything for the project page in ONE request: the project, its folders,
+ * plan items, team (with their folders) and tickets (with who opened them) are
+ * embedded through the foreign keys. Row-level security applies to every
+ * embedded table exactly as it would to a separate query.
+ */
+export async function getProjectDetail(supabase: SupabaseClient, slug: string): Promise<ProjectDetail | null> {
+  const run = (extended: boolean) =>
+    supabase
+      .from("projects")
+      .select(
+        PROJECT_CORE +
+          (extended
+            ? ",overview,project_milestones(id,title,description,status,department_id,due_date,sort_order,code,priority,delivery,summary)"
+            : ",project_milestones(id,title,description,status,department_id,due_date,sort_order)")
+      )
+      .eq("slug", slug)
+      .order("sort_order", { referencedTable: "project_milestones" })
+      .order("due_date", { referencedTable: "project_milestones", nullsFirst: false })
+      .order("created_at", { referencedTable: "tickets", ascending: false })
+      .limit(200, { referencedTable: "tickets" })
+      .maybeSingle();
+
+  let { data, error } = await run(true);
+  // Before the problem-details migration the newer columns don't exist: the rest of the page still loads.
+  if (error) {
+    console.warn(`[portal] plan-item details unavailable: ${error.message}`);
+    ({ data, error } = await run(false));
   }
+  if (error) throw new Error(`Failed to load project: ${error.message}`);
+  const project = data as unknown as ProjectDetailRow | null;
+  if (!project) return null;
 
   return {
     id: project.id,
@@ -238,19 +260,19 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
     name: plain(project.name),
     slug: project.slug,
     description: plainOrNull(project.description),
-    overview,
+    overview: plainOrNull(project.overview),
     status: project.status,
     organization: plainOrNull(one<{ name: string }>(project.organizations as never)?.name),
     stagingUrl: plainOrNull(project.staging_url),
     productionUrl: plainOrNull(project.production_url),
     officeLabel: plainOrNull(project.office_label),
     officeAddress: plainOrNull(project.office_address),
-    departments: (departments.data ?? [])
+    departments: (project.project_departments ?? [])
       .map((row) => one<Department>(row.departments as never))
       .filter((d): d is Department => d !== null)
       .map((d) => ({ id: d.id, name: plain(d.name) }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    milestones: (milestones.data ?? []).map((m) => ({
+    milestones: (project.project_milestones ?? []).map((m) => ({
       id: m.id,
       title: plain(m.title),
       description: plainOrNull(m.description),
@@ -258,19 +280,19 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       departmentId: m.department_id,
       dueDate: m.due_date,
       sortOrder: m.sort_order,
-      code: extras.get(m.id)?.code ?? null,
-      priority: extras.get(m.id)?.priority ?? "medium",
-      delivery: extras.get(m.id)?.delivery ?? null,
-      summary: extras.get(m.id)?.summary ?? null,
+      code: plainOrNull(m.code),
+      priority: m.priority ?? "medium",
+      delivery: plainOrNull(m.delivery),
+      summary: plainOrNull(m.summary),
     })),
-    team: (members.data ?? []).map((m) => ({
+    team: (project.project_members ?? []).map((m) => ({
       userId: m.user_id,
       name: plainOrNull(one<{ display_name: string }>(m.profiles as never)?.display_name) ?? "—",
       role: m.role,
       allDepartments: m.all_departments,
-      departmentIds: foldersByUser.get(m.user_id) ?? [],
+      departmentIds: (m.project_member_departments ?? []).map((row) => row.department_id),
     })),
-    tickets: (tickets.data ?? []).map((t) => ({
+    tickets: (project.tickets ?? []).map((t) => ({
       id: t.id,
       number: t.ticket_number,
       title: plain(t.title),
@@ -280,7 +302,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       departmentId: t.department_id,
       milestoneId: t.milestone_id,
       createdAt: t.created_at,
-      createdByName: (t.created_by && authors.get(t.created_by)) || null,
+      createdByName: plainOrNull(one<{ display_name: string }>(t.profiles as never)?.display_name),
     })),
   };
 }
@@ -487,13 +509,12 @@ export async function listProjectCostFlags(supabase: SupabaseClient, projectId: 
 
 /** Everyone with company-wide access to a company. Only the owner can read these rows. */
 export async function listCompanyAccess(supabase: SupabaseClient, organizationId: string): Promise<CompanyAccessEntry[]> {
-  const { data, error } = await supabase
-    .from("organization_members")
-    .select("user_id,access_level,profiles(display_name,email)")
-    .eq("organization_id", organizationId);
+  const [{ data, error }, flagged] = await Promise.all([
+    supabase.from("organization_members").select("user_id,access_level,profiles(display_name,email)").eq("organization_id", organizationId),
+    // Separate so the screen still loads before the problem-details migration.
+    supabase.from("organization_members").select("user_id").eq("organization_id", organizationId).eq("can_view_costs", true),
+  ]);
   if (error) throw new Error(`Failed to load company access: ${error.message}`);
-  // Separate so the screen still loads before the problem-details migration.
-  const flagged = await supabase.from("organization_members").select("user_id").eq("organization_id", organizationId).eq("can_view_costs", true);
   const costUsers = new Set((flagged.error ? [] : (flagged.data ?? [])).map((row) => row.user_id as string));
   return (data ?? [])
     .map((row) => {
@@ -535,29 +556,32 @@ export interface ProblemDetail {
 }
 
 export async function getProblem(supabase: SupabaseClient, projectId: string, milestoneId: string): Promise<ProblemDetail | null> {
-  const { data: item, error } = await supabase
-    .from("project_milestones")
-    .select("id,title,description,status,department_id,due_date")
-    .eq("id", milestoneId)
-    .eq("project_id", projectId)
-    .maybeSingle();
-  if (error) throw new Error(`Failed to load plan item: ${error.message}`);
-  if (!item) return null;
-
-  const [details, cost, tickets] = await Promise.all([
-    supabase.from("project_milestones").select("code,priority,delivery,summary,solution,resources").eq("id", item.id).maybeSingle(),
-    supabase.from("problem_costs").select("cost_note").eq("milestone_id", item.id).maybeSingle(),
+  // All four only need the ids we already have, so they run together. If the
+  // item turns out not to exist (or isn't visible), the rest is simply discarded.
+  const [itemResult, details, cost, tickets] = await Promise.all([
+    supabase
+      .from("project_milestones")
+      .select("id,title,description,status,department_id,due_date")
+      .eq("id", milestoneId)
+      .eq("project_id", projectId)
+      .maybeSingle(),
+    // Own query so a database without the problem-details migration still serves the item.
+    supabase.from("project_milestones").select("code,priority,delivery,summary,solution,resources").eq("id", milestoneId).eq("project_id", projectId).maybeSingle(),
+    supabase.from("problem_costs").select("cost_note").eq("milestone_id", milestoneId).maybeSingle(),
     supabase
       .from("tickets")
-      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,created_by")
-      .eq("milestone_id", item.id)
+      .select("id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,profiles!created_by(display_name)")
+      .eq("project_id", projectId)
+      .eq("milestone_id", milestoneId)
       .order("created_at", { ascending: false })
       .limit(200),
   ]);
+  if (itemResult.error) throw new Error(`Failed to load plan item: ${itemResult.error.message}`);
+  const item = itemResult.data;
+  if (!item) return null;
   if (tickets.error) throw new Error(`Failed to load tickets: ${tickets.error.message}`);
   if (details.error) console.warn(`[portal] plan-item details unavailable: ${details.error.message}`);
   if (cost.error) console.warn(`[portal] costs unavailable: ${cost.error.message}`);
-  const authors = await loadAuthorNames(supabase, tickets.data ?? []);
 
   const extra = (details.data ?? null) as {
     code: string | null;
@@ -592,7 +616,7 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
       departmentId: t.department_id,
       milestoneId: t.milestone_id,
       createdAt: t.created_at,
-      createdByName: (t.created_by && authors.get(t.created_by)) || null,
+      createdByName: plainOrNull(one<{ display_name: string }>(t.profiles as never)?.display_name),
     })),
   };
 }
@@ -623,45 +647,53 @@ export async function getProjectEvents(
   /** Narrow in the database (not after the fact) so a busy project can't push an item's own history past the limit. */
   only: { milestoneId?: string; excludeKind?: LogEvent["kind"] } = {}
 ): Promise<LogEntry[]> {
-  let query = supabase
-    .from("project_events")
-    .select("id,kind,ticket_id,milestone_id,department_id,from_status,to_status,actor_id,created_at")
-    .eq("project_id", projectId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (only.milestoneId) query = query.eq("milestone_id", only.milestoneId);
-  if (only.excludeKind) query = query.neq("kind", only.excludeKind);
-  if (range) query = query.gte("created_at", new Date(range.from).toISOString()).lt("created_at", new Date(range.to).toISOString());
+  // The ticket, plan item and person behind each event come along in the same
+  // request (embedded through the foreign keys), so there are no follow-up
+  // lookups and no long id lists in the URL. Row-level security applies to the
+  // embedded rows too: anything the viewer can't see comes back as null.
+  const run = (itemColumns: string) => {
+    let query = supabase
+      .from("project_events")
+      .select(
+        `id,kind,ticket_id,milestone_id,department_id,from_status,to_status,actor_id,created_at,tickets(ticket_number,title),project_milestones(${itemColumns}),profiles(display_name)`
+      )
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (only.milestoneId) query = query.eq("milestone_id", only.milestoneId);
+    if (only.excludeKind) query = query.neq("kind", only.excludeKind);
+    if (range) query = query.gte("created_at", new Date(range.from).toISOString()).lt("created_at", new Date(range.to).toISOString());
+    return query;
+  };
 
-  const { data, error } = await query;
+  let { data, error } = await run("title,code");
+  // Before the problem-details migration `code` doesn't exist: retry without it.
+  if (error) ({ data, error } = await run("title"));
   if (error) {
     // Before the log migration the table doesn't exist: show an empty log rather than an error page.
     console.warn(`[portal] project log unavailable: ${error.message}`);
     return [];
   }
-  const rows = data ?? [];
-  if (rows.length === 0) return [];
-
-  const actorIds = Array.from(new Set(rows.map((r) => r.actor_id).filter((id): id is string => Boolean(id))));
-  const [tickets, items, codes, actors] = await Promise.all([
-    supabase.from("tickets").select("id,ticket_number,title").eq("project_id", projectId).limit(1000),
-    supabase.from("project_milestones").select("id,title").eq("project_id", projectId),
-    supabase.from("project_milestones").select("id,code").eq("project_id", projectId),
-    actorIds.length > 0
-      ? supabase.from("profiles").select("id,display_name").in("id", actorIds)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-
-  const ticketById = new Map((tickets.data ?? []).map((t) => [t.id as string, t]));
-  const itemById = new Map((items.data ?? []).map((m) => [m.id as string, m]));
-  const codeById = new Map((codes.error ? [] : (codes.data ?? [])).map((m) => [m.id as string, plainOrNull(m.code as string | null)]));
-  const actorById = new Map(
-    ((actors.data ?? []) as { id: string; display_name: string }[]).map((a) => [a.id, plainOrNull(a.display_name)])
-  );
+  // The column list is built at runtime, so the client can't infer the row type.
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    kind: LogEvent["kind"];
+    ticket_id: string | null;
+    milestone_id: string | null;
+    department_id: string | null;
+    from_status: LogEvent["fromStatus"];
+    to_status: LogEvent["toStatus"];
+    actor_id: string | null;
+    created_at: string;
+    tickets: unknown;
+    project_milestones: unknown;
+    profiles: unknown;
+  }[];
 
   return rows.map((r) => {
-    const ticket = r.ticket_id ? ticketById.get(r.ticket_id) : undefined;
-    const item = r.milestone_id ? itemById.get(r.milestone_id) : undefined;
+    const ticket = one<{ ticket_number: number; title: string }>(r.tickets as never);
+    const item = one<{ title: string; code?: string | null }>(r.project_milestones as never);
+    const actor = one<{ display_name: string }>(r.profiles as never);
     return {
       id: r.id,
       kind: r.kind,
@@ -672,11 +704,11 @@ export async function getProjectEvents(
       toStatus: r.to_status,
       actorId: r.actor_id,
       createdAt: r.created_at,
-      ticketNumber: ticket ? (ticket.ticket_number as number) : null,
-      ticketTitle: ticket ? plain(ticket.title as string) : null,
-      problemCode: r.milestone_id ? (codeById.get(r.milestone_id) ?? null) : null,
-      problemTitle: item ? plain(item.title as string) : null,
-      actorName: r.actor_id ? (actorById.get(r.actor_id) ?? null) : null,
+      ticketNumber: ticket ? ticket.ticket_number : null,
+      ticketTitle: ticket ? plain(ticket.title) : null,
+      problemCode: plainOrNull(item?.code),
+      problemTitle: item ? plain(item.title) : null,
+      actorName: plainOrNull(actor?.display_name),
     };
   });
 }

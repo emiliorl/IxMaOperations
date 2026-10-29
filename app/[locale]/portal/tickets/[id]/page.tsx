@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { updateTicketStatus } from "@/app/[locale]/portal/actions";
 import { AttachmentList } from "@/components/portal/AttachmentList";
 import { CommentForm } from "@/components/portal/CommentForm";
+import { ConfirmFixedForm } from "@/components/portal/ConfirmFixedForm";
 import { Pill } from "@/components/portal/Pills";
 import { StatusForm } from "@/components/portal/StatusForm";
 import { StillBrokenForm } from "@/components/portal/StillBrokenForm";
@@ -72,12 +73,18 @@ export default async function TicketPage(props: {
           {/* The owner says it's fixed → the person can say "still broken" and reopen this same ticket. */}
           {ticket.status === "needs_review" && mayComment && !isAdmin && (
             <section className="rounded-lg border border-amber-500/40 bg-amber-500/[0.04] overflow-hidden">
-              <div className="p-5 sm:p-6 space-y-4">
-                <div className="space-y-1">
-                  <h2 className="text-sm font-semibold text-zinc-100">{t("stillBrokenTitle")}</h2>
-                  <p className="text-xs text-zinc-400 leading-relaxed max-w-2xl">{t("stillBrokenHelp")}</p>
+              <div className="p-5 sm:p-6 space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <h2 className="text-sm font-semibold text-zinc-100">{t("stillBrokenTitle")}</h2>
+                    <p className="text-xs text-zinc-400 leading-relaxed max-w-2xl">{t("stillBrokenHelp")}</p>
+                  </div>
+                  <ConfirmFixedForm locale={locale} ticketId={ticket.id} />
                 </div>
-                <StillBrokenForm locale={locale} ticketId={ticket.id} />
+                <div className="space-y-4 border-t border-amber-500/20 pt-6">
+                  <h3 className="text-sm font-semibold text-zinc-100">{t("stillBrokenHeading")}</h3>
+                  <StillBrokenForm locale={locale} ticketId={ticket.id} />
+                </div>
               </div>
             </section>
           )}

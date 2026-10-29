@@ -126,6 +126,7 @@ beforeAll(async () => {
   await db.exec(sql("20261029000400_problem_details.sql"));
   await db.exec(sql("20261029000500_project_log.sql"));
   await db.exec(sql("20261029000600_reopen_ticket.sql"));
+  await db.exec(sql("20261029000700_confirm_ticket_fixed.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -1044,5 +1045,66 @@ describe("sending a fixed ticket back ('still broken')", () => {
        where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'open'`
     );
     expect(event).toEqual({ from_status: "needs_review", to_status: "open", actor_id: U.leadFin });
+  });
+});
+
+describe("closing a fixed ticket ('it works')", () => {
+  const confirm = async (ticket: string) => (await rows<{ ok: boolean }>(`select public.confirm_ticket_fixed('${ticket}') as ok`))[0].ok;
+  const statusOf = async (ticket: string) => (await rows<{ status: string }>(`select status from public.tickets where id = '${ticket}'`))[0]?.status;
+  const markFixed = async (ticket: string) => {
+    await as({ id: U.admin, admin: true });
+    await db.exec(`update public.tickets set status = 'needs_review' where id = '${ticket}'`);
+  };
+
+  it("someone with the ticket's folder can close it, and it becomes 'closed'", async () => {
+    for (const who of [U.leadFin, U.leadAll, U.multi, U.cfo]) {
+      await markFixed(T_FIN);
+      await as({ id: who });
+      expect(await confirm(T_FIN)).toBe(true);
+      expect(await statusOf(T_FIN)).toBe("closed");
+    }
+  });
+
+  it("a project-wide ticket can be closed by any member of the project", async () => {
+    await markFixed(T_ALL);
+    await as({ id: U.memberOps });
+    expect(await confirm(T_ALL)).toBe(true);
+  });
+
+  it("people without that folder, a view-only executive, another company and strangers cannot", async () => {
+    await markFixed(T_FIN);
+    for (const who of [U.memberOps, U.ceo, U.outsider, U.betaExec, U.nobody]) {
+      await as({ id: who });
+      expect(await confirm(T_FIN)).toBe(false);
+    }
+    await as({ id: U.admin, admin: true });
+    expect(await statusOf(T_FIN)).toBe("needs_review");
+  });
+
+  it("the public key cannot call it at all", async () => {
+    await markFixed(T_FIN);
+    await as(null);
+    expect(await rejection(`select public.confirm_ticket_fixed('${T_FIN}')`)).toMatch(/permission denied/i);
+  });
+
+  it("only a ticket waiting for review can be closed this way", async () => {
+    for (const status of ["open", "in_progress", "resolved", "closed"]) {
+      await as({ id: U.admin, admin: true });
+      await db.exec(`update public.tickets set status = '${status}' where id = '${T_FIN}'`);
+      await as({ id: U.leadFin });
+      expect(await confirm(T_FIN)).toBe(false);
+      expect(await statusOf(T_FIN)).toBe(status);
+    }
+  });
+
+  it("the project log records who closed it, from 'needs review' to 'closed'", async () => {
+    await markFixed(T_FIN);
+    await as({ id: U.leadFin });
+    await confirm(T_FIN);
+    const [event] = await rows<{ from_status: string; to_status: string; actor_id: string }>(
+      `select from_status, to_status, actor_id from public.project_events
+       where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'closed'`
+    );
+    expect(event).toEqual({ from_status: "needs_review", to_status: "closed", actor_id: U.leadFin });
   });
 });

@@ -14,8 +14,8 @@ import {
   canWriteIn,
   getProblem,
   getProjectAccess,
-  getProjectDetail,
   getProjectEvents,
+  getProjectShell,
 } from "@/lib/portal/queries";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -26,15 +26,20 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
   setRequestLocale(locale);
 
   const { supabase, user, isAdmin } = await requireUser(locale);
-  const project = await getProjectDetail(supabase, slug);
-  if (!project) notFound();
   // Not a UUID, in a folder you can't open, or not on this project: all look the same.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const problem = await getProblem(supabase, project.id, id);
-  if (!problem) notFound();
+  const project = await getProjectShell(supabase, slug);
+  if (!project) notFound();
 
-  const t = await getTranslations("Portal");
-  const access = await getProjectAccess(supabase, user.id, project.id, project.organizationId);
+  // None of these depend on each other, only on the project.
+  const [problem, access, activity, t] = await Promise.all([
+    getProblem(supabase, project.id, id),
+    getProjectAccess(supabase, user.id, project.id, project.organizationId),
+    // "Ticket opened" is already visible as a row in the ticket history below, so it's left out here.
+    getProjectEvents(supabase, project.id, null, 30, { milestoneId: id, excludeKind: "ticket_opened" }),
+    getTranslations("Portal"),
+  ]);
+  if (!problem) notFound();
   const mayOpen = canOpenTickets(access, isAdmin) && canWriteIn(access, isAdmin, problem.departmentId);
   const timeZone = DEFAULT_AVAILABILITY.hostTimezone;
 
@@ -43,8 +48,6 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
   const open = ticketCountsByProblem(problem.tickets.map((tk) => ({ milestoneId: id, status: tk.status }))).get(id)?.open ?? 0;
-  // "Ticket opened" is already visible as a row in the ticket history below, so it's left out here.
-  const activity = await getProjectEvents(supabase, project.id, null, 30, { milestoneId: id, excludeKind: "ticket_opened" });
 
   // Section numbers follow what is actually shown (links, cost and activity are optional).
   const hasLinks = problem.resources.length > 0;

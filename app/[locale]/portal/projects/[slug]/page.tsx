@@ -38,8 +38,14 @@ export default async function ProjectPage(props: {
   const project = await getProjectDetail(supabase, slug);
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
-  const t = await getTranslations("Portal");
-  const access = await getProjectAccess(supabase, user.id, project.id, project.organizationId);
+  // Only the project is needed to start all of these, so they run together.
+  const [t, access, [companyAccess, costUserIds]] = await Promise.all([
+    getTranslations("Portal"),
+    getProjectAccess(supabase, user.id, project.id, project.organizationId),
+    isAdmin
+      ? Promise.all([listCompanyAccess(supabase, project.organizationId), listProjectCostFlags(supabase, project.id)])
+      : Promise.resolve([[], []] as [Awaited<ReturnType<typeof listCompanyAccess>>, string[]]),
+  ]);
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
   // `project.departments` is already limited by the database to the folders this
@@ -84,10 +90,6 @@ export default async function ProjectPage(props: {
       "rounded-md border px-3 py-1.5 text-xs transition-colors",
       active ? "border-zinc-600 bg-zinc-800 text-zinc-100" : "border-zinc-800 bg-zinc-900 text-zinc-500 hover:text-zinc-200"
     );
-
-  const [companyAccess, costUserIds] = isAdmin
-    ? await Promise.all([listCompanyAccess(supabase, project.organizationId), listProjectCostFlags(supabase, project.id)])
-    : [[], []];
 
   return (
     <>

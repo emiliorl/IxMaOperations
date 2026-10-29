@@ -1,6 +1,5 @@
 "use server";
 
-import { refresh } from "next/cache";
 import { headers } from "next/headers";
 import { hasLocale } from "next-intl";
 import { redirect } from "@/i18n/navigation";
@@ -16,6 +15,7 @@ import { resolveTicketFolder, resolveTicketTitle } from "@/lib/portal/ticket-tit
 import {
   commentInput,
   companyAccessInput,
+  confirmFixedInput,
   loginInput,
   memberAccessInput,
   milestoneStatusInput,
@@ -50,6 +50,8 @@ export type ActionError =
   | "files_bad_type";
 export interface FormState {
   error?: ActionError;
+  /** The change was saved (status forms use this to refresh the page's data). */
+  ok?: boolean;
 }
 
 const RLS_VIOLATION = "42501";
@@ -306,6 +308,40 @@ export async function reopenTicket(_prev: FormState, formData: FormData): Promis
   return {};
 }
 
+/**
+ * "It works": the owner marked a ticket as fixed and the person checked it.
+ * Closes the ticket through the confirm_ticket_fixed() database function — like
+ * reopen_ticket(), the one narrow way a non-owner can change a status, limited
+ * to this single move for people who may write in the ticket's folder. The
+ * change lands in the project log automatically.
+ */
+export async function confirmTicketFixed(_prev: FormState, formData: FormData): Promise<FormState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, user, isAdmin } = await requireUser(locale);
+
+  const parsed = confirmFixedInput.safeParse({ ticketId: text(formData, "ticketId") });
+  if (!parsed.success) return { error: "invalid" };
+  const { ticketId } = parsed.data;
+
+  const { data: ticket } = await supabase.from("tickets").select("ticket_number,title,status").eq("id", ticketId).maybeSingle();
+  if (!ticket) return { error: "denied" };
+  if (ticket.status !== "needs_review") return { error: "invalid" };
+
+  const { data: closed, error } = await supabase.rpc("confirm_ticket_fixed", { p_ticket: ticketId });
+  if (error) return { error: "generic" };
+  if (closed !== true) return { error: "denied" };
+
+  if (!isAdmin) {
+    await sendOwnerAlert(`Ticket #${ticket.ticket_number} confirmed fixed`, [
+      `${user.email} checked "${decryptLoose(ticket.title) ?? "a ticket"}", says it works, and closed it.`,
+      "",
+      `${SITE_URL}/portal/tickets/${ticketId}`,
+    ]);
+  }
+  redirect({ href: `/portal/tickets/${ticketId}`, locale });
+  return {};
+}
+
 // ---------------------------------------------------------------- owner only
 
 /**
@@ -323,8 +359,7 @@ export async function updateTicketStatus(_prev: FormState, formData: FormData): 
   const { data, error } = await supabase.from("tickets").update({ status: parsed.data.status }).eq("id", parsed.data.ticketId).select("id");
   if (error) return { error: classify(error) };
   if (!data || data.length === 0) return { error: "denied" };
-  refresh();
-  return {};
+  return { ok: true };
 }
 
 export async function updateMilestoneStatus(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -343,8 +378,7 @@ export async function updateMilestoneStatus(_prev: FormState, formData: FormData
     .select("id");
   if (error) return { error: classify(error) };
   if (!data || data.length === 0) return { error: "denied" };
-  refresh();
-  return {};
+  return { ok: true };
 }
 
 // ------------------------------------------------- owner: who can see what

@@ -25,22 +25,29 @@ const loadSession = cache(async () => {
   }
   if (!user) return { supabase, user: null };
 
-  const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
   return {
     supabase,
     user,
-    name: decryptLoose(profile?.display_name) ?? user.email ?? "",
     // app_metadata is writable only with the service role, so people can't set these themselves.
     isAdmin: user.app_metadata?.role === "admin",
     mustChangePassword: user.app_metadata?.must_change_password === true,
   };
 });
 
-/** For display only (the portal header). Never used to authorize anything. */
+/**
+ * For display only (the portal header). Never used to authorize anything.
+ * The display name is looked up here, not in loadSession: only the header shows
+ * it, and the header isn't re-rendered when moving between portal pages.
+ */
 export async function getPortalSession() {
   const session = await loadSession();
   if (!session?.user) return null;
-  return { name: session.name!, email: session.user.email ?? "", isAdmin: session.isAdmin! };
+  const { data: profile } = await session.supabase.from("profiles").select("display_name").eq("id", session.user.id).maybeSingle();
+  return {
+    name: decryptLoose(profile?.display_name) ?? session.user.email ?? "",
+    email: session.user.email ?? "",
+    isAdmin: session.isAdmin!,
+  };
 }
 
 /**
@@ -60,7 +67,6 @@ export async function requireUser(locale: string, { allowPasswordChange = false 
   return {
     supabase: session.supabase,
     user: session.user!,
-    name: session.name!,
     isAdmin: session.isAdmin!,
     mustChangePassword: session.mustChangePassword!,
   };
