@@ -38,6 +38,12 @@ export interface SlotQuery {
   overrides: Record<string, DayOverride>;
   meetings: ExistingMeeting[];
   config?: AvailabilityConfig;
+  /**
+   * The weekdays (0 = Sunday ... 6 = Saturday) the client's office is open, when the booking is for a client's
+   * office. In-person times exist only on those days, even on a day marked on-site (a client that works from
+   * home on Fridays has nobody to meet that day). Absent = no such limit (the public page).
+   */
+  officeWeekdays?: readonly number[];
 }
 
 const MINUTE = 60_000;
@@ -194,6 +200,7 @@ export function generateSlots(query: SlotQuery): Slot[] {
     const date = addDays(firstDate, offset);
     const policy = dayPolicy(date, query.overrides[date], config, claimed.has(date));
     if (query.mode === "online" ? !policy.online : !policy.inPerson) continue;
+    if (query.mode === "in_person" && query.officeWeekdays && !query.officeWeekdays.includes(weekdayOf(date))) continue;
     if (query.mode === "in_person" && !isWithinWeekLimit(date, query.meetings, query.overrides, config)) continue;
 
     const windowStart = zonedTimeToUtc(date, rules.startTime, tz);
@@ -214,7 +221,10 @@ export function generateSlots(query: SlotQuery): Slot[] {
       if (query.hostBusy.some((busy) => overlaps(padded, busy))) continue;
       if (query.meetings.some((meeting) => overlaps(padded, meeting))) continue;
       if (policy.onSite && violatesLunchRule(dayMeetings, slot, lunch)) continue;
-      slots.push({ ...slot, onSite: claimed.has(date) });
+      // "On-site" marks the day for someone booking: the owner will be at an office. Where the client's own office
+      // is closed that day (home office), that would be a promise nobody can keep, so it is not marked.
+      const officeOpen = !query.officeWeekdays || query.officeWeekdays.includes(weekdayOf(date));
+      slots.push({ ...slot, onSite: claimed.has(date) && officeOpen });
     }
   }
   return slots;

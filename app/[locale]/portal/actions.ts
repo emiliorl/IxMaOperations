@@ -16,7 +16,11 @@ import { validateNewPassword } from "@/lib/portal/password";
 import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
 import { saveAttachments } from "@/lib/portal/save-attachments";
 import { resolveTicketFolder, resolveTicketTitle } from "@/lib/portal/ticket-title";
+import { isOfficeDay, officeDaysFromForm } from "@/lib/portal/office-days";
+import { getOfficeWeekdays } from "@/lib/portal/queries";
+import { cancelProjectMeeting } from "@/lib/portal/project-meetings";
 import {
+  cancelMeetingInput,
   commentInput,
   companyAccessInput,
   confirmFixedInput,
@@ -452,7 +456,7 @@ export async function updateMilestoneStatus(_prev: FormState, formData: FormData
 // ------------------------------------------------- owner: when I'm at a client's office
 
 /** Back to the project's On-site tab with a one-word result the page turns into a message. */
-function backToOnsite(locale: string, slug: string, result: "saved" | "error"): never {
+function backToOnsite(locale: string, slug: string, result: "saved" | "error" | "closed"): never {
   return redirect({ href: { pathname: `/portal/projects/${slug}`, query: { tab: "onsite", visit: result } }, locale });
 }
 
@@ -473,6 +477,8 @@ export async function saveOnSiteVisit(formData: FormData): Promise<void> {
   }
   const { data: project } = await supabase.from("projects").select("id").eq("slug", slug).maybeSingle();
   if (!project) return backToOnsite(locale, slug, "error");
+  // Not on a day the client's office is closed (their home-office days): there would be nobody to visit.
+  if (!isOfficeDay(parsed.data.date, await getOfficeWeekdays(supabase, project.id))) return backToOnsite(locale, slug, "closed");
   const { error } = await supabase
     .from("onsite_visits")
     .upsert(
@@ -496,6 +502,25 @@ export async function removeOnSiteVisit(formData: FormData): Promise<void> {
   return backToOnsite(locale, slug, error ? "error" : "saved");
 }
 
+/**
+ * Owner: which weekdays this client's office is open for visits (Monday to Friday offered; none ticked = online
+ * only). In-person times and on-site days only exist on these, so a client that works from home on Fridays is
+ * simply not offered a Friday visit. Only the owner can change it: the database refuses anyone else.
+ */
+export async function setOfficeDays(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const safeSlug = SLUG.test(slug) ? slug : "";
+  if (!isAdmin || !SLUG.test(slug)) return backToOnsite(locale, safeSlug, "error");
+  const { data, error } = await supabase
+    .from("projects")
+    .update({ office_weekdays: officeDaysFromForm(formData.getAll("day")) })
+    .eq("slug", slug)
+    .select("id");
+  return backToOnsite(locale, slug, error || !data?.length ? "error" : "saved");
+}
+
 /** Owner: show or hide the on-site schedule for this project's people. Hidden, it also stops listing days from booked meetings. */
 export async function setOnSitePresence(formData: FormData): Promise<void> {
   const locale = pickLocale(formData.get("locale"));
@@ -506,6 +531,37 @@ export async function setOnSitePresence(formData: FormData): Promise<void> {
   if (!isAdmin || !parsed.success) return backToOnsite(locale, safeSlug, "error");
   const { data, error } = await supabase.from("projects").update({ show_onsite_presence: parsed.data.enabled }).eq("slug", slug).select("id");
   return backToOnsite(locale, slug, error || !data?.length ? "error" : "saved");
+}
+
+// ------------------------------------------------- cancel a booked meeting
+
+/** Back to the project's Meetings tab with a one-word result the page turns into a message. */
+function backToMeetings(locale: string, slug: string, result: "cancelled" | "error"): never {
+  return redirect({ href: { pathname: `/portal/projects/${slug}`, query: { tab: "onsite", meeting: result } }, locale });
+}
+
+/**
+ * Cancel a booked meeting of a project: the person who booked it, or the owner. Who may is decided
+ * in lib/portal/project-meetings.ts, not by the form: the project is looked up as the signed-in
+ * person (a project they can't open is refused), and the meeting must belong to that project and
+ * to them. The calendar event is removed (its guests are told) and the time is freed here.
+ */
+export async function cancelMeeting(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, user, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const safeSlug = SLUG.test(slug) ? slug : "";
+  const parsed = cancelMeetingInput.safeParse({ projectSlug: slug, meetingId: text(formData, "meetingId") });
+  if (!parsed.success) return backToMeetings(locale, safeSlug, "error");
+  const { data: project } = await supabase.from("projects").select("id,name").eq("slug", slug).maybeSingle();
+  if (!project) return backToMeetings(locale, slug, "error");
+  const result = await cancelProjectMeeting({
+    meetingId: parsed.data.meetingId,
+    projectId: project.id,
+    projectName: decryptLoose(project.name) ?? "",
+    viewer: { id: user.id, email: user.email ?? "", isAdmin },
+  });
+  return backToMeetings(locale, slug, result);
 }
 
 // ------------------------------------------------- owner: who can see what

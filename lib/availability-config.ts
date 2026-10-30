@@ -39,8 +39,9 @@ export interface AvailabilityConfig {
   inPersonDayMode: "first_come" | "announced";
   maxInPersonDaysPerWeek: number;
   /**
-   * On a day the owner is on-site, hide online slots (the day is for
-   * in-person meetings; other days are for working from home).
+   * On a day the owner is on-site, hide online slots. Off: online times stay bookable, and the day is only
+   * marked as an on-site day, so someone booking online is told the owner will be at the office and can
+   * choose to meet in person instead.
    */
   hideOnlineOnOnSiteDays: boolean;
   /** Thresholds for the owner alerts about inefficient on-site days (lib/onsite.ts). */
@@ -79,7 +80,7 @@ export const DEFAULT_AVAILABILITY: AvailabilityConfig = {
   },
   inPersonDayMode: "first_come",
   maxInPersonDaysPerWeek: 2,
-  hideOnlineOnOnSiteDays: true,
+  hideOnlineOnOnSiteDays: false,
   onSite: { sparseGapMinutes: 150, digestLookaheadDays: 3 },
   lunch: { start: "12:30", end: "13:00" },
 };

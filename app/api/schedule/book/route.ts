@@ -37,7 +37,7 @@ import { resolveBookingContext } from "@/lib/portal/booking-context";
 import { portalContextLine, portalEventDescription, portalMeetingTitle, type PortalBookingTopic } from "@/lib/portal/booking-description";
 import { resolveTopic } from "@/lib/portal/booking-topic";
 import { OUTGOING_URL } from "@/lib/site-url";
-import { checkRateLimit, clientIp } from "@/lib/rate-limit";
+import { checkRateLimit, clientIp, peekRateLimit } from "@/lib/rate-limit";
 import { loadScheduleInputs } from "@/lib/schedule-data";
 import { addDays, localDate, zonedTimeToUtc } from "@/lib/tz";
 
@@ -45,14 +45,27 @@ export const dynamic = "force-dynamic";
 
 const DAY = 86_400_000;
 
+/**
+ * Two limits, because they guard different things.
+ *  - ATTEMPTS (any request, per address): a loose cap so the route can't be hammered. Spent on every request.
+ *  - BOOKINGS (per address for the public, per account for a signed-in client): what really matters, since a
+ *    booking writes to the owner's calendar and invites the guest by email. It is looked at before the work
+ *    and spent only AFTER a booking succeeded, so a failure on our side, or losing a race for a time, never
+ *    costs anyone one of their bookings.
+ */
+const ATTEMPTS = { name: "schedule-book-attempts", requests: 30, window: 3600 };
+const BOOKINGS_PUBLIC = { name: "schedule-book", requests: 3, window: 3600 };
+const BOOKINGS_MEMBER = { name: "schedule-book-member", requests: 10, window: 3600 };
+
+const tooMany = (retryAfterSeconds: number) =>
+  NextResponse.json(
+    { error: "Too many booking attempts — please wait before trying again." },
+    { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+  );
+
 export async function POST(req: Request) {
-  const rateLimit = await checkRateLimit("schedule-book", clientIp(req), 3, 3600, { failClosed: true });
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: "Too many booking attempts — please wait before trying again." },
-      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
-    );
-  }
+  const attempts = await checkRateLimit(ATTEMPTS.name, clientIp(req), ATTEMPTS.requests, ATTEMPTS.window, { failClosed: true });
+  if (!attempts.allowed) return tooMany(attempts.retryAfterSeconds);
 
   let body: unknown;
   try {
@@ -73,6 +86,14 @@ export async function POST(req: Request) {
   // From the portal: the project, ticket, name, email and office come from the signed-in account, not from the request.
   // If the request says it is for a project this person cannot open, it is just an ordinary booking.
   const context = booking.projectSlug ? await resolveBookingContext({ projectSlug: booking.projectSlug, ticketId: booking.ticketId }) : null;
+
+  // How many bookings this person may still make this hour: a signed-in client by account, anyone else by address.
+  const quota = context
+    ? { ...BOOKINGS_MEMBER, who: `user:${context.userId}` }
+    : { ...BOOKINGS_PUBLIC, who: clientIp(req) };
+  const bookings = await peekRateLimit(quota.name, quota.who, quota.requests, quota.window, { failClosed: true });
+  if (!bookings.allowed) return tooMany(bookings.retryAfterSeconds);
+
   const guestName = context?.name || booking.name;
   const guestEmail = context?.email || booking.email;
   const inPersonLocation = booking.mode === "in_person" ? context?.officeAddress || booking.location : undefined;
@@ -109,7 +130,7 @@ export async function POST(req: Request) {
     });
     overrides = inputs.overrides;
     const stillAvailable = isSlotAvailable(
-      { mode: booking.mode, durationMinutes: booking.durationMinutes, now: Date.now(), ...inputs, config },
+      { mode: booking.mode, durationMinutes: booking.durationMinutes, now: Date.now(), ...inputs, config, ...(context ? { officeWeekdays: context.officeWeekdays } : {}) },
       start
     );
     if (!stillAvailable) {
@@ -137,6 +158,7 @@ export async function POST(req: Request) {
       location: inPersonLocation,
       projectId: context?.projectId,
       ticketId: context?.ticketId ?? undefined,
+      clientId: context?.userId,
       departmentId: topic?.areaId ?? undefined,
       milestoneId: topic?.problemId ?? undefined,
     });
@@ -181,6 +203,8 @@ export async function POST(req: Request) {
     });
     eventId = event.id;
     await confirmMeeting(reservation.id, { googleEventId: event.id, meetLink: event.meetLink });
+    // The booking is real now: this is the moment it counts against the hourly allowance.
+    await checkRateLimit(quota.name, quota.who, quota.requests, quota.window, { failClosed: true });
 
     // 7. Emails (best-effort), plus an on-site heads-up for in-person days.
     let ownerNotes: string[] = [];

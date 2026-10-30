@@ -81,6 +81,31 @@ export interface RateLimitOptions {
   failClosed?: boolean;
 }
 
+/**
+ * How much of a limit is left, WITHOUT using any of it up. For a limit that should be spent only when the work
+ * succeeded (a booking): look first with this, do the work, then spend one with checkRateLimit. That way a
+ * failure on our side, or a lost race for a time slot, never costs the visitor an attempt.
+ */
+export async function peekRateLimit(
+  routeName: string,
+  identifier: string,
+  requests: number,
+  windowSeconds: number,
+  { failClosed = false }: RateLimitOptions = {}
+): Promise<RateLimitResult> {
+  const open: RateLimitResult = { allowed: true, limit: requests, remaining: requests, retryAfterSeconds: 0 };
+  const closed: RateLimitResult = { allowed: false, limit: requests, remaining: 0, retryAfterSeconds: 60 };
+  const limiter = getLimiter(routeName, requests, windowSeconds);
+  if (!limiter) return failClosed && process.env.NODE_ENV === "production" ? closed : open;
+  try {
+    const { remaining, limit, reset } = await limiter.getRemaining(identifier);
+    return { allowed: remaining > 0, limit, remaining, retryAfterSeconds: Math.max(0, Math.ceil((reset - Date.now()) / 1000)) };
+  } catch (error) {
+    console.error(`[rate-limit] Upstash read failed for "${routeName}" — failing ${failClosed ? "closed" : "open"}.`, error);
+    return failClosed ? closed : open;
+  }
+}
+
 export async function checkRateLimit(
   routeName: string,
   identifier: string,

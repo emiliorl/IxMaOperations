@@ -1,10 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { removeOnSiteVisit, saveOnSiteVisit, setOnSitePresence } from "@/app/[locale]/portal/actions";
+import { removeOnSiteVisit, saveOnSiteVisit, setOfficeDays, setOnSitePresence } from "@/app/[locale]/portal/actions";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import type { OnSiteDayDetail } from "@/lib/portal/onsite";
+import { DEFAULT_OFFICE_DAYS, describeOfficeDays } from "@/lib/portal/office-days";
 import { formatVisit } from "@/lib/portal/onsite-format";
 import type { Segment } from "@/lib/portal/onsite-schedule";
 import { localDate } from "@/lib/tz";
@@ -35,6 +36,7 @@ export async function OnSitePanel({
   showOnsite,
   officeLabel,
   officeAddress,
+  officeDays = [...DEFAULT_OFFICE_DAYS],
   notice,
 }: {
   locale: string;
@@ -46,7 +48,9 @@ export async function OnSitePanel({
   showOnsite: boolean;
   officeLabel: string | null;
   officeAddress: string | null;
-  notice: "saved" | "error" | null;
+  /** The weekdays (0 = Sunday ... 6 = Saturday) this office is open for visits. */
+  officeDays?: number[];
+  notice: "saved" | "error" | "closed" | null;
 }) {
   const t = await getTranslations("Portal");
   const host = DEFAULT_AVAILABILITY.hostTimezone;
@@ -76,7 +80,7 @@ export async function OnSitePanel({
     <div className="space-y-5">
       {notice && (
         <p role="status" className={cn("text-xs", notice === "saved" ? "text-green-500" : "text-red-400")}>
-          {notice === "saved" ? t("onsiteSaved") : t("onsiteError")}
+          {notice === "saved" ? t("onsiteSaved") : notice === "closed" ? t("onsiteClosed") : t("onsiteError")}
         </p>
       )}
 
@@ -85,6 +89,9 @@ export async function OnSitePanel({
           <h2 className="text-sm font-semibold text-zinc-100">{t("onsiteTitle")}</h2>
           <p className="max-w-2xl text-xs leading-relaxed text-zinc-400">{t("onsiteIntro")}</p>
           {place && <p className="font-mono text-[11px] text-zinc-500">{place}</p>}
+          <p className="text-xs text-zinc-400">
+            {officeDays.length === 0 ? t("officeDaysNone") : t("officeDaysLine", { days: describeOfficeDays(officeDays, locale, "") })}
+          </p>
           <ul className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-[11px] text-zinc-500" aria-label={t("onsiteLegend")}>
             {(["free", "busy", "lunch"] as const).map((kind) => (
               <li key={kind} className="flex items-center gap-1.5">
@@ -185,7 +192,24 @@ export async function OnSitePanel({
             {t("onsiteAdminTitle")}
           </div>
           <div className="space-y-6 p-5 sm:p-6">
-            <form action={saveOnSiteVisit} className="space-y-3">
+            <form action={setOfficeDays} className="space-y-3">
+              {hidden}
+              <p className="text-sm font-medium text-zinc-100">{t("officeDaysTitle")}</p>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                {[1, 2, 3, 4, 5].map((day) => (
+                  <label key={day} className="flex items-center gap-2 text-xs text-zinc-300">
+                    <input type="checkbox" name="day" value={day} defaultChecked={officeDays.includes(day)} className="accent-zinc-300" />
+                    {new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(Date.UTC(2024, 0, 7 + day))}
+                  </label>
+                ))}
+                <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  {t("officeDaysSave")}
+                </button>
+              </div>
+              <p className="max-w-2xl text-[11px] leading-relaxed text-zinc-500">{t("officeDaysHelp")}</p>
+            </form>
+
+            <form action={saveOnSiteVisit} className="space-y-3 border-t border-zinc-800 pt-5">
               {hidden}
               <p className="text-sm font-medium text-zinc-100">{t("onsiteAddDay")}</p>
               <div className="flex flex-wrap items-end gap-3">

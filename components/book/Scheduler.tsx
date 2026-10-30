@@ -328,7 +328,9 @@ export function Scheduler({
     const controller = new AbortController();
     setLoadState("loading");
     setSlot(null);
-    fetch(`/api/schedule/availability?mode=${mode}&duration=${duration}`, { signal: controller.signal })
+    // From the portal the project goes along, so in-person times follow that office's open days.
+    const project = context?.projectSlug ? `&project=${encodeURIComponent(context.projectSlug)}` : "";
+    fetch(`/api/schedule/availability?mode=${mode}&duration=${duration}${project}`, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(String(res.status));
         const data = (await res.json()) as { slots: Slot[] };
@@ -743,7 +745,7 @@ export function Scheduler({
         </div>
         <p className="basis-full -mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] leading-relaxed text-zinc-500">
           <span className="max-w-2xl">{mode === "online" ? t("modeOnlineHint") : t("onSiteNote")}</span>
-          {mode === "in_person" && onSite.size > 0 && (
+          {onSite.size > 0 && (
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-1.5 w-1.5 rounded-sm bg-zinc-400" aria-hidden="true" /> {t("legendOnSite")}
             </span>
@@ -815,6 +817,17 @@ export function Scheduler({
                       {t("timesIn", { zone: `${tz.replace(/_/g, " ")}${tzShort ? ` (${tzShort})` : ""}` })}
                     </p>
                   </div>
+
+                  {/* Booking online on a day I'm at an office: not blocked, just a heads-up with a way to meet in person instead. */}
+                  {mode === "online" && onSite.has(day) && (
+                    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-300">
+                      <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-sm bg-zinc-400" aria-hidden="true" />
+                      <span>{context?.officeAddress ? t("onSiteDayHintOffice") : t("onSiteDayHint")}</span>
+                      <button type="button" onClick={() => setMode("in_person")} className="underline underline-offset-4 hover:text-white">
+                        {t("onSiteDayHintAction")}
+                      </button>
+                    </p>
+                  )}
 
                   <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
                     {groups.map((group) => (

@@ -6,6 +6,7 @@ import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { AccessPanel } from "@/components/portal/AccessPanel";
 import { FilterSelect } from "@/components/portal/FilterSelect";
 import { Highlight } from "@/components/portal/Highlight";
+import { MeetingsPanel } from "@/components/portal/MeetingsPanel";
 import { OnSitePanel } from "@/components/portal/OnSitePanel";
 import { Markdown } from "@/components/portal/Markdown";
 import { Pill, PriorityDot } from "@/components/portal/Pills";
@@ -43,6 +44,7 @@ import {
   canViewProjectLog,
   canWriteIn,
   getMyTimeZone,
+  getOfficeWeekdays,
   getProjectAccess,
   getProjectDetail,
   getSearchText,
@@ -54,6 +56,7 @@ import {
 } from "@/lib/portal/queries";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { loadOnSiteDays, listUpcomingVisits } from "@/lib/portal/onsite";
+import { listProjectMeetings } from "@/lib/portal/project-meetings";
 import { formatVisit } from "@/lib/portal/onsite-format";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +66,7 @@ const REVIEW_LIST_MAX = 3;
 
 export default async function ProjectPage(props: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ dept?: string; tab?: string; q?: string; access?: string; tickets?: string; sort?: string; mine?: string; psort?: string; visit?: string }>;
+  searchParams: Promise<{ dept?: string; tab?: string; q?: string; access?: string; tickets?: string; sort?: string; mine?: string; psort?: string; visit?: string; meeting?: string }>;
 }) {
   const { locale, slug } = await props.params;
   const {
@@ -76,6 +79,7 @@ export default async function ProjectPage(props: {
     mine: mineParam,
     psort: planSortParamRaw,
     visit: visitNotice,
+    meeting: meetingNotice,
   } = await props.searchParams;
   setRequestLocale(locale);
 
@@ -84,7 +88,7 @@ export default async function ProjectPage(props: {
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
   // Only the project is needed to start all of these, so they run together.
-  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone, visits, areaInfo] = await Promise.all([
+  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone, visits, areaInfo, meetings, officeDays] = await Promise.all([
     getTranslations("Portal"),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     listCostMilestoneIds(supabase),
@@ -96,6 +100,10 @@ export default async function ProjectPage(props: {
     listUpcomingVisits(supabase, { id: project.id, showOnsite: project.showOnsite }, isAdmin),
     // Each team's general information, only for the areas this person can open.
     listAreaInfo(supabase, project.id),
+    // The project's upcoming booked meetings: a person's own, or all of them for the owner.
+    listProjectMeetings(supabase, { id: project.id }, { id: user.id, email: user.email ?? "", isAdmin }),
+    // The weekdays this client's office is open for visits (their home-office days are left out).
+    getOfficeWeekdays(supabase, project.id),
   ]);
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
@@ -146,6 +154,8 @@ export default async function ProjectPage(props: {
 
   // The on-site tab is for projects the owner visits: when the owner announced days or booked meetings there, or the project has an office.
   const showOnsiteTab = isAdmin || (project.showOnsite && (Boolean(project.officeAddress) || visits.length > 0));
+  // The tab also holds the person's booked meetings, so it exists whenever they have one (or when office days are shown).
+  const showMeetingsTab = showOnsiteTab || meetings.length > 0;
   const hostZone = DEFAULT_AVAILABILITY.hostTimezone;
   const nextVisit = visits[0] ? formatVisit(visits[0], locale, timeZone, hostZone) : null;
   const nextOnsite = nextVisit && showOnsiteTab && (
@@ -362,7 +372,7 @@ export default async function ProjectPage(props: {
 
   const hasDetails = Boolean(project.overview || links || project.description || !mayOpenTickets);
   const tab: ProjectTab =
-    (requestedTab === "details" && !hasDetails) || (requestedTab === "onsite" && !showOnsiteTab) ? "plan" : (requestedTab ?? "plan");
+    (requestedTab === "details" && !hasDetails) || (requestedTab === "onsite" && !showMeetingsTab) ? "plan" : (requestedTab ?? "plan");
 
   const canReport = (m: { status: string; departmentId: string | null }) =>
     mayOpenTickets && m.status !== "pending" && canWriteIn(access, isAdmin, m.departmentId);
@@ -376,7 +386,7 @@ export default async function ProjectPage(props: {
   const tabs: { id: ProjectTab; label: string; count?: number; dot?: boolean }[] = [
     { id: "plan", label: t("planTab"), count: areaMilestones.length },
     { id: "tickets", label: t("ticketsTitle"), count: areaTickets.length, dot: toReview.length > 0 },
-    ...(showOnsiteTab ? [{ id: "onsite" as const, label: t("onsiteTab") }] : []),
+    ...(showMeetingsTab ? [{ id: "onsite" as const, label: t("onsiteTab"), count: meetings.length || undefined }] : []),
     { id: "team", label: isAdmin ? t("accessTitle") : t("teamTitle"), count: isAdmin ? undefined : project.team.length },
     ...(hasDetails ? [{ id: "details" as const, label: t("detailsTitle") }] : []),
   ];
@@ -565,7 +575,7 @@ export default async function ProjectPage(props: {
   }
 
   // The owner's calendar is read only when this tab is open.
-  const onsiteDays = tab === "onsite" ? await loadOnSiteDays(visits, project.id) : [];
+  const onsiteDays = tab === "onsite" && showOnsiteTab ? await loadOnSiteDays(visits, project.id) : [];
   const problems = sortProblems(areaMilestones, planSort, { areaLabel, openTickets: (id) => ticketCounts.get(id)?.open ?? 0 });
   const sortHead = (key: PlanSortKey, label: string, className?: string) => {
     const active = planSort?.key === key;
@@ -914,19 +924,32 @@ export default async function ProjectPage(props: {
               </section>
             )}
 
-            {/* On-site — when the owner is at this project's office, and the free stretches */}
+            {/* Meetings — the person's booked meetings first, then when the owner is at the office and the free stretches */}
             {tab === "onsite" && (
-              <OnSitePanel
-                locale={locale}
-                slug={slug}
-                timeZone={timeZone}
-                days={onsiteDays}
-                isAdmin={isAdmin}
-                showOnsite={project.showOnsite}
-                officeLabel={project.officeLabel}
-                officeAddress={project.officeAddress}
-                notice={visitNotice === "saved" || visitNotice === "error" ? visitNotice : null}
-              />
+              <div className="space-y-5">
+                <MeetingsPanel
+                  locale={locale}
+                  slug={slug}
+                  timeZone={timeZone}
+                  meetings={meetings}
+                  isAdmin={isAdmin}
+                  notice={meetingNotice === "cancelled" || meetingNotice === "error" ? meetingNotice : null}
+                />
+                {showOnsiteTab && (
+                  <OnSitePanel
+                    locale={locale}
+                    slug={slug}
+                    timeZone={timeZone}
+                    days={onsiteDays}
+                    isAdmin={isAdmin}
+                    showOnsite={project.showOnsite}
+                    officeLabel={project.officeLabel}
+                    officeAddress={project.officeAddress}
+                    officeDays={officeDays}
+                    notice={visitNotice === "saved" || visitNotice === "error" || visitNotice === "closed" ? visitNotice : null}
+                  />
+                )}
+              </div>
             )}
 
             {/* Team — the owner manages access here, so the read-only list would only repeat it */}

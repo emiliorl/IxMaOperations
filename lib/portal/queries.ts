@@ -1,7 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cache } from "react";
 import { decryptLoose } from "@/lib/field-crypto";
+import { missingColumn } from "@/lib/missing-column";
 import { INLINE_TYPES } from "./attachments";
+import { normalizeOfficeDays } from "./office-days";
 import type { LogEvent } from "./log";
 import { ticketBucket } from "./filters";
 import { parseResources, type ProblemPriority, type ResourceLink } from "./plan";
@@ -198,6 +200,19 @@ export async function getProjectShell(supabase: SupabaseClient, slug: string): P
       .map((d) => ({ id: d.id, name: plain(d.name) }))
       .sort((a, b) => a.name.localeCompare(b.name)),
   };
+}
+
+/**
+ * The weekdays (0 = Sunday ... 6 = Saturday) this project's office is open for visits. Monday to Friday when
+ * nothing is stored or the office-days migration hasn't been applied yet, so nothing breaks before it is.
+ */
+export async function getOfficeWeekdays(supabase: SupabaseClient, projectId: string): Promise<number[]> {
+  const { data, error } = await supabase.from("projects").select("office_weekdays").eq("id", projectId).maybeSingle();
+  if (error) {
+    if (!missingColumn(error.message)) console.warn(`[portal] office days unavailable: ${error.message}`);
+    return normalizeOfficeDays(undefined);
+  }
+  return normalizeOfficeDays((data as { office_weekdays?: unknown } | null)?.office_weekdays);
 }
 
 /**

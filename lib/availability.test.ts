@@ -265,22 +265,48 @@ describe("weekly limit ordering (race tie-break)", () => {
 });
 
 describe("on-site days and online slots", () => {
-  it("hide online slots on a claimed day, and show them on other days", () => {
+  /** Online slots of one day with whether each is marked "I'll be on-site that day". */
+  const flags = (slots: { start: number; onSite: boolean }[], date: string) => slots.filter((s) => localDate(s.start, TZ) === date).map((s) => s.onSite);
+
+  it("online stays bookable on an on-site day: it is marked, not hidden", () => {
     const slots = generateSlots(query({ meetings: [meeting(WED, "10:00", "10:30")] }));
+    expect(startsOn(slots, WED).length).toBeGreaterThan(0);
+    expect(flags(slots, WED).every(Boolean)).toBe(true); // every online time that day carries the hint
+    expect(flags(slots, THU).some(Boolean)).toBe(false); // an ordinary day does not
+  });
+
+  it("an owner IN-PERSON marker marks that day's online times too", () => {
+    const slots = generateSlots(query({ overrides: { [WED]: "IN_PERSON" } }));
+    expect(startsOn(slots, WED).length).toBeGreaterThan(0);
+    expect(flags(slots, WED).every(Boolean)).toBe(true);
+    expect(flags(slots, TUE).some(Boolean)).toBe(false);
+  });
+
+  it("an online time is never offered on top of the in-person meeting that makes the day on-site", () => {
+    const slots = startsOn(generateSlots(query({ meetings: [meeting(WED, "10:00", "10:30")] })), WED);
+    expect(slots).not.toContain("10:00");
+    expect(slots).not.toContain("10:30"); // inside the buffer
+  });
+
+  it("only says 'on-site' where the client's own office is open that day", () => {
+    // The owner is on-site on Friday (another client), but this client's office is closed on Fridays.
+    const overrides = { [FRI]: "IN_PERSON" as const };
+    const closed = generateSlots(query({ overrides, officeWeekdays: [1, 2, 3, 4] }));
+    expect(startsOn(closed, FRI).length).toBeGreaterThan(0); // still bookable online
+    expect(flags(closed, FRI).some(Boolean)).toBe(false); // but no promise of a visit
+    const open = generateSlots(query({ overrides, officeWeekdays: [1, 2, 3, 4, 5] }));
+    expect(flags(open, FRI).every(Boolean)).toBe(true);
+  });
+
+  it("can still hide online on on-site days, if the setting is switched back on", () => {
+    const config = { ...CONFIG, hideOnlineOnOnSiteDays: true };
+    const slots = generateSlots(query({ config, meetings: [meeting(WED, "10:00", "10:30")] }));
     expect(startsOn(slots, WED)).toEqual([]);
     expect(startsOn(slots, THU).length).toBeGreaterThan(0);
   });
 
-  it("an owner IN-PERSON marker also hides online that day", () => {
-    const slots = generateSlots(query({ overrides: { [WED]: "IN_PERSON" } }));
-    expect(startsOn(slots, WED)).toEqual([]);
-    expect(startsOn(slots, TUE).length).toBeGreaterThan(0);
-  });
-
-  it("keeps online available on-site days when hiding is switched off", () => {
-    const config = { ...CONFIG, hideOnlineOnOnSiteDays: false };
-    const slots = generateSlots(query({ config, meetings: [meeting(WED, "10:00", "10:30")] }));
-    expect(startsOn(slots, WED).length).toBeGreaterThan(0);
+  it("the app's setting is: do not hide", () => {
+    expect(DEFAULT_AVAILABILITY.hideOnlineOnOnSiteDays).toBe(false);
   });
 });
 
@@ -290,8 +316,9 @@ describe("dayPolicy", () => {
     expect(dayPolicy(SAT, undefined, CONFIG)).toEqual({ online: false, inPerson: false, onSite: false });
   });
 
-  it("a claimed day is on-site and hides online", () => {
-    expect(dayPolicy(WED, undefined, CONFIG, true)).toEqual({ online: false, inPerson: true, onSite: true });
+  it("a claimed day is on-site, and online is still offered (unless hiding is switched on)", () => {
+    expect(dayPolicy(WED, undefined, CONFIG, true)).toEqual({ online: true, inPerson: true, onSite: true });
+    expect(dayPolicy(WED, undefined, { ...CONFIG, hideOnlineOnOnSiteDays: true }, true)).toEqual({ online: false, inPerson: true, onSite: true });
   });
 
   it("an on-site override on a weekend offers in-person only", () => {
@@ -375,13 +402,51 @@ describe("lunch rule inside generateSlots (on-site day)", () => {
   });
 });
 
+describe("a client's office days (home-office days)", () => {
+  const MON_TO_THU = [1, 2, 3, 4];
+
+  it("offers no in-person times on a day the client's office is closed", () => {
+    expect(startsOn(generateSlots(query({ mode: "in_person", officeWeekdays: MON_TO_THU })), FRI)).toEqual([]);
+    // The same Friday is open for in-person meetings when there is no such limit (the public page).
+    expect(startsOn(generateSlots(query({ mode: "in_person" })), FRI).length).toBeGreaterThan(0);
+  });
+
+  it("still offers the days the office is open", () => {
+    // (Monday itself is inside the 24-hour notice for in-person meetings at the test's clock, so it starts Tuesday.)
+    for (const day of [TUE, WED, THU]) {
+      expect(startsOn(generateSlots(query({ mode: "in_person", officeWeekdays: MON_TO_THU })), day).length, day).toBeGreaterThan(0);
+    }
+  });
+
+  it("holds even on a Friday the owner marked IN-PERSON on the calendar", () => {
+    const slots = generateSlots(query({ mode: "in_person", overrides: { [FRI]: "IN_PERSON" }, officeWeekdays: MON_TO_THU }));
+    expect(startsOn(slots, FRI)).toEqual([]);
+  });
+
+  it("does not touch online meetings: the closed day is still bookable by video", () => {
+    expect(startsOn(generateSlots(query({ mode: "online", officeWeekdays: MON_TO_THU })), FRI).length).toBeGreaterThan(0);
+  });
+
+  it("an office with no open days has no in-person times at all", () => {
+    expect(generateSlots(query({ mode: "in_person", officeWeekdays: [] }))).toEqual([]);
+  });
+
+  it("the final check before booking refuses a closed day too", () => {
+    const q = query({ mode: "in_person", officeWeekdays: MON_TO_THU });
+    expect(isSlotAvailable(q, at(FRI, "11:00"))).toBe(false);
+    expect(isSlotAvailable(q, at(THU, "11:00"))).toBe(true);
+  });
+});
+
 describe("a cancelled in-person meeting", () => {
-  it("stops the day being an on-site day when it was the only one: online times come back", () => {
-    const withMeeting = startsOn(generateSlots(query({ mode: "online", meetings: [meeting(WED, "10:00", "10:30")] })), WED);
-    expect(withMeeting).toEqual([]); // the day is for in-person meetings, so online is hidden
+  it("stops the day being marked on-site when it was the only one", () => {
+    const marked = (meetings: ReturnType<typeof meeting>[]) =>
+      generateSlots(query({ mode: "online", meetings })).filter((s) => localDate(s.start, TZ) === WED).map((s) => s.onSite);
+    expect(marked([meeting(WED, "10:00", "10:30")]).every(Boolean)).toBe(true); // "I'll be on-site that day"
     // Cancelled meetings are not read any more (only pending and confirmed ones are), so the day is ordinary again.
-    const cancelled = startsOn(generateSlots(query({ mode: "online", meetings: [] })), WED);
+    const cancelled = marked([]);
     expect(cancelled.length).toBeGreaterThan(0);
+    expect(cancelled.some(Boolean)).toBe(false);
   });
 
   it("gives its slot of the week back: a third in-person day can be claimed again", () => {

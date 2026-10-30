@@ -65,6 +65,14 @@ describe("the booking context", () => {
     expect(context).toMatchObject({ projectSlug: "domus", projectName: "Domus", officeAddress: "Zona 14", name: "Ana", email: "ana@example.com", ticketTopic: null });
   });
 
+  it("carries the days the office is open: Monday to Friday unless the project says otherwise", async () => {
+    expect((await load({ projectSlug: "domus" }))!.officeWeekdays).toEqual([1, 2, 3, 4, 5]);
+    tables.projects = { data: { id: PROJECT, name: "Domus", slug: "domus", office_label: null, office_address: "Zona 14", office_weekdays: [1, 2, 3, 4] } };
+    expect((await load({ projectSlug: "domus" }))!.officeWeekdays).toEqual([1, 2, 3, 4]);
+    tables.projects = { data: { id: PROJECT, name: "Domus", slug: "domus", office_label: null, office_address: "Zona 14", office_weekdays: [] } };
+    expect((await load({ projectSlug: "domus" }))!.officeWeekdays).toEqual([]);
+  });
+
   it("starts from the ticket's own team and problem when the booking is about a ticket", async () => {
     const context = await load({ projectSlug: "domus", ticketId: TICKET });
     expect(context).toMatchObject({ ticketId: TICKET, ticketNumber: 7, ticketTopic: { areaId: "d-rrhh", problemId: "m-1" } });

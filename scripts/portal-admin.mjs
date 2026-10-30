@@ -542,6 +542,8 @@ const commands = {
       ["20261029001400_onsite_visits.sql", () => column("onsite_visits", "visit_date")],
       ["20261029001500_area_info.sql", () => column("project_departments", "overview")],
       ["20261029001600_meeting_topic.sql", () => column("meetings", "milestone_id")],
+      ["20261029001700_meeting_client.sql", () => column("meetings", "client_id")],
+      ["20261029001800_office_days.sql", () => column("projects", "office_weekdays")],
     ];
     for (const [file, check] of migrations) {
       (await check().catch(() => false)) ? ok(`migration ${file}`) : bad(`migration ${file} is not applied`, `run supabase/migrations/${file} in the Supabase SQL editor`);

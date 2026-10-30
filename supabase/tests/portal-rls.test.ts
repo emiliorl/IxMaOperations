@@ -136,6 +136,8 @@ beforeAll(async () => {
   await db.exec(sql("20261029001400_onsite_visits.sql"));
   await db.exec(sql("20261029001500_area_info.sql"));
   await db.exec(sql("20261029001600_meeting_topic.sql"));
+  await db.exec(sql("20261029001700_meeting_client.sql"));
+  await db.exec(sql("20261029001800_office_days.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -1342,6 +1344,47 @@ describe("a team's general information (apart from its problems)", () => {
     }
     await owner();
     expect(await rows(`select 1 from public.project_departments where overview = 'changed'`)).toHaveLength(0);
+  });
+});
+
+describe("a client's office days", () => {
+  const owner = () => as({ id: U.admin, admin: true });
+  const daysOf = async (project: string) => (await rows<{ d: number[] }>(`select office_weekdays as d from public.projects where id = '${project}'`))[0]?.d;
+
+  it("is Monday to Friday for every project until the owner changes it", async () => {
+    await owner();
+    expect(await daysOf(P1)).toEqual([1, 2, 3, 4, 5]);
+    expect(await daysOf(P2)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it("the owner can set it, including to nothing (online only)", async () => {
+    await owner();
+    await db.exec(`update public.projects set office_weekdays = '{1,2,3,4}' where id = '${P1}'`);
+    expect(await daysOf(P1)).toEqual([1, 2, 3, 4]);
+    await db.exec(`update public.projects set office_weekdays = '{}' where id = '${P1}'`);
+    expect(await daysOf(P1)).toEqual([]);
+  });
+
+  it("refuses a day that is not a weekday", async () => {
+    await owner();
+    expect(await rejection(`update public.projects set office_weekdays = '{1,2,7}' where id = '${P1}'`)).toMatch(/check constraint/i);
+    expect(await rejection(`update public.projects set office_weekdays = '{-1}' where id = '${P1}'`)).toMatch(/check constraint/i);
+  });
+
+  it("nobody but the owner changes it: not a team lead, not a full-access executive, not another company", async () => {
+    for (const who of [U.leadAll, U.leadFin, U.memberOps, U.cfo, U.outsider]) {
+      await as({ id: who });
+      expect(await affected(`update public.projects set office_weekdays = '{1}' where id = '${P1}'`), who).toBe(0);
+    }
+    await owner();
+    expect(await daysOf(P1)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it("people on the project can read it, and a stranger cannot", async () => {
+    await as({ id: U.leadFin });
+    expect(await daysOf(P1)).toEqual([1, 2, 3, 4, 5]);
+    await as({ id: U.nobody });
+    expect(await daysOf(P1)).toBeUndefined();
   });
 });
 

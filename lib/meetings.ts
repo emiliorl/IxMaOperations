@@ -2,6 +2,7 @@ import "server-only";
 import type { BookingMode } from "./availability-config";
 import type { ExistingMeeting } from "./availability";
 import { decryptOptional, encryptField, encryptOptional } from "./field-crypto";
+import { missingColumn } from "./missing-column";
 import type { OnSiteMeeting } from "./onsite";
 import { supabaseAdmin } from "./supabase-admin";
 
@@ -12,6 +13,8 @@ import { supabaseAdmin } from "./supabase-admin";
  */
 
 const PG_EXCLUSION_VIOLATION = "23P01";
+/** How many optional columns a booking may carry (client, team, problem): the most retries a missing one can cost. */
+const OPTIONAL_COLUMNS = 3;
 const STALE_PENDING_MS = 5 * 60_000;
 
 /** Booked meetings (pending or confirmed) overlapping [from, to]. */
@@ -67,6 +70,8 @@ export interface NewMeeting {
   /** Set when a signed-in client booked from the portal (already verified): it ties the meeting to the project. */
   projectId?: string;
   ticketId?: string;
+  /** The signed-in account that booked it (portal only): how the person finds and cancels their own meetings. */
+  clientId?: string;
   /** The team and problem the call is about (already checked against what the person can open). */
   departmentId?: string;
   milestoneId?: string;
@@ -102,18 +107,22 @@ export async function insertPendingMeeting(meeting: NewMeeting): Promise<InsertR
     ticket_id: meeting.ticketId ?? null,
     status: "pending",
   };
-  const topic = { department_id: meeting.departmentId ?? null, milestone_id: meeting.milestoneId ?? null };
-  const hasTopic = topic.department_id !== null || topic.milestone_id !== null;
+  // Columns that came with later migrations. A database that hasn't applied one yet must still take
+  // the booking: a missing column is left out (and said so in the log) instead of failing it.
+  const optional: Record<string, string | null> = {
+    client_id: meeting.clientId ?? null,
+    department_id: meeting.departmentId ?? null,
+    milestone_id: meeting.milestoneId ?? null,
+  };
+  for (const [column, value] of Object.entries(optional)) if (value === null) delete optional[column];
 
-  let { data, error } = await db
-    .from("meetings")
-    .insert(hasTopic ? { ...row, ...topic } : row)
-    .select("id")
-    .single();
-  // Before the meeting-topic migration those two columns don't exist: the booking must still go through without them.
-  if (error && hasTopic && /department_id|milestone_id/.test(error.message)) {
-    console.warn(`[schedule] meeting topic not saved (run 20261029001600_meeting_topic.sql): ${error.message}`);
-    ({ data, error } = await db.from("meetings").insert(row).select("id").single());
+  let { data, error } = await db.from("meetings").insert({ ...row, ...optional }).select("id").single();
+  for (let attempt = 0; error && attempt < OPTIONAL_COLUMNS; attempt++) {
+    const column = missingColumn(error.message);
+    if (!column || !(column in optional)) break;
+    console.warn(`[schedule] meetings.${column} doesn't exist yet, so it was not saved (run the pending migration): ${error.message}`);
+    delete optional[column];
+    ({ data, error } = await db.from("meetings").insert({ ...row, ...optional }).select("id").single());
   }
 
   if (error) {

@@ -2,6 +2,7 @@ import "server-only";
 import { decryptLoose } from "@/lib/field-crypto";
 import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server";
 import { timeZoneOrDefault } from "./preferences";
+import { getOfficeWeekdays } from "./queries";
 import type { TopicArea, TopicProblem } from "./booking-topic";
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
@@ -18,11 +19,15 @@ const PROBLEM_LIMIT = 300;
  * office is, or which team or problem it is about.
  */
 export interface BookingContext {
+  /** The signed-in account: stored with the meeting, so the person can find and cancel it later. */
+  userId: string;
   projectId: string;
   projectSlug: string;
   projectName: string;
   officeLabel: string | null;
   officeAddress: string | null;
+  /** The weekdays (0 = Sunday ... 6 = Saturday) the office is open: in-person meetings only exist on these. */
+  officeWeekdays: number[];
   ticketId: string | null;
   ticketNumber: number | null;
   /** The ticket's own team and problem, to start from when the booking is about a ticket. */
@@ -63,7 +68,7 @@ export async function resolveBookingContext(input: { projectSlug?: string | null
   if (!project) return null;
 
   // None of these depend on each other, only on the project.
-  const [ticketResult, profileResult, areaResult, problemResult] = await Promise.all([
+  const [ticketResult, profileResult, areaResult, problemResult, officeWeekdays] = await Promise.all([
     input.ticketId && UUID.test(input.ticketId)
       ? supabase.from("tickets").select("id,ticket_number,project_id,department_id,milestone_id").eq("id", input.ticketId).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -75,6 +80,7 @@ export async function resolveBookingContext(input: { projectSlug?: string | null
       .eq("project_id", project.id)
       .order("sort_order")
       .limit(PROBLEM_LIMIT),
+    getOfficeWeekdays(supabase, project.id),
   ]);
 
   const ticket = ticketResult.data && ticketResult.data.project_id === project.id ? ticketResult.data : null;
@@ -97,11 +103,13 @@ export async function resolveBookingContext(input: { projectSlug?: string | null
       }));
 
   return {
+    userId: user.id,
     projectId: project.id,
     projectSlug: project.slug,
     projectName: decryptLoose(project.name) ?? "",
     officeLabel: decryptLoose(project.office_label),
     officeAddress: decryptLoose(project.office_address),
+    officeWeekdays,
     ticketId: ticket?.id ?? null,
     ticketNumber: ticket?.ticket_number ?? null,
     ticketTopic: ticket ? { areaId: ticket.department_id, problemId: ticket.milestone_id } : null,
@@ -111,4 +119,20 @@ export async function resolveBookingContext(input: { projectSlug?: string | null
     email: user.email,
     timeZone: timeZoneOrDefault(profile?.timezone),
   };
+}
+
+/**
+ * Just the office days of a project, for the availability list: only when the person is signed in and can open
+ * that project (row-level security decides); anyone else gets null, which means "no limit" (the public page).
+ */
+export async function resolveOfficeWeekdays(projectSlug: string | null | undefined): Promise<number[] | null> {
+  const slug = projectSlug?.trim() ?? "";
+  if (!SLUG.test(slug) || !supabaseConfigured()) return null;
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: project } = await supabase.from("projects").select("id").eq("slug", slug).maybeSingle();
+  return project ? getOfficeWeekdays(supabase, project.id) : null;
 }

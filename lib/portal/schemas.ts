@@ -40,6 +40,12 @@ export const removeOnsiteVisitInput = z.object({
   visitId: z.string().uuid(),
 });
 
+/** Cancelling a booked meeting: the project it is on, and which one. */
+export const cancelMeetingInput = z.object({
+  projectSlug: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,119}$/),
+  meetingId: z.string().uuid(),
+});
+
 export const onsitePresenceInput = z.object({
   projectSlug: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,119}$/),
   enabled: z.boolean(),
