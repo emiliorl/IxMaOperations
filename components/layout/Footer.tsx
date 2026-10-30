@@ -29,7 +29,7 @@ export function Footer() {
           <p className="text-zinc-500">{t("tagline")}</p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-5 text-zinc-400 text-xs">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-0 text-zinc-400 text-xs [&_a]:inline-block [&_a]:py-3 sm:gap-y-1 sm:[&_a]:py-1">
           <Link href="/about" className="hover:text-zinc-200">{t("about")}</Link>
           <Link href="/#project-scoper" className="hover:text-zinc-200">{t("startHere")}</Link>
           <Link href="/#examples" className="hover:text-zinc-200">{t("examples")}</Link>

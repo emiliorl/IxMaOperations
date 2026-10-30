@@ -1056,6 +1056,7 @@
     "weekNoDue": "Nada vence.",
     "weekOpenProject": "Abrir proyecto →",
     "weekToday": "Hoy",
+    "sortPlanOrder": "Orden del plan",
     "twoStepTitle": "Verificación en dos pasos",
     "twoStepIntro": "Además de tu contraseña, al iniciar sesión se pide un código de 6 dígitos de una app de autenticación en tu teléfono. Aunque alguien se entere de tu contraseña, no podrá entrar.",
     "twoStepRequired": "La verificación en dos pasos es obligatoria para la cuenta del propietario, porque puede ver los datos de todos los clientes. Actívala ahora para continuar.",

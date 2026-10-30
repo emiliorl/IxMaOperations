@@ -58,7 +58,7 @@ export async function MeetingsPanel({
               .filter(Boolean)
               .join(" · ");
             return (
-              <li key={meeting.id} className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 px-5 py-4 sm:px-6">
+              <li key={meeting.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-x-6 sm:gap-y-2 sm:px-6">
                 <div className="min-w-0 space-y-1">
                   <p className="text-sm font-medium text-zinc-100">
                     {sentence(day.format(meeting.start))}
@@ -72,7 +72,12 @@ export async function MeetingsPanel({
                     </span>
                     {meeting.mode === "online" ? (
                       link && (
-                        <a href={link} target="_blank" rel="noreferrer noopener" className="text-zinc-200 underline underline-offset-4 hover:text-white">
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="inline-flex min-h-10 items-center rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 text-sm text-emerald-300 hover:bg-emerald-500/15 sm:min-h-0 sm:border-0 sm:bg-transparent sm:px-0 sm:text-xs sm:text-zinc-200 sm:underline sm:underline-offset-4 sm:hover:bg-transparent sm:hover:text-white"
+                        >
                           {t("meetingJoin")}
                         </a>
                       )
@@ -83,11 +88,11 @@ export async function MeetingsPanel({
                   {about && <p className="text-xs text-zinc-500">{about}</p>}
                   {isAdmin && meeting.bookedBy && <p className="text-xs text-zinc-500">{t("meetingBookedBy", { name: meeting.bookedBy })}</p>}
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-4">
                   {/* Moving it keeps the same meeting and calendar event: the guest gets an updated invitation. */}
                   <Link
                     href={{ pathname: "/portal/book", query: { project: slug, reschedule: meeting.id } }}
-                    className="text-xs text-zinc-300 underline underline-offset-4 hover:text-white"
+                    className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-700 text-sm text-zinc-200 hover:bg-zinc-900 sm:min-h-0 sm:rounded-none sm:border-0 sm:text-xs sm:underline sm:underline-offset-4 sm:hover:bg-transparent sm:hover:text-white"
                   >
                     {t("meetingReschedule")}
                   </Link>

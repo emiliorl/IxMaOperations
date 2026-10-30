@@ -80,7 +80,7 @@ interface Booked {
 const DURATIONS = [15, 30, 45];
 /** Same look as the other fields of the sheet (see components/ui/Input). */
 const selectClass =
-  "h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400";
+  "h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-base text-zinc-100 sm:h-10 sm:text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400";
 const pad = (n: number) => String(n).padStart(2, "0");
 /** Uppercase only the first letter (CSS `capitalize` would turn Spanish "de" into "De"). */
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
@@ -119,7 +119,7 @@ function Segmented<T extends string | number>({
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
-            "h-8 rounded px-2.5 sm:px-3 text-sm transition-colors border",
+            "h-10 rounded px-3 text-sm transition-colors border sm:h-8",
             mono && "font-mono text-xs",
             value === option.value
               ? "border-zinc-600 bg-zinc-800 text-zinc-100"
@@ -192,7 +192,7 @@ function MonthCalendar({
   );
   const fullDay = useMemo(() => new Intl.DateTimeFormat(locale, { timeZone: "UTC", dateStyle: "full" }), [locale]);
   const arrow =
-    "h-8 w-8 inline-flex items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600 disabled:opacity-30 disabled:hover:border-zinc-800 disabled:hover:text-zinc-400";
+    "h-10 w-10 sm:h-8 sm:w-8 inline-flex items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600 disabled:opacity-30 disabled:hover:border-zinc-800 disabled:hover:text-zinc-400";
 
   return (
     <div>
@@ -230,7 +230,7 @@ function MonthCalendar({
               aria-label={fullDay.format(Date.parse(`${key}T12:00:00Z`))}
               onClick={() => onSelect(key)}
               className={cn(
-                "relative h-9 rounded-md border text-sm font-mono transition-colors",
+                "relative h-10 rounded-md border text-sm font-mono transition-colors sm:h-9",
                 isSelected
                   ? "border-zinc-200 bg-zinc-800 text-white"
                   : isAvailable
@@ -773,7 +773,7 @@ export function Scheduler({
                 setEditingTz(false);
               }}
               onBlur={() => setEditingTz(false)}
-              className="flex h-8 w-full min-w-[220px] max-w-[280px] rounded-md border border-zinc-800 bg-zinc-900 px-3 text-xs text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
+              className="flex h-10 w-full min-w-[220px] max-w-[280px] rounded-md border border-zinc-800 bg-zinc-900 px-3 text-base sm:h-8 sm:text-xs text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
             >
               {zones.map((z) => (
                 <option key={z} value={z}>
@@ -786,7 +786,7 @@ export function Scheduler({
               id="tz"
               type="button"
               onClick={() => setEditingTz(true)}
-              className="inline-flex h-8 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-xs text-zinc-300 transition-colors hover:border-zinc-600 hover:text-zinc-100"
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-xs sm:h-8 text-zinc-300 transition-colors hover:border-zinc-600 hover:text-zinc-100"
             >
               <Globe className="h-3.5 w-3.5 text-zinc-500" aria-hidden />
               {tz.replace(/_/g, " ")}
@@ -894,7 +894,7 @@ export function Scheduler({
                                 bringIntoView(panelRef);
                               }}
                               className={cn(
-                                "relative h-9 rounded-md border border-zinc-800 bg-zinc-900 font-mono text-xs text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white",
+                                "relative h-10 rounded-md border border-zinc-800 bg-zinc-900 font-mono text-sm text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white sm:h-9 sm:text-xs",
                                 s.both === false && "opacity-50"
                               )}
                             >
@@ -1068,7 +1068,7 @@ export function Scheduler({
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <Button type="button" variant="secondary" size="sm" onClick={connectGoogle} disabled={connect === "waiting"} className="shrink-0">
+            <Button type="button" variant="secondary" size="sm" onClick={connectGoogle} disabled={connect === "waiting"} className="h-10 shrink-0 sm:h-8">
               {connect === "waiting" ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> {t("connecting")}

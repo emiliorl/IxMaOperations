@@ -52,8 +52,8 @@ export interface AvailabilityConfig {
     digestLookaheadDays: number;
   };
   /**
-   * Lunch is protected only when a day has meetings both before AND after
-   * it — see violatesLunchRule in lib/availability.ts.
+   * Lunch is always the owner's on a day they are on-site: no meeting, online or in person, may overlap it
+   * (see generateSlots in lib/availability.ts). On ordinary days nothing protects it.
    */
   lunch: { start: string; end: string };
 }

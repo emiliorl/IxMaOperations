@@ -158,25 +158,6 @@ export function dayPolicy(
   };
 }
 
-/**
- * Lunch rule. Lunch is protected only when the day would have meetings both
- * before it and after it:
- *  - morning meeting   = starts before the lunch window opens
- *  - afternoon meeting = ends after the lunch window closes
- * If both exist, no meeting (including one starting at midday) may overlap
- * the lunch window. A morning-only or afternoon-only day can use that time.
- *
- * `dayMeetings` are the confirmed meetings that day; `candidate` is the slot
- * being considered. Returns true when the candidate must be hidden.
- */
-export function violatesLunchRule(dayMeetings: Interval[], candidate: Interval, lunch: Interval): boolean {
-  const all = [...dayMeetings, candidate];
-  const hasMorning = all.some((m) => m.start < lunch.start);
-  const hasAfternoon = all.some((m) => m.end > lunch.end);
-  if (!hasMorning || !hasAfternoon) return false;
-  return all.some((m) => overlaps(m, lunch));
-}
-
 export interface Slot {
   start: number;
   end: number;
@@ -206,9 +187,6 @@ export function generateSlots(query: SlotQuery): Slot[] {
     const windowStart = zonedTimeToUtc(date, rules.startTime, tz);
     const windowEnd = zonedTimeToUtc(date, rules.endTime, tz);
 
-    const dayStart = zonedTimeToUtc(date, "00:00", tz);
-    const dayEnd = zonedTimeToUtc(addDays(date, 1), "00:00", tz);
-    const dayMeetings = query.meetings.filter((m) => m.start >= dayStart && m.start < dayEnd);
     const lunch = {
       start: zonedTimeToUtc(date, config.lunch.start, tz),
       end: zonedTimeToUtc(date, config.lunch.end, tz),
@@ -220,7 +198,8 @@ export function generateSlots(query: SlotQuery): Slot[] {
       const padded = { start: start - buffer, end: slot.end + buffer };
       if (query.hostBusy.some((busy) => overlaps(padded, busy))) continue;
       if (query.meetings.some((meeting) => overlaps(padded, meeting))) continue;
-      if (policy.onSite && violatesLunchRule(dayMeetings, slot, lunch)) continue;
+      // On a day the owner is at an office, lunch is always theirs: nothing that overlaps it is offered, whatever else is booked.
+      if (policy.onSite && overlaps(slot, lunch)) continue;
       // "On-site" marks the day for someone booking: the owner will be at an office. Where the client's own office
       // is closed that day (home office), that would be a promise nobody can keep, so it is not marked.
       const officeOpen = !query.officeWeekdays || query.officeWeekdays.includes(weekdayOf(date));

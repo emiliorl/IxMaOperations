@@ -11,7 +11,7 @@ export function CancelMeetingButton({ label, confirmText }: { label: string; con
       onClick={(event) => {
         if (!window.confirm(confirmText)) event.preventDefault();
       }}
-      className="text-xs text-zinc-500 underline underline-offset-4 hover:text-red-400"
+      className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-zinc-800 text-sm text-zinc-400 hover:border-red-900/60 hover:text-red-400 sm:min-h-0 sm:w-auto sm:rounded-none sm:border-0 sm:text-xs sm:underline sm:underline-offset-4"
     >
       {label}
     </button>

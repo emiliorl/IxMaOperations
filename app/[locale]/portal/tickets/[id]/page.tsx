@@ -69,7 +69,7 @@ export default async function TicketPage(props: {
 
           <header className="space-y-3">
             <p className="font-mono text-xs text-zinc-500">#{ticket.number}</p>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">{ticket.title}</h1>
+            <h1 className="break-words text-2xl sm:text-3xl font-semibold text-white tracking-tight">{ticket.title}</h1>
             <div className="flex flex-wrap items-center gap-2">
               <Pill kind="ticketStatus" value={ticket.status} label={t(`ticketStatus.${ticket.status}`)} />
               <Pill kind="priority" value={ticket.priority} label={t(`priority.${ticket.priority}`)} />

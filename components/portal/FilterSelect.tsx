@@ -40,7 +40,7 @@ export function FilterSelect({
           const next = { ...query, [param]: event.target.value };
           startTransition(() => router.push({ pathname, query: next }));
         }}
-        className={cn(selectClass, "h-8 w-auto min-w-[9rem] text-xs", pending && "opacity-60")}
+        className={cn(selectClass, "h-10 w-auto min-w-[9rem] text-base sm:h-8 sm:text-xs", pending && "opacity-60")}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

@@ -9,6 +9,7 @@ import { Highlight } from "@/components/portal/Highlight";
 import { MeetingsPanel } from "@/components/portal/MeetingsPanel";
 import { OnSitePanel } from "@/components/portal/OnSitePanel";
 import { Markdown } from "@/components/portal/Markdown";
+import { PlanCards, type PlanCardItem } from "@/components/portal/PlanCards";
 import { Pill, PriorityDot } from "@/components/portal/Pills";
 import { SearchBox } from "@/components/portal/SearchBox";
 import { StatusForm } from "@/components/portal/StatusForm";
@@ -577,6 +578,38 @@ export default async function ProjectPage(props: {
   // The owner's calendar is read only when this tab is open.
   const onsiteDays = tab === "onsite" && showOnsiteTab ? await loadOnSiteDays(visits, project.id) : [];
   const problems = sortProblems(areaMilestones, planSort, { areaLabel, openTickets: (id) => ticketCounts.get(id)?.open ?? 0 });
+  // The same problems for a phone: as cards, with a dropdown in place of the clickable column headings.
+  const planCards: PlanCardItem[] = problems.map((m) => ({
+    id: m.id,
+    code: m.code,
+    title: m.title,
+    summary: m.summary ?? m.description,
+    status: m.status,
+    priority: m.priority,
+    areaLabel: hasSeveralAreas ? areaLabel(m.departmentId) : null,
+    dueLabel: m.dueDate ? dueFmt.format(Date.parse(m.dueDate)) : null,
+    openTickets: ticketCounts.get(m.id)?.open ?? 0,
+    hasCost: costItemIds.has(m.id),
+    canReport: canReport(m),
+  }));
+  const sortColumns: [PlanSortKey, string][] = [
+    ["code", t("colId")],
+    ["title", t("colProblem")],
+    ...(hasSeveralAreas ? ([["area", t("fieldDepartment")]] as [PlanSortKey, string][]) : []),
+    ["status", t("statusLabel")],
+    ["priority", t("fieldPriority")],
+    ["tickets", t("ticketsTitle")],
+    ["due", t("colDue")],
+  ];
+  const planSortOptions = [
+    { value: "", label: t("sortPlanOrder") },
+    ...sortColumns.flatMap(([key, label]) => [
+      { value: key, label: `${label} ↑` },
+      { value: `-${key}`, label: `${label} ↓` },
+    ]),
+  ];
+  // What the phone's sort dropdown keeps while it changes the order: the area, on the plan tab.
+  const planSortQuery: Record<string, string> = { tab: "plan", ...(deptParam ? { dept: deptParam } : {}) };
   const sortHead = (key: PlanSortKey, label: string, className?: string) => {
     const active = planSort?.key === key;
     return (
@@ -687,10 +720,10 @@ export default async function ProjectPage(props: {
                 <Link
                   key={stat.key}
                   href={stat.href}
-                  className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 px-4 py-3 transition-colors hover:border-zinc-700"
+                  className="rounded-lg border border-zinc-800/80 bg-zinc-900/40 px-3 py-2 transition-colors hover:border-zinc-700 sm:px-4 sm:py-3"
                 >
                   <p className={eyebrow}>{stat.label}</p>
-                  <p className={cn("mt-1 text-2xl font-semibold tabular-nums text-zinc-100", stat.tone)}>{stat.value}</p>
+                  <p className={cn("mt-0.5 text-xl font-semibold tabular-nums text-zinc-100 sm:mt-1 sm:text-2xl", stat.tone)}>{stat.value}</p>
                   <p className="mt-0.5 truncate text-[11px] text-zinc-500">{stat.hint}</p>
                 </Link>
               ))}
@@ -774,7 +807,19 @@ export default async function ProjectPage(props: {
                 {areaMilestones.length === 0 ? (
                   <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noMilestones")}</p>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <>
+                    <div className="border-b border-zinc-800/80 px-4 py-3 md:hidden">
+                      <FilterSelect
+                        label={t("sortLabel")}
+                        pathname={`/portal/projects/${slug}`}
+                        param="psort"
+                        value={planSortParam(planSort) ?? ""}
+                        options={planSortOptions}
+                        query={planSortQuery}
+                      />
+                    </div>
+                    <PlanCards locale={locale} slug={slug} isAdmin={isAdmin} items={planCards} />
+                    <div className="hidden overflow-x-auto md:block">
                     <table className="w-full min-w-[820px] border-collapse text-left">
                       <thead>
                         <tr className="border-b border-zinc-800 bg-zinc-900/60 font-mono text-[11px] uppercase tracking-wider text-zinc-500">
@@ -859,7 +904,8 @@ export default async function ProjectPage(props: {
                         })}
                       </tbody>
                     </table>
-                  </div>
+                    </div>
+                  </>
                 )}
               </section>
             )}

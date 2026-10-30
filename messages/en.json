@@ -1056,6 +1056,7 @@
     "weekNoDue": "Nothing due.",
     "weekOpenProject": "Open project →",
     "weekToday": "Today",
+    "sortPlanOrder": "Plan order",
     "twoStepTitle": "Two-step verification",
     "twoStepIntro": "Besides your password, signing in asks for a 6-digit code from an authenticator app on your phone. Even if someone learns your password, they can't get in.",
     "twoStepRequired": "Two-step verification is required for the owner account, because it can see every client's data. Set it up now to continue.",

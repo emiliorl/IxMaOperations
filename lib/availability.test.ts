@@ -8,7 +8,6 @@ import {
   isWithinWeekLimit,
   onSiteDaysInOrder,
   overlaps,
-  violatesLunchRule,
   weekStartOf,
   type ExistingMeeting,
   type Interval,
@@ -331,74 +330,54 @@ describe("dayPolicy", () => {
   });
 });
 
-describe("lunch rule", () => {
-  const lunch = block(WED, "12:00", "13:00");
-  const m = (from: string, to: string) => block(WED, from, to);
-
-  it("no meetings yet: midday is fine", () => {
-    expect(violatesLunchRule([], m("12:00", "12:30"), lunch)).toBe(false);
-  });
-
-  it("morning-only day may use the lunch hour", () => {
-    expect(violatesLunchRule([m("10:00", "10:30")], m("12:00", "12:30"), lunch)).toBe(false);
-    expect(violatesLunchRule([m("10:00", "10:30")], m("12:30", "13:00"), lunch)).toBe(false);
-  });
-
-  it("afternoon-only day may use the lunch hour", () => {
-    expect(violatesLunchRule([m("13:30", "14:00")], m("12:30", "13:00"), lunch)).toBe(false);
-  });
-
-  it("morning + afternoon is fine while the lunch hour stays free", () => {
-    expect(violatesLunchRule([m("10:00", "10:30")], m("14:00", "14:30"), lunch)).toBe(false);
-    expect(violatesLunchRule([m("14:00", "14:30")], m("10:00", "10:30"), lunch)).toBe(false);
-  });
-
-  it("morning + afternoon blocks a midday meeting", () => {
-    expect(violatesLunchRule([m("10:00", "10:30"), m("14:00", "14:30")], m("12:00", "12:30"), lunch)).toBe(true);
-  });
-
-  it("morning + midday already booked blocks the afternoon candidate", () => {
-    expect(violatesLunchRule([m("10:00", "10:30"), m("12:00", "12:30")], m("14:00", "14:30"), lunch)).toBe(true);
-  });
-
-  it("a meeting straddling lunch counts as morning and blocks when there is an afternoon one", () => {
-    expect(violatesLunchRule([m("14:00", "14:30")], m("11:30", "12:30"), lunch)).toBe(true);
-  });
-
-  it("meetings that merely touch the lunch window edges are fine", () => {
-    expect(violatesLunchRule([m("11:00", "12:00")], m("13:00", "13:30"), lunch)).toBe(false);
-  });
-});
-
-describe("lunch rule inside generateSlots (on-site day)", () => {
+describe("lunch on an on-site day", () => {
   it("lunch is 12:30–13:00", () => {
     expect(DEFAULT_AVAILABILITY.lunch).toEqual({ start: "12:30", end: "13:00" });
   });
 
-  it("with a morning and an afternoon meeting booked, the 12:30 slot disappears", () => {
-    const slots = startsOn(
-      generateSlots(
-        query({ mode: "in_person", meetings: [meeting(WED, "10:00", "10:30"), meeting(WED, "14:00", "14:30")] })
-      ),
-      WED
-    );
+  it("is always protected: with nothing else booked, the 12:30 slot is not offered, in person or online", () => {
+    const claimed = [meeting(WED, "10:00", "10:30")]; // makes Wednesday an on-site day
+    for (const mode of ["in_person", "online"] as const) {
+      const slots = startsOn(generateSlots(query({ mode, meetings: claimed })), WED);
+      expect(slots, mode).not.toContain("12:30");
+      expect(slots, mode).toContain("12:00"); // ends exactly when lunch starts
+      expect(slots, mode).toContain("13:00"); // starts exactly when lunch ends
+    }
+  });
+
+  it("whatever else is booked: a morning meeting, an afternoon one, or both", () => {
+    for (const meetings of [
+      [meeting(WED, "10:00", "10:30")],
+      [meeting(WED, "14:00", "14:30")],
+      [meeting(WED, "10:00", "10:30"), meeting(WED, "14:00", "14:30")],
+    ]) {
+      expect(startsOn(generateSlots(query({ mode: "in_person", meetings })), WED)).not.toContain("12:30");
+    }
+  });
+
+  it("someone booking the 12:00 slot cannot push the afternoon out: lunch stays free and the afternoon stays open", () => {
+    // 12:00–12:30 is the last slot before lunch. With it booked the afternoon is still on offer (the old rule closed it).
+    const slots = startsOn(generateSlots(query({ mode: "in_person", meetings: [meeting(WED, "10:00", "10:30"), meeting(WED, "12:00", "12:30")] })), WED);
+    expect(slots).toContain("13:00");
+    expect(slots).toContain("14:00");
     expect(slots).not.toContain("12:30");
-    expect(slots).toContain("12:00"); // ends exactly when lunch starts
-    expect(slots).toContain("13:00"); // starts exactly when lunch ends
   });
 
-  it("with only a morning meeting booked, midday stays bookable", () => {
-    const slots = startsOn(generateSlots(query({ mode: "in_person", meetings: [meeting(WED, "10:00", "10:30")] })), WED);
-    expect(slots).toContain("12:00");
-    expect(slots).toContain("12:30");
+  it("holds for 15-minute meetings too: 12:30 and 12:45 are hidden, 12:15 and 13:00 are fine", () => {
+    const slots = startsOn(generateSlots(query({ mode: "in_person", durationMinutes: 15, meetings: [meeting(WED, "10:00", "10:30")] })), WED);
+    expect(slots).not.toContain("12:30");
+    expect(slots).not.toContain("12:45");
+    expect(slots).toContain("12:15");
+    expect(slots).toContain("13:00");
   });
 
-  it("does not apply on ordinary (not on-site) days", () => {
-    const slots = startsOn(
-      generateSlots(query({ meetings: [meeting(TUE, "10:00", "10:30", "online"), meeting(TUE, "14:00", "14:30", "online")] })),
-      TUE
-    );
-    expect(slots).toContain("12:00");
+  it("does not apply on an ordinary day, when the owner is not on-site", () => {
+    expect(startsOn(generateSlots(query({ meetings: [meeting(TUE, "10:00", "10:30", "online")] })), TUE)).toContain("12:30");
+    expect(startsOn(generateSlots(query()), THU)).toContain("12:30");
+  });
+
+  it("a day marked IN-PERSON on the calendar protects lunch too", () => {
+    expect(startsOn(generateSlots(query({ overrides: { [WED]: "IN_PERSON" } })), WED)).not.toContain("12:30");
   });
 });
 

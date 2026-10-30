@@ -65,14 +65,14 @@ export default async function BookPage(props: {
           {email ? (
             <>
               {t("signedInHint")}{" "}
-              <Link href="/portal/book" className="text-zinc-300 underline underline-offset-4 hover:text-white">
+              <Link href="/portal/book" className="inline-block py-2.5 -my-2.5 text-zinc-300 underline underline-offset-4 hover:text-white">
                 {t("signedInLink")}
               </Link>
             </>
           ) : (
             <>
               {t("clientHint")}{" "}
-              <Link href="/portal/login" className="text-zinc-300 underline underline-offset-4 hover:text-white">
+              <Link href="/portal/login" className="inline-block py-2.5 -my-2.5 text-zinc-300 underline underline-offset-4 hover:text-white">
                 {t("clientLogin")}
               </Link>
             </>

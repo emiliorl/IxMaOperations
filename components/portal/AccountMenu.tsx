@@ -32,11 +32,11 @@ export function AccountMenu({
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         aria-label={t("accountMenu")}
-        className="group flex items-center gap-2 rounded-md border border-transparent py-1 pl-1 pr-2 text-xs text-zinc-300 outline-none transition-colors hover:border-zinc-800 hover:bg-zinc-900/60 focus-visible:border-zinc-600 data-[state=open]:border-zinc-800 data-[state=open]:bg-zinc-900/60"
+        className="group flex min-h-10 items-center gap-2 rounded-md border border-transparent py-1 pl-1 pr-2 sm:min-h-0 text-xs text-zinc-300 outline-none transition-colors hover:border-zinc-800 hover:bg-zinc-900/60 focus-visible:border-zinc-600 data-[state=open]:border-zinc-800 data-[state=open]:bg-zinc-900/60"
       >
         <span
           aria-hidden
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 font-mono text-[11px] text-zinc-200"
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 font-mono text-[11px] text-zinc-200"
         >
           {initialsOf(name)}
         </span>

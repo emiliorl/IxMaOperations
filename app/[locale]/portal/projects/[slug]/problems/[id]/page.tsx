@@ -82,7 +82,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
             <Pill kind="milestone" value={problem.status} label={t(`milestoneStatus.${problem.status}`)} />
             <Pill kind="priority" value={problem.priority} label={t(`problemPriority.${problem.priority}`)} />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">{problem.title}</h1>
+          <h1 className="break-words text-2xl sm:text-4xl font-semibold text-white tracking-tight">{problem.title}</h1>
           {problem.summary && <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-2xl">{problem.summary}</p>}
           <p className="font-mono text-[11px] text-zinc-500">
             {folderLabel(problem.departmentId)}
@@ -92,7 +92,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
           {(mayOpen || !isAdmin) && (
             <div className="flex flex-wrap items-center gap-3 pt-1">
               {mayOpen && (
-                <Link href={newTicket} className={buttonVariants({ size: "lg" })}>
+                <Link href={newTicket} className={`${buttonVariants({ size: "lg" })} w-full sm:w-auto`}>
                   {t("openTicketFor")}
                 </Link>
               )}
@@ -100,7 +100,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
               {!isAdmin && (
                 <Link
                   href={{ pathname: "/portal/book", query: { project: slug, problem: id } }}
-                  className={buttonVariants({ variant: "outline", size: "lg" })}
+                  className={`${buttonVariants({ variant: "outline", size: "lg" })} w-full sm:w-auto`}
                 >
                   {t("talkAboutProblem")}
                 </Link>

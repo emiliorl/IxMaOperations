@@ -55,7 +55,7 @@ export function StatusForm({
         onChange={(event) => setValue(event.target.value)}
         aria-label={ariaLabel}
         disabled={pending}
-        className={cn(selectClass, "h-8 w-auto text-xs")}
+        className={cn(selectClass, "h-10 min-w-0 flex-1 text-base sm:h-8 sm:w-auto sm:flex-none sm:text-xs")}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

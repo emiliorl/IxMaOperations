@@ -62,7 +62,7 @@ export async function AccessPanel({
   );
 
   const roleSelect = (value: string) => (
-    <select name="role" defaultValue={value} aria-label={t("roleLabel")} className={cn(selectClass, "h-8 w-auto text-xs")}>
+    <select name="role" defaultValue={value} aria-label={t("roleLabel")} className={cn(selectClass, "h-10 w-auto text-base sm:h-8 sm:text-xs")}>
       <option value="lead">{t("memberRole.lead")}</option>
       <option value="member">{t("memberRole.member")}</option>
     </select>
@@ -91,7 +91,7 @@ export async function AccessPanel({
   );
 
   const levelSelect = (value: string) => (
-    <select name="level" defaultValue={value} aria-label={t("accessTitle")} className={cn(selectClass, "h-8 w-auto text-xs")}>
+    <select name="level" defaultValue={value} aria-label={t("accessTitle")} className={cn(selectClass, "h-10 w-auto text-base sm:h-8 sm:text-xs")}>
       <option value="full">{t("accessLevel.full")}</option>
       <option value="view">{t("accessLevel.view")}</option>
     </select>
@@ -101,11 +101,11 @@ export async function AccessPanel({
     <div className="flex flex-wrap items-end gap-3">
       <div className="space-y-1.5">
         <label htmlFor={`${prefix}-email`} className={label}>{t("personEmail")}</label>
-        <Input id={`${prefix}-email`} name="email" type="email" required className="h-8 w-60 text-xs" />
+        <Input id={`${prefix}-email`} name="email" type="email" required className="h-10 w-full text-base sm:h-8 sm:w-60 sm:text-xs" />
       </div>
       <div className="space-y-1.5">
         <label htmlFor={`${prefix}-name`} className={label}>{t("personName")}</label>
-        <Input id={`${prefix}-name`} name="displayName" maxLength={120} className="h-8 w-52 text-xs" />
+        <Input id={`${prefix}-name`} name="displayName" maxLength={120} className="h-10 w-full text-base sm:h-8 sm:w-52 sm:text-xs" />
       </div>
     </div>
   );

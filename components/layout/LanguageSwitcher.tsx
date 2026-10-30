@@ -26,7 +26,7 @@ export function LanguageSwitcher() {
     <div className="flex items-center gap-1 text-[11px] font-mono">
       {routing.locales.map((cur) => {
         const className = cn(
-          "px-1.5 py-0.5 rounded transition-colors uppercase",
+          "inline-flex min-h-10 min-w-9 items-center justify-center rounded px-2 text-xs transition-colors uppercase sm:min-h-0 sm:min-w-0 sm:px-1.5 sm:py-0.5 sm:text-[11px]",
           cur === locale ? "text-zinc-100 font-medium" : "text-zinc-500 hover:text-zinc-300"
         );
         if (isPortal) {

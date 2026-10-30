@@ -203,7 +203,7 @@ export function SettingsForm({
       </section>
 
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" size="lg" disabled={pending} className="gap-2">
+        <Button type="submit" size="lg" disabled={pending} className="w-full gap-2 sm:w-auto">
           {pending && <Loader2 className="h-4 w-4 animate-spin" />}
           {pending ? t("saving") : t("save")}
         </Button>

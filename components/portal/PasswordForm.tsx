@@ -42,7 +42,7 @@ export function PasswordForm({ locale }: { locale: string }) {
         )}
       </div>
       <div className="border-t border-zinc-800 bg-zinc-900/40 px-5 py-4 sm:px-6">
-        <Button type="submit" size="lg" disabled={pending} className="gap-2">
+        <Button type="submit" size="lg" disabled={pending} className="w-full gap-2 sm:w-auto">
           {pending && <Loader2 className="h-4 w-4 animate-spin" />}
           {pending ? t("saving") : t("savePassword")}
         </Button>

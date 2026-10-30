@@ -49,7 +49,7 @@ export async function TicketList({
             <Link
               href={`/portal/tickets/${ticket.id}`}
               className={cn(
-                "flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 px-5 sm:px-6 py-3.5 transition-colors",
+                "flex flex-col gap-2 border-l-2 px-4 py-3.5 transition-colors sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:px-6",
                 waiting
                   ? "border-l-emerald-400 bg-emerald-500/[0.05] hover:bg-emerald-500/[0.09]"
                   : active
@@ -57,17 +57,22 @@ export async function TicketList({
                     : "border-l-transparent opacity-60 hover:opacity-100 hover:bg-zinc-900/60"
               )}
             >
-              <span className="font-mono text-xs text-zinc-500 w-10 shrink-0">#{ticket.number}</span>
-              <span className="flex-1 min-w-[12rem]">
-                <span className={cn("block text-sm", active ? "text-zinc-50 font-medium" : "text-zinc-300")}>{ticket.title}</span>
-                {ticket.createdByName && <span className="block text-[11px] text-zinc-500">{t("openedByShort", { name: ticket.createdByName })}</span>}
+              <span className="flex items-start gap-3 sm:contents">
+                <span className="w-10 shrink-0 pt-0.5 font-mono text-xs text-zinc-500">#{ticket.number}</span>
+                <span className="min-w-0 flex-1 sm:min-w-[12rem]">
+                  <span className={cn("block break-words text-[15px] leading-snug sm:text-sm", active ? "text-zinc-50 font-medium" : "text-zinc-300")}>{ticket.title}</span>
+                  {ticket.createdByName && <span className="block text-[11px] text-zinc-500">{t("openedByShort", { name: ticket.createdByName })}</span>}
+                </span>
               </span>
-              {problem && <span className="font-mono text-[11px] text-zinc-400">{problem}</span>}
-              {showFolder && <span className="font-mono text-[11px] text-zinc-500">{folderLabel(ticket.departmentId)}</span>}
-              <Pill kind="priority" value={ticket.priority} label={t(`priority.${ticket.priority}`)} />
-              <Pill kind="ticketStatus" value={ticket.status} label={t(`ticketStatus.${ticket.status}`)} />
-              <span className="w-28 text-right font-mono text-[11px] text-zinc-500" title={t("ticketUpdated")}>
-                {dateFmt.format(Date.parse(ticket.updatedAt))}
+              {/* Under the title on a phone; part of the same row from `sm` up. */}
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pl-[3.25rem] sm:contents">
+                {problem && <span className="font-mono text-[11px] text-zinc-400">{problem}</span>}
+                {showFolder && <span className="font-mono text-[11px] text-zinc-500">{folderLabel(ticket.departmentId)}</span>}
+                <Pill kind="priority" value={ticket.priority} label={t(`priority.${ticket.priority}`)} />
+                <Pill kind="ticketStatus" value={ticket.status} label={t(`ticketStatus.${ticket.status}`)} />
+                <span className="font-mono text-[11px] text-zinc-500 sm:w-28 sm:text-right" title={t("ticketUpdated")}>
+                  {dateFmt.format(Date.parse(ticket.updatedAt))}
+                </span>
               </span>
             </Link>
           </li>

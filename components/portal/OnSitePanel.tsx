@@ -161,10 +161,10 @@ export async function OnSitePanel({
                     <p className="text-xs text-zinc-500">{t("onsiteUnknown")}</p>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <div className="grid gap-2 pt-1 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
                     <Link
                       href={{ pathname: "/portal/book", query: { project: slug, mode: "in_person", day: day.date } }}
-                      className="text-xs text-zinc-300 underline underline-offset-4 hover:text-white"
+                      className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-700 px-4 text-sm text-zinc-200 hover:bg-zinc-900 sm:min-h-0 sm:justify-start sm:rounded-none sm:border-0 sm:px-0 sm:text-xs sm:text-zinc-300 sm:underline sm:underline-offset-4 sm:hover:bg-transparent sm:hover:text-white"
                     >
                       {t("onsiteBookDay")} →
                     </Link>
@@ -172,7 +172,10 @@ export async function OnSitePanel({
                       <form action={removeOnSiteVisit}>
                         {hidden}
                         <input type="hidden" name="visitId" value={day.id} />
-                        <button type="submit" className="text-xs text-zinc-500 underline underline-offset-4 hover:text-red-400">
+                        <button
+                          type="submit"
+                          className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-zinc-800 text-sm text-zinc-400 hover:border-red-900/60 hover:text-red-400 sm:min-h-0 sm:w-auto sm:rounded-none sm:border-0 sm:text-xs sm:text-zinc-500 sm:underline sm:underline-offset-4"
+                        >
                           {t("onsiteRemove")}
                         </button>
                       </form>
@@ -195,14 +198,14 @@ export async function OnSitePanel({
             <form action={setOfficeDays} className="space-y-3">
               {hidden}
               <p className="text-sm font-medium text-zinc-100">{t("officeDaysTitle")}</p>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2">
                 {[1, 2, 3, 4, 5].map((day) => (
-                  <label key={day} className="flex items-center gap-2 text-xs text-zinc-300">
-                    <input type="checkbox" name="day" value={day} defaultChecked={officeDays.includes(day)} className="accent-zinc-300" />
+                  <label key={day} className="flex min-h-10 items-center gap-3 rounded-md border border-zinc-800 px-3 text-sm text-zinc-300 sm:min-h-0 sm:gap-2 sm:rounded-none sm:border-0 sm:px-0 sm:text-xs">
+                    <input type="checkbox" name="day" value={day} defaultChecked={officeDays.includes(day)} className="h-5 w-5 accent-zinc-300 sm:h-4 sm:w-4" />
                     {new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(Date.UTC(2024, 0, 7 + day))}
                   </label>
                 ))}
-                <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                <button type="submit" className={`${buttonVariants({ variant: "outline", size: "sm" })} col-span-2 sm:col-span-1`}>
                   {t("officeDaysSave")}
                 </button>
               </div>
@@ -215,15 +218,15 @@ export async function OnSitePanel({
               <div className="flex flex-wrap items-end gap-3">
                 <label className="space-y-1.5">
                   <span className={eyebrow}>{t("onsiteDate")}</span>
-                  <Input name="date" type="date" required min={today} className="h-8 w-44 text-xs" />
+                  <Input name="date" type="date" required min={today} className="h-10 w-full text-base sm:h-8 sm:w-44 sm:text-xs" />
                 </label>
                 <label className="space-y-1.5">
                   <span className={eyebrow}>{t("onsiteFrom")}</span>
-                  <Input name="start" type="time" required defaultValue={DEFAULT_AVAILABILITY.inPerson.startTime} className="h-8 w-28 text-xs" />
+                  <Input name="start" type="time" required defaultValue={DEFAULT_AVAILABILITY.inPerson.startTime} className="h-10 w-full text-base sm:h-8 sm:w-28 sm:text-xs" />
                 </label>
                 <label className="space-y-1.5">
                   <span className={eyebrow}>{t("onsiteTo")}</span>
-                  <Input name="end" type="time" required defaultValue={DEFAULT_AVAILABILITY.inPerson.endTime} className="h-8 w-28 text-xs" />
+                  <Input name="end" type="time" required defaultValue={DEFAULT_AVAILABILITY.inPerson.endTime} className="h-10 w-full text-base sm:h-8 sm:w-28 sm:text-xs" />
                 </label>
                 <button type="submit" className={buttonVariants({ size: "sm" })}>
                   {t("onsiteAdd")}

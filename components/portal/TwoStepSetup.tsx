@@ -24,7 +24,7 @@ export function TwoStepSetup({ locale, first }: { locale: string; first: boolean
     return (
       <form action={start} className="space-y-3">
         <input type="hidden" name="locale" value={locale} />
-        <Button type="submit" size="lg" disabled={starting} className="gap-2">
+        <Button type="submit" size="lg" disabled={starting} className="w-full gap-2 sm:w-auto">
           {starting && <Loader2 className="h-4 w-4 animate-spin" />}
           {first ? t("twoStepSetupButton") : t("twoStepAddAnother")}
         </Button>
@@ -68,7 +68,7 @@ export function TwoStepSetup({ locale, first }: { locale: string; first: boolean
           {t(ERRORS[confirmed.error])}
         </p>
       )}
-      <Button type="submit" size="lg" disabled={confirming} className="gap-2">
+      <Button type="submit" size="lg" disabled={confirming} className="w-full gap-2 sm:w-auto">
         {confirming && <Loader2 className="h-4 w-4 animate-spin" />}
         {confirming ? t("twoStepChecking") : t("twoStepConfirm")}
       </Button>

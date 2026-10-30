@@ -141,7 +141,7 @@ export function SearchBox({
           }
         }}
         className={cn(
-          "h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 pl-9 pr-16 text-sm text-zinc-100 placeholder:text-zinc-500",
+          "h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 pl-9 pr-16 text-base text-zinc-100 sm:h-9 sm:text-sm placeholder:text-zinc-500",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 [&::-webkit-search-cancel-button]:hidden"
         )}
       />

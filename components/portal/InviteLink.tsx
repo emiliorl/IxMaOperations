@@ -33,7 +33,7 @@ export function InviteLink({ locale, userId }: { locale: string; userId: string 
               value={state.link}
               onFocus={(event) => event.currentTarget.select()}
               aria-label={t("inviteLink")}
-              className="h-8 flex-1 min-w-0 rounded-md border border-zinc-800 bg-zinc-950 px-2 font-mono text-[11px] text-zinc-300"
+              className="h-10 flex-1 min-w-0 rounded-md sm:h-8 border border-zinc-800 bg-zinc-950 px-2 font-mono text-[11px] text-zinc-300"
             />
             <button
               type="button"
