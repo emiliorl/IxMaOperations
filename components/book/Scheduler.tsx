@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Globe, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
@@ -16,14 +16,16 @@ import { cn } from "@/lib/utils";
  * presents them.
  *
  * Look: the same "intake sheet" as BriefForm — a panel with a mono header
- * band, numbered mono field labels (01 FORMAT … 05 TIME), hairline borders,
+ * band, numbered mono field labels (01 FORMAT … 04 TIME), hairline borders,
  * and a footer band. White is reserved for the one primary button
  * (STANDARDS.md), so selections use a hairline ring instead of a white fill.
  *
- * Flow (one panel, nothing scrolls out of view): options → month calendar
- * where only days with openings are selectable → the chosen day's times
- * grouped Morning/Afternoon → the booking form takes the time list's place
- * once a time is picked.
+ * Flow (one panel, built to fit on one screen): format and length on one row
+ * (the time zone is detected and only shown as a small line to change) → month
+ * calendar where only days with openings are selectable, with that day's times
+ * beside it → the booking form takes the time list's place once a time is
+ * picked, as short as the calendar next to it. On a phone each step moves the
+ * screen to the next one, and the calendar steps aside while the form is open.
  *
  * Two things happen purely in the browser:
  *  - "both free": if the visitor connects Google Calendar (read-only
@@ -92,7 +94,7 @@ function Segmented<T extends string | number>({
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
-            "h-8 rounded px-3 text-sm transition-colors border",
+            "h-8 rounded px-2.5 sm:px-3 text-sm transition-colors border",
             mono && "font-mono text-xs",
             value === option.value
               ? "border-zinc-600 bg-zinc-800 text-zinc-100"
@@ -114,10 +116,10 @@ function shiftMonth(month: string, delta: number): string {
   return `${next.getUTCFullYear()}-${pad(next.getUTCMonth() + 1)}`;
 }
 
-/** Monday-first grid of "YYYY-MM-DD" keys; null pads the leading/trailing cells. */
+/** Sunday-first grid of "YYYY-MM-DD" keys; null pads the leading/trailing cells. */
 function monthCells(month: string): (string | null)[] {
   const [y, m] = month.split("-").map(Number);
-  const lead = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7;
+  const lead = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
   const total = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const cells: (string | null)[] = Array(lead).fill(null);
   for (let d = 1; d <= total; d++) cells.push(`${y}-${pad(m)}-${pad(d)}`);
@@ -159,7 +161,7 @@ function MonthCalendar({
   const weekdays = useMemo(
     () =>
       Array.from({ length: 7 }, (_, i) =>
-        new Intl.DateTimeFormat(locale, { timeZone: "UTC", weekday: "short" }).format(Date.UTC(2024, 0, 1 + i)) // 2024-01-01 is a Monday
+        new Intl.DateTimeFormat(locale, { timeZone: "UTC", weekday: "short" }).format(Date.UTC(2024, 0, 7 + i)) // 2024-01-07 is a Sunday
       ),
     [locale]
   );
@@ -169,7 +171,7 @@ function MonthCalendar({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-zinc-100">{sentence(title)}</h3>
         <div className="flex gap-1.5">
           <button type="button" aria-label={labels.prev} disabled={!canPrev} onClick={() => onMonth(shiftMonth(month, -1))} className={arrow}>
@@ -203,7 +205,7 @@ function MonthCalendar({
               aria-label={fullDay.format(Date.parse(`${key}T12:00:00Z`))}
               onClick={() => onSelect(key)}
               className={cn(
-                "relative h-10 rounded-md border text-sm font-mono transition-colors",
+                "relative h-9 rounded-md border text-sm font-mono transition-colors",
                 isSelected
                   ? "border-zinc-200 bg-zinc-800 text-white"
                   : isAvailable
@@ -236,6 +238,9 @@ export function Scheduler() {
   const [duration, setDuration] = useState(30);
   const [tz, setTz] = useState("UTC");
   const [zones, setZones] = useState<string[]>(["UTC"]);
+  const [editingTz, setEditingTz] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const timesRef = useRef<HTMLDivElement>(null);
 
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
@@ -402,6 +407,11 @@ export function Scheduler() {
   );
   const today = useMemo(() => localDate(Date.now(), tz), [tz]);
   const modeLabel = mode === "online" ? t("modeOnline") : t("modeInPerson");
+  /** On a phone the next step is below the fold: bring it up. (On a desktop everything is already side by side.) */
+  const bringIntoView = (target: React.RefObject<HTMLElement | null>) => {
+    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    window.requestAnimationFrame(() => target.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -496,23 +506,20 @@ export function Scheduler() {
   }
 
   const hasSlots = loadState === "ready" && enriched.length > 0;
-  const detailIndex = (n: number) => String(5 + n).padStart(2, "0");
+  const detailIndex = (n: number) => String(4 + n).padStart(2, "0");
 
   return (
-    <div className={panel}>
+    <div ref={panelRef} className={cn(panel, "scroll-mt-20")}>
       {/* Header band */}
-      <div className={cn(band, "border-b border-zinc-800")}>
+      <div className={cn(band, "border-b border-zinc-800 !py-2.5")}>
         <span>
           <span className="text-zinc-600">{"// "}</span>
           {t("bookingLabel")}
         </span>
-        <span className="normal-case tracking-normal text-zinc-600 hidden sm:inline">
-          {modeLabel} · {t("minutes", { n: duration })} · {tzShort || tz}
-        </span>
       </div>
 
-      {/* 01–03 options */}
-      <div className="flex flex-wrap gap-x-8 gap-y-5 p-5 sm:p-6 border-b border-zinc-800">
+      {/* 01–02 options, one row; the zone is detected, so changing it is a small link */}
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-3 px-5 py-4 sm:px-6 sm:gap-x-8 border-b border-zinc-800">
         <div className="space-y-1.5">
           <FieldLabel index="01">{t("formatLabel")}</FieldLabel>
           <Segmented
@@ -535,39 +542,56 @@ export function Scheduler() {
             options={DURATIONS.map((d) => ({ value: d, label: t("minutes", { n: d }) }))}
           />
         </div>
-        <div className="space-y-1.5">
-          <FieldLabel index="03" htmlFor="tz">
+        <div className="space-y-1.5 sm:ml-auto">
+          <label htmlFor="tz" className="sr-only sm:not-sr-only sm:block text-xs font-mono uppercase tracking-wider text-zinc-400">
             {t("timezoneLabel")}
-          </FieldLabel>
-          <select
-            id="tz"
-            value={tz}
-            onChange={(e) => setTz(e.target.value)}
-            className="flex h-10 w-full min-w-[220px] max-w-[280px] rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
-          >
-            {zones.map((z) => (
-              <option key={z} value={z}>
-                {z.replace(/_/g, " ")}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="basis-full space-y-1">
-          <p className="text-[11px] text-zinc-500 leading-relaxed max-w-2xl">
-            {mode === "online" ? t("modeOnlineHint") : t("onSiteNote")}
-          </p>
-          {mode === "in_person" && onSite.size > 0 && (
-            <p className="text-[11px] text-zinc-500 flex items-center gap-1.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-sm bg-zinc-400" aria-hidden="true" /> {t("legendOnSite")}
-            </p>
+          </label>
+          {editingTz ? (
+            <select
+              id="tz"
+              value={tz}
+              autoFocus
+              onChange={(e) => {
+                setTz(e.target.value);
+                setEditingTz(false);
+              }}
+              onBlur={() => setEditingTz(false)}
+              className="flex h-8 w-full min-w-[220px] max-w-[280px] rounded-md border border-zinc-800 bg-zinc-900 px-3 text-xs text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
+            >
+              {zones.map((z) => (
+                <option key={z} value={z}>
+                  {z.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <button
+              id="tz"
+              type="button"
+              onClick={() => setEditingTz(true)}
+              className="inline-flex h-8 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-xs text-zinc-300 transition-colors hover:border-zinc-600 hover:text-zinc-100"
+            >
+              <Globe className="h-3.5 w-3.5 text-zinc-500" aria-hidden />
+              {tz.replace(/_/g, " ")}
+              {tzShort && <span className="text-zinc-500">({tzShort})</span>}
+            </button>
           )}
         </div>
+        <p className="basis-full -mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] leading-relaxed text-zinc-500">
+          <span className="max-w-2xl">{mode === "online" ? t("modeOnlineHint") : t("onSiteNote")}</span>
+          {mode === "in_person" && onSite.size > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-sm bg-zinc-400" aria-hidden="true" /> {t("legendOnSite")}
+            </span>
+          )}
+        </p>
       </div>
 
-      {/* 04 day · 05 time / details */}
+      {/* 03 day · 04 time / details */}
       <div className="grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-        <div className="p-5 sm:p-6 space-y-4">
-          <FieldLabel index="04">{t("stepDay")}</FieldLabel>
+        {/* On a phone the calendar steps aside while the details form is open, so the form is what you see. */}
+        <div className={cn("p-5 sm:p-6 space-y-3", slot && "hidden md:block")}>
+          <FieldLabel index="03">{t("stepDay")}</FieldLabel>
 
           {loadState === "loading" && (
             <p className="text-sm text-zinc-500 flex items-center gap-2 py-12 justify-center">
@@ -608,15 +632,16 @@ export function Scheduler() {
               onSelect={(key) => {
                 setDay(key);
                 setSlot(null);
+                bringIntoView(timesRef);
               }}
             />
           )}
         </div>
 
-        <div className="p-5 sm:p-6 border-t md:border-t-0 md:border-l border-zinc-800 min-h-[300px] space-y-4">
+        <div ref={timesRef} className="p-5 sm:p-6 border-t md:border-t-0 md:border-l border-zinc-800 space-y-3 scroll-mt-20">
           {!slot && (
             <>
-              <FieldLabel index="05">{t("stepTime")}</FieldLabel>
+              <FieldLabel index="04">{t("stepTime")}</FieldLabel>
 
               {day && hasSlots ? (
                 <div className="space-y-4">
@@ -627,7 +652,7 @@ export function Scheduler() {
                     </p>
                   </div>
 
-                  <div className="space-y-4 max-h-[340px] overflow-y-auto pr-1">
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
                     {groups.map((group) => (
                       <div key={group.name} className="space-y-2">
                         <h4 className="text-[10px] font-mono uppercase tracking-wider text-zinc-600">{t(group.name)}</h4>
@@ -636,7 +661,10 @@ export function Scheduler() {
                             <button
                               key={s.start}
                               type="button"
-                              onClick={() => setSlot({ start: s.start, end: s.end })}
+                              onClick={() => {
+                                setSlot({ start: s.start, end: s.end });
+                                bringIntoView(panelRef);
+                              }}
                               className={cn(
                                 "relative h-9 rounded-md border border-zinc-800 bg-zinc-900 font-mono text-xs text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white",
                                 s.both === false && "opacity-50"
@@ -664,36 +692,40 @@ export function Scheduler() {
           )}
 
           {slot && (
-            <form onSubmit={submit} noValidate className="space-y-4">
-              <button
-                type="button"
-                onClick={() => setSlot(null)}
-                className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" /> {t("changeTime")}
-              </button>
-
-              <div className="rounded-md border border-zinc-800 bg-zinc-950 p-3 space-y-1">
-                <p className="text-sm text-zinc-100">{longFmt.format(Date.parse(slot.start))}</p>
-                <p className="text-[11px] text-zinc-500 font-mono uppercase tracking-wider">
-                  {modeLabel} · {t("minutes", { n: duration })} · {tzShort || tz}
-                </p>
+            <form onSubmit={submit} noValidate className="space-y-3">
+              {/* The chosen time and the way back to the others, in one line. */}
+              <div className="flex items-start justify-between gap-3 rounded-md border border-zinc-800 bg-zinc-950 p-3">
+                <div className="space-y-1">
+                  <p className="text-sm text-zinc-100">{longFmt.format(Date.parse(slot.start))}</p>
+                  <p className="text-[11px] text-zinc-500 font-mono uppercase tracking-wider">
+                    {modeLabel} · {t("minutes", { n: duration })} · {tzShort || tz}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSlot(null)}
+                  className="inline-flex shrink-0 items-center gap-1 text-xs text-zinc-400 hover:text-zinc-100"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" /> {t("changeTime")}
+                </button>
               </div>
 
-              <div className="space-y-1.5">
-                <FieldLabel index={detailIndex(1)} htmlFor="b-name">
-                  {t("nameLabel")}
-                </FieldLabel>
-                <Input id="b-name" autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
-              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <FieldLabel index={detailIndex(1)} htmlFor="b-name">
+                    {t("nameLabel")}
+                  </FieldLabel>
+                  <Input id="b-name" autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
+                </div>
 
-              <div className="space-y-1.5">
-                <FieldLabel index={detailIndex(2)} htmlFor="b-email">
-                  {t("emailLabel")}
-                </FieldLabel>
-                <Input id="b-email" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
+                <div className="space-y-1.5">
+                  <FieldLabel index={detailIndex(2)} htmlFor="b-email">
+                    {t("emailLabel")}
+                  </FieldLabel>
+                  <Input id="b-email" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
+                </div>
               </div>
 
               {mode === "in_person" && (
@@ -716,12 +748,12 @@ export function Scheduler() {
                 <FieldLabel index={detailIndex(mode === "in_person" ? 4 : 3)} htmlFor="b-notes">
                   {t("notesLabel")}
                 </FieldLabel>
-                <Textarea id="b-notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                <Textarea id="b-notes" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
 
               {submitError && <p className="text-xs text-red-400">{submitError}</p>}
 
-              <div className="space-y-2 pt-1">
+              <div className="space-y-2">
                 <Button type="submit" size="lg" disabled={submitting} className="gap-2 w-full">
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {submitting ? t("confirming") : t("confirm")}
@@ -734,7 +766,7 @@ export function Scheduler() {
       </div>
 
       {/* Footer band: optional Google Calendar overlay */}
-      <div className="border-t border-zinc-800 bg-zinc-900/40 px-5 py-4 sm:px-6 space-y-2">
+      <div className="border-t border-zinc-800 bg-zinc-900/40 px-5 py-3 sm:px-6 space-y-2">
         {busy ? (
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
             <span className="text-zinc-200 flex items-center gap-2">
