@@ -11,7 +11,7 @@ import { StillBrokenForm } from "@/components/portal/StillBrokenForm";
 import { TICKET_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
 import { isActiveTicket } from "@/lib/portal/plan";
-import { canWriteIn, getProjectAccess, getProjectEvents, getTicketDetail } from "@/lib/portal/queries";
+import { canWriteIn, getMyTimeZone, getProjectAccess, getProjectEvents, getTicketDetail } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -35,16 +35,17 @@ export default async function TicketPage(props: {
 
   // Whether to OFFER a comment box (a view-only executive can read but not write;
   // the database refuses their comment either way).
-  const [access, events, t] = await Promise.all([
+  const [access, events, t, timeZone] = await Promise.all([
     getProjectAccess(supabase, user.id, ticket.project.id, ticket.project.organizationId),
     // This ticket's own status history. Everyone who can see the ticket may read this; the project-wide log is for leaders.
     getProjectEvents(supabase, ticket.project.id, null, 100, { ticketId: ticket.id }),
     getTranslations("Portal"),
+    getMyTimeZone(supabase, user.id),
   ]);
   const mayComment = canWriteIn(access, isAdmin, ticket.departmentId);
   // Oldest first, so it reads as a story: opened → in progress → fixed → still broken → closed.
   const statusChanges = events.filter((event) => event.kind === "ticket_status").reverse();
-  const stamp = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
+  const stamp = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone });
   const url = safeHttpUrl(ticket.affectedUrl);
 
   return (

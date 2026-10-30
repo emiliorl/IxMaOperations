@@ -130,6 +130,9 @@ beforeAll(async () => {
   await db.exec(sql("20261029000800_leader_logs.sql"));
   await db.exec(sql("20261029000900_closed_tickets.sql"));
   await db.exec(sql("20261029001000_email_notifications.sql"));
+  await db.exec(sql("20261029001100_preferences.sql"));
+  // The WhatsApp migration was dropped from the project; this removes it for anyone who ran it, and does nothing for everyone else.
+  await db.exec(sql("20261029001300_remove_whatsapp.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -349,6 +352,26 @@ describe("a person with ONE folder (Finance)", () => {
     expect(await affected(`update public.profiles set notify_email = false where id = '${U.leadAll}'`)).toBe(0);
     await as({ id: U.admin, admin: true });
     expect((await rows<{ notify_email: boolean }>(`select notify_email from public.profiles where id = '${U.leadAll}'`))[0].notify_email).toBe(true);
+  });
+
+  it("can set their own language, time zone and which e-mails they want", async () => {
+    expect(await affected(`update public.profiles set locale = 'es', timezone = 'Europe/Madrid', notify_fix_ready = false, notify_replies = false where id = '${U.leadFin}'`)).toBe(1);
+    await as({ id: U.admin, admin: true });
+    const [row] = await rows<{ locale: string; timezone: string; notify_fix_ready: boolean; notify_replies: boolean }>(
+      `select locale, timezone, notify_fix_ready, notify_replies from public.profiles where id = '${U.leadFin}'`
+    );
+    expect(row).toEqual({ locale: "es", timezone: "Europe/Madrid", notify_fix_ready: false, notify_replies: false });
+  });
+
+  it("cannot change someone else's preferences", async () => {
+    expect(await affected(`update public.profiles set locale = 'en', timezone = 'UTC', notify_replies = false where id = '${U.leadAll}'`)).toBe(0);
+  });
+
+  it("only English and Spanish are accepted as a language; the time zone cannot be empty or huge", async () => {
+    expect(await rejection(`update public.profiles set locale = 'fr' where id = '${U.leadFin}'`)).toMatch(/check constraint/i);
+    expect(await rejection(`update public.profiles set timezone = '' where id = '${U.leadFin}'`)).toMatch(/check constraint/i);
+    expect(await rejection(`update public.profiles set timezone = '${"x".repeat(80)}' where id = '${U.leadFin}'`)).toMatch(/check constraint/i);
+    expect(await affected(`update public.profiles set locale = null where id = '${U.leadFin}'`)).toBe(1);
   });
 
   it("e-mails are on until someone switches them off", async () => {

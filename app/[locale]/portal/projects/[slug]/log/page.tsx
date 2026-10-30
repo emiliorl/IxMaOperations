@@ -4,11 +4,10 @@ import { Link, redirect } from "@/i18n/navigation";
 import { FilterSelect } from "@/components/portal/FilterSelect";
 import { LogList } from "@/components/portal/LogList";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { requireUser } from "@/lib/portal/auth";
 import { inFolder } from "@/lib/portal/filters";
 import { filterEvents, logHref, parseFilter, parseWeek, recentWeeks, summarize, weekRange, type LogFilter } from "@/lib/portal/log";
-import { canViewProjectLog, getProjectAccess, getProjectEvents, getProjectShell } from "@/lib/portal/queries";
+import { canViewProjectLog, getMyTimeZone, getProjectAccess, getProjectEvents, getProjectShell } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
 
 const EVENT_LIMIT = 500;
@@ -29,7 +28,8 @@ export default async function ProjectLogPage(props: {
   const access = await getProjectAccess(supabase, user.id, project.id, project.organizationId);
   if (!canViewProjectLog(access, isAdmin)) redirect({ href: `/portal/projects/${slug}`, locale });
 
-  const timeZone = DEFAULT_AVAILABILITY.hostTimezone;
+  // Weeks and times are the person's own, not the owner's.
+  const timeZone = await getMyTimeZone(supabase, user.id);
   const now = Date.now();
   const week = parseWeek(weekParam, now, timeZone);
   const filter = parseFilter(type);

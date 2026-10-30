@@ -8,6 +8,7 @@ import { blindIndex, decryptLoose, encryptField, encryptOptional } from "@/lib/f
 import { requireUser } from "@/lib/portal/auth";
 import { prepareFiles, type FileProblem } from "@/lib/portal/attachments";
 import { alertOwner, notifyTicketPerson } from "@/lib/portal/notify-send";
+import { parseLanguage } from "@/lib/portal/preferences";
 import { isActiveTicket } from "@/lib/portal/plan";
 import { validateNewPassword } from "@/lib/portal/password";
 import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
@@ -23,6 +24,7 @@ import {
   removeCompanyAccessInput,
   removeMemberInput,
   reopenTicketInput,
+  settingsInput,
   ticketInput,
   ticketStatusInput,
 } from "@/lib/portal/schemas";
@@ -99,12 +101,14 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   if (!byIp.allowed || !byEmail.allowed) return { error: "rate" };
 
   const supabase = await createSupabaseServer();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: signedIn, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     // The same message for "no such user" and "wrong password": no account enumeration.
     return { error: error.status && error.status >= 500 ? "unavailable" : "invalid" };
   }
-  redirect({ href: "/portal", locale });
+  // Open the portal in the language the person chose (Settings, or the menu); before they have, in the one they signed in with.
+  const { data: mine } = await supabase.from("profiles").select("locale").eq("id", signedIn.user.id).maybeSingle();
+  redirect({ href: "/portal", locale: parseLanguage((mine as { locale?: string } | null)?.locale) ?? locale });
   return {};
 }
 
@@ -357,11 +361,42 @@ export async function confirmTicketFixed(_prev: FormState, formData: FormData): 
   return {};
 }
 
-/** The switch in the account menu: e-mails about my own tickets on or off. */
-export async function setEmailNotifications(locale: string, enabled: boolean): Promise<{ ok: boolean }> {
-  const { supabase, user } = await requireUser(pickLocale(locale));
-  const { data, error } = await supabase.from("profiles").update({ notify_email: Boolean(enabled) }).eq("id", user.id).select("id");
-  return { ok: !error && (data?.length ?? 0) === 1 };
+/**
+ * Settings: my name, language, time zone and which e-mails I want. Only the
+ * person's own profile row can be changed (the database enforces it, and only
+ * these columns). The notification switches are left alone when the form did not
+ * show them (the owner's alerts are set up elsewhere).
+ */
+export async function saveSettings(_prev: FormState, formData: FormData): Promise<FormState> {
+  const uiLocale = pickLocale(formData.get("uiLocale"));
+  const { supabase, user } = await requireUser(uiLocale);
+
+  const parsed = settingsInput.safeParse({
+    displayName: text(formData, "displayName"),
+    timezone: text(formData, "timezone"),
+    language: text(formData, "language"),
+    notifyEmail: formData.get("notifyEmail") === "on",
+    notifyFixReady: formData.get("notifyFixReady") === "on",
+    notifyReplies: formData.get("notifyReplies") === "on",
+  });
+  if (!parsed.success) return { error: "invalid" };
+  const input = parsed.data;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      display_name: encryptField(input.displayName),
+      timezone: input.timezone,
+      locale: input.language,
+      ...(formData.get("notificationsShown") === "1"
+        ? { notify_email: input.notifyEmail, notify_fix_ready: input.notifyFixReady, notify_replies: input.notifyReplies }
+        : {}),
+    })
+    .eq("id", user.id)
+    .select("id");
+  if (error) return { error: classify(error) };
+  if (!data || data.length === 0) return { error: "denied" };
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------- owner only

@@ -135,10 +135,26 @@ describe("emails to a client", () => {
     expect(text).toContain("We replied on your ticket");
     expect(text).not.toMatch(/the answer is|respuesta:/i);
   });
-  it("says how to switch them off and where to reply", () => {
+  it("says where to change them and where to reply", () => {
     const { text } = clientEmail("fix_ready", ticket);
-    expect(text).toMatch(/menú de tu cuenta/);
-    expect(text).toMatch(/account menu/);
+    expect(text).toMatch(/Configuración/);
+    expect(text).toMatch(/Settings/);
+  });
+  it("in the language the person chose it is only that language", () => {
+    const es = clientEmail("fix_ready", ticket, "es");
+    expect(es.subject).toBe("Tu ticket #3 está listo para revisar");
+    expect(es.text).toContain("Marcamos tu ticket");
+    expect(es.text).not.toContain("We marked");
+    expect(es.text.match(/https:\/\/x\.test/g)).toHaveLength(1);
+
+    const en = clientEmail("owner_replied", ticket, "en");
+    expect(en.subject).toBe("We replied on ticket #3");
+    expect(en.text).toContain("We replied on your ticket");
+    expect(en.text).not.toContain("Respondimos");
+  });
+  it("with no language chosen yet it is both, Spanish first", () => {
+    const { subject } = clientEmail("fix_ready", ticket, null);
+    expect(subject.indexOf("Tu ticket")).toBeLessThan(subject.indexOf("Ticket #3 is ready"));
   });
   it("a title with line breaks cannot break the email's layout or subject", () => {
     const { subject, text } = clientEmail("fix_ready", { ...ticket, title: "Bad\r\nBcc: x@y.z" });

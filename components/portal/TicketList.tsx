@@ -24,6 +24,7 @@ export async function TicketList({
   folderLabel,
   problemCodes,
   showFolder = true,
+  timeZone,
 }: {
   tickets: TicketSummary[];
   locale: string;
@@ -31,9 +32,11 @@ export async function TicketList({
   /** milestone id → "DW-1" (or the title), to show which problem a ticket belongs to. */
   problemCodes?: Map<string, string>;
   showFolder?: boolean;
+  /** The person's own time zone, so a date is the day they see it on. */
+  timeZone?: string;
 }) {
   const t = await getTranslations("Portal");
-  const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+  const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone });
 
   return (
     <ul className="divide-y divide-zinc-800/80">

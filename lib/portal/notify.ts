@@ -145,13 +145,14 @@ export function buildOwnerDigest(events: DigestEvent[], siteUrl: string): { subj
 export type ClientEmailKind = "fix_ready" | "owner_replied";
 
 /**
- * The email a person gets about THEIR ticket. In both languages, since the
- * portal does not know which one a person prefers: Spanish first, then English.
- * Only the title and a link, never the message itself.
+ * The email a person gets about THEIR ticket, in the language they chose in
+ * Settings. Until they have chosen one it carries both: Spanish first, then
+ * English. Only the title and a link, never the message itself.
  */
 export function clientEmail(
   kind: ClientEmailKind,
-  ticket: { number: number; title: string; project: string; url: string }
+  ticket: { number: number; title: string; project: string; url: string },
+  language: "es" | "en" | null = null
 ): { subject: string; text: string } {
   const title = oneLine(ticket.title, 100);
   const project = oneLine(ticket.project, 60);
@@ -174,26 +175,18 @@ export function clientEmail(
         ]
       : ["Hi,", "", `We replied on your ticket ${ref}. Open it to read the reply.`];
 
+  const subjectEs = kind === "fix_ready" ? `Tu ticket #${ticket.number} está listo para revisar` : `Respondimos en tu ticket #${ticket.number}`;
+  const subjectEn = kind === "fix_ready" ? `Ticket #${ticket.number} is ready for your review` : `We replied on ticket #${ticket.number}`;
+  const footerEs = "Responde desde el portal, no por correo. Puedes cambiar estos avisos en Configuración (menú de tu cuenta).";
+  const footerEn = "Please reply from the portal, not by email. You can change these emails in Settings (your account menu).";
+  const spanish = [...es, "", `Abrir el ticket: ${ticket.url}`];
+  const english = [...en, "", `Open the ticket: ${ticket.url}`];
+
+  if (language === "es") return { subject: subjectEs, text: [...spanish, "", "—", footerEs].join("\n") };
+  if (language === "en") return { subject: subjectEn, text: [...english, "", "—", footerEn].join("\n") };
   return {
-    subject:
-      kind === "fix_ready"
-        ? `Tu ticket #${ticket.number} está listo para revisar · Ticket #${ticket.number} is ready for your review`
-        : `Respondimos en tu ticket #${ticket.number} · We replied on ticket #${ticket.number}`,
-    text: [
-      ...es,
-      "",
-      `Abrir el ticket: ${ticket.url}`,
-      "",
-      "—",
-      "",
-      ...en,
-      "",
-      `Open the ticket: ${ticket.url}`,
-      "",
-      "—",
-      "Responde desde el portal, no por correo. Puedes desactivar estos avisos en el menú de tu cuenta.",
-      "Please reply from the portal, not by email. You can turn these emails off in your account menu.",
-    ].join("\n"),
+    subject: `${subjectEs} · ${subjectEn}`,
+    text: [...spanish, "", "—", "", ...english, "", "—", footerEs, footerEn].join("\n"),
   };
 }
 

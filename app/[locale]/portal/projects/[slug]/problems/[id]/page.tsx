@@ -6,7 +6,6 @@ import { Markdown } from "@/components/portal/Markdown";
 import { Pill } from "@/components/portal/Pills";
 import { TicketList } from "@/components/portal/TicketList";
 import { buttonVariants } from "@/components/ui/Button";
-import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { requireUser } from "@/lib/portal/auth";
 import { sortTickets } from "@/lib/portal/filters";
 import { ticketCountsByProblem } from "@/lib/portal/plan";
@@ -18,6 +17,7 @@ import {
   getProjectAccess,
   getProjectEvents,
   getProjectShell,
+  getMyTimeZone,
 } from "@/lib/portal/queries";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -34,18 +34,18 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
   if (!project) notFound();
 
   // None of these depend on each other, only on the project.
-  const [problem, access, allActivity, t] = await Promise.all([
+  const [problem, access, allActivity, t, timeZone] = await Promise.all([
     getProblem(supabase, project.id, id),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     // "Ticket opened" is already visible as a row in the ticket history below, so it's left out here.
     getProjectEvents(supabase, project.id, null, 30, { milestoneId: id, excludeKind: "ticket_opened" }),
     getTranslations("Portal"),
+    getMyTimeZone(supabase, user.id),
   ]);
   if (!problem) notFound();
   // The activity feed is for leaders (owner, executives, team leads); everyone else sees the tickets above, not the audit trail.
   const activity = canViewProjectLog(access, isAdmin) ? allActivity : [];
   const mayOpen = canOpenTickets(access, isAdmin) && canWriteIn(access, isAdmin, problem.departmentId);
-  const timeZone = DEFAULT_AVAILABILITY.hostTimezone;
 
   const folderName = new Map(project.departments.map((d) => [d.id, d.name]));
   const folderLabel = (departmentId: string | null) => (departmentId ? (folderName.get(departmentId) ?? "—") : t("deptProjectWide"));
@@ -165,7 +165,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
           {problem.tickets.length === 0 ? (
             <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noProblemTickets")}</p>
           ) : (
-            <TicketList tickets={sortTickets(problem.tickets, "activity")} locale={locale} folderLabel={folderLabel} showFolder={false} />
+            <TicketList tickets={sortTickets(problem.tickets, "activity")} locale={locale} folderLabel={folderLabel} showFolder={false} timeZone={timeZone} />
           )}
         </section>
 

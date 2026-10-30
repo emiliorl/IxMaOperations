@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { cache } from "react";
 import { decryptLoose } from "@/lib/field-crypto";
 import { INLINE_TYPES } from "./attachments";
 import type { LogEvent } from "./log";
 import { ticketBucket } from "./filters";
 import { parseResources, type ProblemPriority, type ResourceLink } from "./plan";
+import { notificationPreferencesFrom, parseLanguage, timeZoneOrDefault, type NotificationPreferences, type Language } from "./preferences";
 import { milestoneProgress } from "./progress";
 import type {
   MilestoneStatus,
@@ -345,6 +347,44 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       createdById: t.created_by,
     })),
   };
+}
+
+/**
+ * The time zone the person chose, for showing dates and times. Cached for the
+ * request, so every part of a page that needs it asks the database once. A missing
+ * or broken value is the default zone, never an error.
+ */
+export const getMyTimeZone = cache(async (supabase: SupabaseClient, userId: string): Promise<string> => {
+  const { data } = await supabase.from("profiles").select("timezone").eq("id", userId).maybeSingle();
+  return timeZoneOrDefault((data as { timezone?: string } | null)?.timezone);
+});
+
+export interface MyPreferences extends NotificationPreferences {
+  timeZone: string;
+  language: Language | null;
+}
+
+/**
+ * Everything on the Settings page. The newer columns come from migrations that may
+ * not have been run yet; then those settings simply show their defaults.
+ */
+export async function getMyPreferences(supabase: SupabaseClient, userId: string): Promise<MyPreferences> {
+  const columns = [
+    "timezone,locale,notify_email,notify_fix_ready,notify_replies",
+    "timezone,notify_email",
+    "timezone",
+  ];
+  for (const select of columns) {
+    const { data, error } = await supabase.from("profiles").select(select).eq("id", userId).maybeSingle();
+    if (error) continue;
+    const row = data as unknown as { timezone?: string; locale?: string | null } | null;
+    return {
+      timeZone: timeZoneOrDefault(row?.timezone),
+      language: parseLanguage(row?.locale),
+      ...notificationPreferencesFrom(data as never),
+    };
+  }
+  return { timeZone: timeZoneOrDefault(null), language: null, ...notificationPreferencesFrom(null) };
 }
 
 /** The longer texts a search also looks in, by ticket / problem id. Each is labelled with where it came from. */

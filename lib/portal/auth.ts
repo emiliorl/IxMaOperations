@@ -42,16 +42,11 @@ const loadSession = cache(async () => {
 export async function getPortalSession() {
   const session = await loadSession();
   if (!session?.user) return null;
-  // The switch is read on its own: before its migration is run the column doesn't exist, and the name must still show.
-  const [{ data: profile }, prefs] = await Promise.all([
-    session.supabase.from("profiles").select("display_name").eq("id", session.user.id).maybeSingle(),
-    session.supabase.from("profiles").select("notify_email").eq("id", session.user.id).maybeSingle(),
-  ]);
+  const { data: profile } = await session.supabase.from("profiles").select("display_name").eq("id", session.user.id).maybeSingle();
   return {
     name: decryptLoose(profile?.display_name) ?? session.user.email ?? "",
     email: session.user.email ?? "",
     isAdmin: session.isAdmin!,
-    notifyEmail: (prefs.data as { notify_email?: boolean } | null)?.notify_email ?? true,
   };
 }
 

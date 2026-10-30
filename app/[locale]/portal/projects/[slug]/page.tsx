@@ -41,6 +41,7 @@ import {
   canOpenTickets,
   canViewProjectLog,
   canWriteIn,
+  getMyTimeZone,
   getProjectAccess,
   getProjectDetail,
   getSearchText,
@@ -76,13 +77,14 @@ export default async function ProjectPage(props: {
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
   // Only the project is needed to start all of these, so they run together.
-  const [t, access, costItemIds, [companyAccess, costUserIds]] = await Promise.all([
+  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone] = await Promise.all([
     getTranslations("Portal"),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     listCostMilestoneIds(supabase),
     isAdmin
       ? Promise.all([listCompanyAccess(supabase, project.organizationId), listProjectCostFlags(supabase, project.id)])
       : Promise.resolve([[], []] as [Awaited<ReturnType<typeof listCompanyAccess>>, string[]]),
+    getMyTimeZone(supabase, user.id),
   ]);
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
@@ -353,7 +355,7 @@ export default async function ProjectPage(props: {
   let searchView: ReactNode = null;
   if (q !== "") {
     const RESULT_LIMIT = 50;
-    const updatedFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+    const updatedFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone });
     const found = await getSearchText(supabase, project.id);
     const bestFirst = <T extends { hit: { score: number } }>(a: T, b: T) => b.hit.score - a.hit.score;
     const problemHits = project.milestones
@@ -846,7 +848,7 @@ export default async function ProjectPage(props: {
                 ) : tickets.length === 0 ? (
                   <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noTicketsFilter")}</p>
                 ) : (
-                  <TicketList tickets={tickets} locale={locale} folderLabel={areaLabel} problemCodes={problemLabels} showFolder={filterFolder === null} />
+                  <TicketList tickets={tickets} locale={locale} folderLabel={areaLabel} problemCodes={problemLabels} showFolder={filterFolder === null} timeZone={timeZone} />
                 )}
               </section>
             )}

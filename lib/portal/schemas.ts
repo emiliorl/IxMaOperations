@@ -6,9 +6,19 @@ import {
   TICKET_PRIORITIES,
   TICKET_STATUSES,
 } from "./constants";
+import { LANGUAGES, isValidTimeZone } from "./preferences";
 
 /** Server-side validation for portal form submissions (the browser is never trusted). */
 const uuidOrEmpty = z.union([z.string().uuid(), z.literal("")]);
+
+export const settingsInput = z.object({
+  displayName: z.string().trim().min(1).max(120),
+  timezone: z.string().trim().refine(isValidTimeZone),
+  language: z.enum(LANGUAGES),
+  notifyEmail: z.boolean(),
+  notifyFixReady: z.boolean(),
+  notifyReplies: z.boolean(),
+});
 
 export const loginInput = z.object({
   email: z.string().trim().email().max(254),

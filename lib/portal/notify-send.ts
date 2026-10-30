@@ -4,6 +4,7 @@ import { decryptLoose } from "@/lib/field-crypto";
 import { SITE_URL } from "@/lib/site-url";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { clientEmail, ownerAlertHeaders, ownerAlertMode, ownerSubject, shouldEmailAboutReply, type ClientEmailKind, type OwnerEvent } from "./notify";
+import { notificationPreferencesFrom, parseLanguage, wantsEmail } from "./preferences";
 
 /** Minutes within which several owner replies count as one email to the person. */
 const REPLY_BURST_MINUTES = 10;
@@ -37,9 +38,10 @@ export async function alertOwner(input: {
 }
 
 /**
- * Email the person who opened a ticket that the owner marked it fixed, or replied
- * to it. Skipped when: they did it themselves, they switched these emails off, they
- * have no address, or (for replies) they were just emailed. Never throws.
+ * Email the person who opened a ticket that the owner marked it fixed, or replied to
+ * it, in the language they chose in Settings. Skipped when: they did it themselves,
+ * they switched these emails (or this kind) off, they have no address, or (for
+ * replies) they were just emailed. Never throws.
  */
 export async function notifyTicketPerson(input: { ticketId: string; kind: ClientEmailKind; actorId: string }): Promise<void> {
   try {
@@ -51,14 +53,18 @@ export async function notifyTicketPerson(input: { ticketId: string; kind: Client
       .maybeSingle();
     if (!ticket?.created_by || ticket.created_by === input.actorId) return;
 
-    const { data: person, error } = await db.from("profiles").select("email,notify_email").eq("id", ticket.created_by).maybeSingle();
-    if (error) {
-      // Most likely the notification migration has not been run yet: say nothing to the person rather than guess.
-      console.warn(`[notify] could not read the person's email settings: ${error.message}`);
-      return;
+    // The newer settings come from migrations that may not have been run yet: ask for fewer columns, never guess.
+    let person: Record<string, unknown> | null = null;
+    for (const columns of ["email,locale,notify_email,notify_fix_ready,notify_replies", "email,notify_email", "email"]) {
+      const result = await db.from("profiles").select(columns).eq("id", ticket.created_by).maybeSingle();
+      if (!result.error) {
+        person = result.data as unknown as Record<string, unknown> | null;
+        break;
+      }
     }
-    const address = decryptLoose(person?.email);
-    if (!address || person?.notify_email === false) return;
+    const address = decryptLoose(person?.email as string | undefined);
+    if (!person || !address) return;
+    if (!wantsEmail(input.kind, notificationPreferencesFrom(person))) return;
 
     if (input.kind === "owner_replied") {
       const since = new Date(Date.now() - REPLY_BURST_MINUTES * 60_000).toISOString();
@@ -73,12 +79,16 @@ export async function notifyTicketPerson(input: { ticketId: string; kind: Client
     }
 
     const project = Array.isArray(ticket.projects) ? ticket.projects[0] : ticket.projects;
-    const { subject, text } = clientEmail(input.kind, {
-      number: ticket.ticket_number,
-      title: decryptLoose(ticket.title) ?? "",
-      project: decryptLoose((project as { name?: string } | null)?.name) ?? "",
-      url: `${SITE_URL}/portal/tickets/${ticket.id}`,
-    });
+    const { subject, text } = clientEmail(
+      input.kind,
+      {
+        number: ticket.ticket_number,
+        title: decryptLoose(ticket.title) ?? "",
+        project: decryptLoose((project as { name?: string } | null)?.name) ?? "",
+        url: `${SITE_URL}/portal/tickets/${ticket.id}`,
+      },
+      parseLanguage(person.locale)
+    );
     await sendPortalEmail({ to: address, subject, text });
   } catch (error) {
     console.error("[notify] could not notify the ticket's person:", error instanceof Error ? error.message : error);
