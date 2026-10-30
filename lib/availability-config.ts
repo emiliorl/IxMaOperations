@@ -65,7 +65,7 @@ export const DEFAULT_AVAILABILITY: AvailabilityConfig = {
     weekdays: [1, 2, 3, 4, 5],
     startTime: "09:00",
     endTime: "17:00",
-    bufferMinutes: 15,
+    bufferMinutes: 10,
     minNoticeMinutes: 120,
   },
   inPerson: {
@@ -74,12 +74,12 @@ export const DEFAULT_AVAILABILITY: AvailabilityConfig = {
     weekdays: [1, 2, 3, 4, 5],
     startTime: "10:00",
     endTime: "15:30", // every meeting must FINISH by 3:30 pm (a 30-min meeting can start at 3:00)
-    bufferMinutes: 15,
+    bufferMinutes: 10,
     minNoticeMinutes: 24 * 60,
   },
   inPersonDayMode: "first_come",
   maxInPersonDaysPerWeek: 2,
   hideOnlineOnOnSiteDays: true,
   onSite: { sparseGapMinutes: 150, digestLookaheadDays: 3 },
-  lunch: { start: "12:00", end: "13:00" },
+  lunch: { start: "12:30", end: "13:00" },
 };

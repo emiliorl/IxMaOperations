@@ -35,6 +35,9 @@ export function createBookingSchema(t: (key: keyof typeof EN_ERRORS) => string) 
       /** Set when a signed-in client books from the portal. Only a hint: the server checks it and ignores it if it does not hold. */
       projectSlug: z.string().trim().max(120).optional().default(""),
       ticketId: z.union([z.string().uuid(), z.literal("")]).optional().default(""),
+      /** The team and problem a portal booking is about. Also only hints: the server keeps them only if the person can open them. */
+      departmentId: z.union([z.string().uuid(), z.literal("")]).optional().default(""),
+      milestoneId: z.union([z.string().uuid(), z.literal("")]).optional().default(""),
     })
     .refine((v) => v.mode !== "in_person" || v.location.length >= 3, {
       message: t("locationError"),

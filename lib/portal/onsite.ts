@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { getHostBusy } from "@/lib/google-calendar";
+import { syncCancelledMeetingsQuietly } from "@/lib/meeting-sync";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { addDays, localDate, zonedTimeToUtc } from "@/lib/tz";
 import { buildOnSiteDay, impliedVisits, mergeVisits, type BusySpan, type OnSiteDay, type Span, type VisitWindow } from "./onsite-schedule";
@@ -58,6 +59,8 @@ export async function listUpcomingVisits(
   const announced: VisitWindow[] = (announcedRows.data ?? []).map((row) => ({ date: row.visit_date, start: hhmm(row.start_time), end: hhmm(row.end_time) }));
   const ids = new Map((announcedRows.data ?? []).map((row) => [row.visit_date as string, row.id as string]));
 
+  // A meeting the owner removed from the calendar must not keep its day on this list.
+  await syncCancelledMeetingsQuietly();
   const meetings = await supabaseAdmin()
     .from("meetings")
     .select("start_time,end_time")

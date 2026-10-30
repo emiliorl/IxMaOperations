@@ -46,6 +46,7 @@ import {
   getProjectAccess,
   getProjectDetail,
   getSearchText,
+  listAreaInfo,
   listCompanyAccess,
   listCostMilestoneIds,
   listProjectCostFlags,
@@ -83,7 +84,7 @@ export default async function ProjectPage(props: {
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
   // Only the project is needed to start all of these, so they run together.
-  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone, visits] = await Promise.all([
+  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone, visits, areaInfo] = await Promise.all([
     getTranslations("Portal"),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     listCostMilestoneIds(supabase),
@@ -93,6 +94,8 @@ export default async function ProjectPage(props: {
     getMyTimeZone(supabase, user.id),
     // The days ahead at this project's office (cheap: the database only; the owner's calendar is read only on the On-site tab).
     listUpcomingVisits(supabase, { id: project.id, showOnsite: project.showOnsite }, isAdmin),
+    // Each team's general information, only for the areas this person can open.
+    listAreaInfo(supabase, project.id),
   ]);
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
@@ -163,7 +166,14 @@ export default async function ProjectPage(props: {
           {t("openTicket")}
         </Link>
       )}
-      <Link href={{ pathname: "/book", query: { project: slug } }} className={buttonVariants({ variant: "outline", size: "sm" })}>
+      {/* On the On-site tab the person is looking at the office days, so the booking starts as an in-person meeting. */}
+      <Link
+        href={{
+          pathname: "/portal/book",
+          query: { project: slug, ...(filterFolder ? { area: filterFolder } : {}), ...(requestedTab === "onsite" ? { mode: "in_person" } : {}) },
+        }}
+        className={buttonVariants({ variant: "outline", size: "sm" })}
+      >
         {t("bookCall")}
       </Link>
       {showLog && (
@@ -703,6 +713,22 @@ export default async function ProjectPage(props: {
             </nav>
 
             {/* Plan */}
+            {/* The team's general information: apart from the problems, one area at a time */}
+            {tab === "plan" && filterFolder && areaInfo.get(filterFolder) && (
+              <details className={cn(panel, "group")}>
+                <summary className="flex cursor-pointer list-none select-none items-center justify-between gap-3 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500 hover:text-zinc-300">
+                  <span>
+                    {t("areaInfoTitle")}
+                    <span className="ml-2 normal-case tracking-normal text-zinc-600">{areaName.get(filterFolder) ?? "—"}</span>
+                  </span>
+                  <span aria-hidden className="transition-transform group-open:rotate-180">⌄</span>
+                </summary>
+                <div className="border-t border-zinc-800 p-5 sm:p-6">
+                  <Markdown>{areaInfo.get(filterFolder)!}</Markdown>
+                </div>
+              </details>
+            )}
+
             {tab === "plan" && (
               <section className={panel}>
                 <div className="space-y-1.5 border-b border-zinc-800 bg-zinc-900/40 p-5">

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BackLink } from "@/components/portal/BackLink";
 import { LogList } from "@/components/portal/LogList";
 import { Markdown } from "@/components/portal/Markdown";
 import { Pill } from "@/components/portal/Pills";
@@ -68,12 +69,12 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
   return (
     <div className="py-10 md:py-14">
       <div className="container mx-auto px-6 max-w-4xl space-y-8">
-        <Link
-          href={{ pathname: `/portal/projects/${slug}`, query: { dept: problem.departmentId ?? "all" } }}
+        <BackLink
+          fallbackHref={`/portal/projects/${slug}?dept=${problem.departmentId ?? "all"}`}
           className="text-xs text-zinc-500 hover:text-zinc-200 underline underline-offset-4"
         >
-          ← {project.name}
-        </Link>
+          {project.name}
+        </BackLink>
 
         <header className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -88,11 +89,22 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
             {problem.delivery && ` · ${t("deliveryLabel")}: ${problem.delivery}`}
             {problem.dueDate && ` · ${t("due", { date: dueFmt.format(Date.parse(problem.dueDate)) })}`}
           </p>
-          {mayOpen && (
-            <div className="pt-1">
-              <Link href={newTicket} className={buttonVariants({ size: "lg" })}>
-                {t("openTicketFor")}
-              </Link>
+          {(mayOpen || !isAdmin) && (
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              {mayOpen && (
+                <Link href={newTicket} className={buttonVariants({ size: "lg" })}>
+                  {t("openTicketFor")}
+                </Link>
+              )}
+              {/* A call about this problem: the booking opens inside the portal with this team and problem already chosen. */}
+              {!isAdmin && (
+                <Link
+                  href={{ pathname: "/portal/book", query: { project: slug, problem: id } }}
+                  className={buttonVariants({ variant: "outline", size: "lg" })}
+                >
+                  {t("talkAboutProblem")}
+                </Link>
+              )}
             </div>
           )}
         </header>

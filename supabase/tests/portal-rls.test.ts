@@ -134,6 +134,8 @@ beforeAll(async () => {
   // The WhatsApp migration was dropped from the project; this removes it for anyone who ran it, and does nothing for everyone else.
   await db.exec(sql("20261029001300_remove_whatsapp.sql"));
   await db.exec(sql("20261029001400_onsite_visits.sql"));
+  await db.exec(sql("20261029001500_area_info.sql"));
+  await db.exec(sql("20261029001600_meeting_topic.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -1294,6 +1296,89 @@ describe("the project log is for leaders", () => {
       `select by_owner, actor_id from public.project_events where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'open'`
     );
     expect(reopened).toEqual({ by_owner: false, actor_id: U.leadFin });
+  });
+});
+
+describe("a team's general information (apart from its problems)", () => {
+  const owner = () => as({ id: U.admin, admin: true });
+  const seedInfo = async () => {
+    await owner();
+    await db.exec(`
+      update public.project_departments set overview = 'about finance' where project_id = '${P1}' and department_id = '${DEPT_FIN}';
+      update public.project_departments set overview = 'about operations' where project_id = '${P1}' and department_id = '${DEPT_OPS}';
+      update public.project_departments set overview = 'about hr' where project_id = '${P1}' and department_id = '${DEPT_HR}'`);
+  };
+  const infoSeenBy = async (who: string) => {
+    await as({ id: who });
+    return (await rows<{ overview: string }>(`select overview from public.project_departments where project_id = '${P1}' and overview is not null order by 1`)).map(
+      (r) => r.overview
+    );
+  };
+
+  it("each person reads only the teams they can open", async () => {
+    await seedInfo();
+    expect(await infoSeenBy(U.leadFin)).toEqual(["about finance"]);
+    expect(await infoSeenBy(U.memberOps)).toEqual(["about operations"]);
+    expect(await infoSeenBy(U.multi)).toEqual(["about finance", "about operations"]);
+  });
+
+  it("people with every folder and company executives read every team's", async () => {
+    await seedInfo();
+    for (const who of [U.leadAll, U.cfo, U.ceo]) expect(await infoSeenBy(who)).toEqual(["about finance", "about hr", "about operations"]);
+  });
+
+  it("another company's people and strangers read none, and neither does the public key", async () => {
+    await seedInfo();
+    for (const who of [U.outsider, U.betaExec, U.nobody]) expect(await infoSeenBy(who)).toEqual([]);
+    await as(null);
+    expect(await rejection(`select overview from public.project_departments`)).toMatch(/permission denied/i);
+  });
+
+  it("only the owner writes it", async () => {
+    await seedInfo();
+    for (const who of [U.leadAll, U.leadFin, U.memberOps, U.cfo, U.outsider]) {
+      await as({ id: who });
+      expect(await affected(`update public.project_departments set overview = 'changed' where project_id = '${P1}'`)).toBe(0);
+    }
+    await owner();
+    expect(await rows(`select 1 from public.project_departments where overview = 'changed'`)).toHaveLength(0);
+  });
+});
+
+describe("a booking can say which team and problem it is about", () => {
+  const book = (department: string | null, milestone: string | null) =>
+    `insert into public.meetings (project_id, department_id, milestone_id, guest_name, guest_email, title, timezone, start_time, end_time)
+     values ('${P1}', ${department ? `'${department}'` : "null"}, ${milestone ? `(select id from public.project_milestones where title = '${milestone}')` : "null"},
+             'x', 'x', 'call', 'UTC', '2026-11-05T16:00Z', '2026-11-05T16:30Z')`;
+  const topicOf = async () =>
+    (await rows<{ d: string | null; m: string | null }>(`select department_id as d, milestone_id as m from public.meetings`))[0];
+
+  it("saves both, and clears the problem if it is later removed (the meeting stays)", async () => {
+    await db.exec("reset role");
+    await db.exec(book(DEPT_FIN, "Invoice automation"));
+    const saved = await topicOf();
+    expect(saved.d).toBe(DEPT_FIN);
+    expect(saved.m).not.toBeNull();
+    await db.exec(`delete from public.project_milestones where title = 'Invoice automation'`);
+    expect(await topicOf()).toEqual({ d: DEPT_FIN, m: null });
+    expect(await rows(`select 1 from public.meetings`)).toHaveLength(1);
+  });
+
+  it("refuses a team or problem that does not exist", async () => {
+    await db.exec("reset role");
+    expect(await rejection(`insert into public.meetings (department_id, guest_name, guest_email, title, timezone, start_time, end_time)
+      values ('99999999-0000-0000-0000-000000000000', 'x', 'x', 'call', 'UTC', '2026-11-05T16:00Z', '2026-11-05T16:30Z')`)).toMatch(/foreign key/i);
+  });
+
+  it("stays unreachable for the browser: nobody but the server reads or writes meetings", async () => {
+    await db.exec("reset role");
+    await db.exec(book(DEPT_FIN, null));
+    for (const who of [U.leadAll, U.leadFin, U.cfo, U.outsider, U.admin]) {
+      await as({ id: who, admin: who === U.admin });
+      expect(await rejection(`select department_id, milestone_id from public.meetings`)).toMatch(/permission denied/i);
+    }
+    await as(null);
+    expect(await rejection(`select milestone_id from public.meetings`)).toMatch(/permission denied/i);
   });
 });
 

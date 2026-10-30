@@ -219,6 +219,22 @@ export async function createMeetingEvent(input: CreateEventInput): Promise<Creat
   return { id: event.id, meetLink, htmlLink: event.htmlLink ?? null };
 }
 
+/**
+ * Is a booked event still on the owner's calendar? One the owner deleted or cancelled is "gone"
+ * (Google answers 404/410 for a deleted event, or still returns it with status "cancelled").
+ * Anything else that goes wrong (network, quota, expired token) THROWS: not knowing is never
+ * the same as the event being gone.
+ */
+export async function getEventStatus(eventId: string): Promise<"active" | "gone"> {
+  try {
+    const event = await hostFetch<{ status?: string }>(`/calendars/${hostCalendarId()}/events/${encodeURIComponent(eventId)}?fields=status`);
+    return event?.status === "cancelled" ? "gone" : "active";
+  } catch (error) {
+    if (error instanceof GoogleApiError && (error.status === 404 || error.status === 410)) return "gone";
+    throw error;
+  }
+}
+
 export async function deleteEvent(eventId: string): Promise<void> {
   await hostFetch(`/calendars/${hostCalendarId()}/events/${encodeURIComponent(eventId)}?sendUpdates=all`, { method: "DELETE" });
 }

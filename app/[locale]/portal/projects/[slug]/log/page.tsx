@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
+import { BackLink } from "@/components/portal/BackLink";
 import { FilterSelect } from "@/components/portal/FilterSelect";
 import { LogList } from "@/components/portal/LogList";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -74,12 +75,12 @@ export default async function ProjectLogPage(props: {
   return (
     <div className="py-10 md:py-14">
       <div className="container mx-auto px-6 max-w-5xl space-y-8">
-        <Link
-          href={{ pathname: `/portal/projects/${slug}`, query: { dept: area ?? "all" } }}
+        <BackLink
+          fallbackHref={`/portal/projects/${slug}?dept=${area ?? "all"}`}
           className="text-xs text-zinc-500 hover:text-zinc-200 underline underline-offset-4"
         >
-          ← {project.name}
-        </Link>
+          {project.name}
+        </BackLink>
         <SectionHeader as="h1" index="00" label={project.name} title={t("logTitle")} description={t("logDescription")} />
 
         {/* One toolbar: what kind of change on the left, when and where on the right. */}

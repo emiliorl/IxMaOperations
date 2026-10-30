@@ -16,6 +16,7 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { sendOwnerAlert } from "@/lib/email";
+import { syncCancelledMeetingsQuietly } from "@/lib/meeting-sync";
 import { listConfirmedInPerson } from "@/lib/meetings";
 import { analyzeOnSiteDay, describeOnSiteDay } from "@/lib/onsite";
 import { addDays, localDate, zonedTimeToUtc } from "@/lib/tz";
@@ -40,6 +41,8 @@ export async function GET(req: Request) {
   const to = zonedTimeToUtc(addDays(today, config.onSite.digestLookaheadDays + 1), "00:00", tz);
 
   try {
+    // Don't email about an on-site day whose meetings were already removed from the calendar.
+    await syncCancelledMeetingsQuietly({ force: true });
     const meetings = await listConfirmedInPerson(from, to);
     const byDay = new Map<string, typeof meetings>();
     for (const meeting of meetings) {

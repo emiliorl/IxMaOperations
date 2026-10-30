@@ -200,6 +200,26 @@ export async function getProjectShell(supabase: SupabaseClient, slug: string): P
   };
 }
 
+/**
+ * The general information of each team (area) of a project, by area id. Apart from the
+ * problems: who the team is, what it works with, the suggested calendar. The database
+ * returns only the areas the viewer can open. Empty (not an error) before the area-info
+ * migration is applied, so the page still loads.
+ */
+export async function listAreaInfo(supabase: SupabaseClient, projectId: string): Promise<Map<string, string>> {
+  const { data, error } = await supabase.from("project_departments").select("department_id,overview").eq("project_id", projectId);
+  if (error) {
+    console.warn(`[portal] area information unavailable: ${error.message}`);
+    return new Map();
+  }
+  const info = new Map<string, string>();
+  for (const row of (data ?? []) as { department_id: string; overview: string | null }[]) {
+    const text = plainOrNull(row.overview);
+    if (text) info.set(row.department_id, text);
+  }
+  return info;
+}
+
 /** A project row with everything the project page shows, as one request returns it. */
 interface ProjectDetailRow {
   id: string;

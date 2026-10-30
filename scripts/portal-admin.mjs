@@ -37,6 +37,8 @@
  *                                                       load a client's problems (code, priority, action plan,
  *                                                       links, cost) from a JSON file; re-running updates the same
  *                                                       items (matched by code). Prices must be in "cost" only.
+ *                                                       An optional "areas" list holds each team's general information
+ *                                                       (shown apart from its problems, only to people who can open that folder).
  *                                                       See scripts/plan-import.mjs for the file format.
  *   doctor                                              is this database and machine ready for real clients? (read-only:
  *                                                       migrations applied, owner exists, demo data gone, sign-up off, settings present)
@@ -386,7 +388,7 @@ const commands = {
 
     // Folders: the file names them per problem; --folder is the default for problems that don't.
     const folderOf = (problem) => problem.folder ?? flags.folder ?? null;
-    const wanted = [...new Set(plan.problems.map(folderOf).filter(Boolean))];
+    const wanted = [...new Set([...plan.problems.map(folderOf), ...plan.areas.map((area) => area.folder)].filter(Boolean))];
     const known = must(await db.from("departments").select("id,name").eq("organization_id", project.organization_id), "Looking up folders")
       .map((d) => ({ id: d.id, name: decryptLoose(d.name) }));
     const folderIds = new Map();
@@ -494,6 +496,21 @@ const commands = {
       console.log("  overview  " + (dryRun ? "would be set" : "set"));
       if (!dryRun) must(await db.from("projects").update({ overview: encryptField(plan.overview) }).eq("id", project.id), "Saving the overview");
     }
+    // Each team's general information lives on the area (not on a problem), so only people who can open that area read it.
+    for (const area of plan.areas) {
+      console.log(`  team info  ${area.folder}  ${dryRun ? "would be set" : "set"}`);
+      if (dryRun) continue;
+      const saved = await db.from("project_departments").upsert({
+        project_id: project.id,
+        department_id: folderIds.get(area.folder),
+        overview: encryptField(area.overview),
+      });
+      if (saved.error) {
+        console.error(`✗ Team information for "${area.folder}" was not saved: ${saved.error.message}\n  (Has migration 20261029001500_area_info.sql been run in the Supabase SQL editor? Run it, then re-run this command.)`);
+        process.exitCode = 1;
+        break;
+      }
+    }
     console.log(`✓ ${dryRun ? "Would create" : "Created"} ${created}, ${dryRun ? "would update" : "updated"} ${updated}.`);
   },
 
@@ -523,6 +540,8 @@ const commands = {
       ["20261029001000_email_notifications.sql", () => column("profiles", "notify_email")],
       ["20261029001100_preferences.sql", () => column("profiles", "notify_replies")],
       ["20261029001400_onsite_visits.sql", () => column("onsite_visits", "visit_date")],
+      ["20261029001500_area_info.sql", () => column("project_departments", "overview")],
+      ["20261029001600_meeting_topic.sql", () => column("meetings", "milestone_id")],
     ];
     for (const [file, check] of migrations) {
       (await check().catch(() => false)) ? ok(`migration ${file}`) : bad(`migration ${file} is not applied`, `run supabase/migrations/${file} in the Supabase SQL editor`);

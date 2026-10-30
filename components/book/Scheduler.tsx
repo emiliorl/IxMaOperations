@@ -5,8 +5,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { Check, ChevronLeft, ChevronRight, Globe, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/portal/BackLink";
 import { Input, Textarea } from "@/components/ui/Input";
 import { createBookingSchema } from "@/lib/booking-schema";
+import { problemLabel, problemsForArea, resolveTopic, type TopicArea, type TopicProblem } from "@/lib/portal/booking-topic";
 import { localDate } from "@/lib/tz";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +60,11 @@ export interface SchedulerContext {
   timeZone: string;
   /** Where "back" goes, without the language prefix. */
   backHref: string;
+  /** The teams and problems the person can open, and what the call starts out being about. */
+  areas: TopicArea[];
+  problems: TopicProblem[];
+  areaId: string | null;
+  problemId: string | null;
 }
 interface Booked {
   mode: Mode;
@@ -69,6 +76,9 @@ interface Booked {
 }
 
 const DURATIONS = [15, 30, 45];
+/** Same look as the other fields of the sheet (see components/ui/Input). */
+const selectClass =
+  "h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400";
 const pad = (n: number) => String(n).padStart(2, "0");
 /** Uppercase only the first letter (CSS `capitalize` would turn Spanish "de" into "De"). */
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
@@ -282,6 +292,21 @@ export function Scheduler({
     notes: "",
     location: context?.officeAddress ?? "",
   });
+  // The teams and problems to choose from. Optional: without them the choice is simply not offered.
+  const areas = context?.areas ?? [];
+  const problems = context?.problems ?? [];
+  // What the call is about (portal only): a team, and a problem inside it. A problem decides its own team.
+  const [topic, setTopic] = useState({ areaId: context?.areaId ?? null, problemId: context?.problemId ?? null });
+  const pickArea = (areaId: string | null) =>
+    setTopic((current) => ({
+      areaId,
+      // Moving to another team drops a problem that isn't that team's (project-wide ones stay).
+      problemId: problemsForArea(problems, areaId).some((p) => p.id === current.problemId) ? current.problemId : null,
+    }));
+  const pickProblem = (problemId: string | null) =>
+    setTopic((current) =>
+      context ? resolveTopic({ areas, problems, areaId: current.areaId, problemId }) : current
+    );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -468,6 +493,8 @@ export function Scheduler({
       location: mode === "in_person" ? form.location : "",
       projectSlug: context?.projectSlug ?? "",
       ticketId: context?.ticketId ?? "",
+      departmentId: topic.areaId ?? "",
+      milestoneId: topic.problemId ?? "",
     };
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
@@ -539,11 +566,27 @@ export function Scheduler({
                 {t("successLocation")}: <span className="text-zinc-200">{booked.location}</span>
               </p>
             )}
+            {context && (topic.problemId || topic.areaId) && (
+              <p className="text-xs text-zinc-400">
+                {t("successAbout")}:{" "}
+                <span className="text-zinc-200">
+                  {[
+                    areas.find((a) => a.id === topic.areaId)?.name,
+                    (() => {
+                      const problem = problems.find((p) => p.id === topic.problemId);
+                      return problem ? problemLabel(problem) : null;
+                    })(),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </p>
+            )}
             <p className="text-xs text-zinc-500 leading-relaxed">{t("successBody", { email: booked.email })}</p>
             {context && (
-              <Link href={context.backHref} className="inline-block text-xs text-zinc-300 underline underline-offset-4 hover:text-white">
-                {t("backToPortal")} →
-              </Link>
+              <BackLink fallbackHref={context.backHref} prefix="" suffix=" →" className="inline-block text-xs text-zinc-300 underline underline-offset-4 hover:text-white">
+                {t("backToPortal")}
+              </BackLink>
             )}
           </div>
         </div>
@@ -565,14 +608,77 @@ export function Scheduler({
       </div>
 
       {context && (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-zinc-800 bg-zinc-900/30 px-5 py-2.5 text-xs text-zinc-400 sm:px-6">
-          <span>
-            {t("forProject", { project: context.projectName })}
-            {context.ticketNumber ? ` · ${t("forTicket", { n: context.ticketNumber })}` : ""}
-          </span>
-          <Link href={context.backHref} className="underline underline-offset-4 hover:text-zinc-100">
-            {t("backToPortal")}
-          </Link>
+        <div className="border-b border-zinc-800 bg-zinc-900/30">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-2.5 text-xs text-zinc-400 sm:px-6">
+            <span>
+              {t("forProject", { project: context.projectName })}
+              {context.ticketNumber ? ` · ${t("forTicket", { n: context.ticketNumber })}` : ""}
+            </span>
+            <BackLink fallbackHref={context.backHref} prefix="" className="underline underline-offset-4 hover:text-zinc-100">
+              {t("backToPortal")}
+            </BackLink>
+          </div>
+          {/* What the call is about: only teams and problems this person can open are offered, and a problem fills in its team. */}
+          {(areas.length > 0 || problems.length > 0) && (
+            <div className="grid gap-3 border-t border-zinc-800/80 px-5 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] sm:px-6">
+              {areas.length > 0 && (
+                <div className="space-y-1.5">
+                  <FieldLabel index="//" htmlFor="b-area">
+                    {t("topicArea")}
+                  </FieldLabel>
+                  <select
+                    id="b-area"
+                    value={topic.areaId ?? ""}
+                    onChange={(e) => pickArea(e.target.value || null)}
+                    className={selectClass}
+                  >
+                    <option value="">{t("topicAnyArea")}</option>
+                    {areas.map((area) => (
+                      <option key={area.id} value={area.id}>
+                        {area.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {problems.length > 0 && (
+                <div className="space-y-1.5">
+                  <FieldLabel index="//" htmlFor="b-problem">
+                    {t("topicProblem")}
+                  </FieldLabel>
+                  <select
+                    id="b-problem"
+                    value={topic.problemId ?? ""}
+                    onChange={(e) => pickProblem(e.target.value || null)}
+                    className={selectClass}
+                  >
+                    <option value="">{t("topicNoProblem")}</option>
+                    {/* With no team chosen, the problems are grouped by team so a long list stays readable. */}
+                    {topic.areaId === null
+                      ? [...areas, { id: "", name: t("topicProjectWide") }].map((area) => {
+                          const list = problems.filter((p) => (p.areaId ?? "") === area.id);
+                          return (
+                            list.length > 0 && (
+                              <optgroup key={area.id || "all"} label={area.name}>
+                                {list.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {problemLabel(p)}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            )
+                          );
+                        })
+                      : problemsForArea(problems, topic.areaId).map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {problemLabel(p)}
+                          </option>
+                        ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

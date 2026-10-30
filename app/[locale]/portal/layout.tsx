@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
+import { PortalTrail } from "@/components/portal/BackLink";
 import { PortalFooter } from "@/components/portal/PortalFooter";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 
@@ -23,6 +24,8 @@ export default async function PortalLayout(props: { children: React.ReactNode; p
   return (
     <div className="flex min-h-[calc(100vh-0px)] flex-col">
       <PortalHeader locale={locale} />
+      {/* Remembers the pages visited in this tab, so back links return to where the person was. */}
+      <PortalTrail />
       <div className="flex-1">{props.children}</div>
       <PortalFooter />
     </div>

@@ -33,6 +33,31 @@ describe("plan import: validation", () => {
     expect(result.errors.join("\n")).toMatch(/problems\[1\]\.status/);
   });
 
+  it("keeps each team's general information apart from the problems", async () => {
+    const { validatePlan } = await load();
+    const result = validatePlan({
+      areas: [{ folder: "RRHH", overview: "## Equipo\n\n- Líder: Valeria" }],
+      problems: [problem({ folder: "RRHH" })],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.plan.areas).toEqual([{ folder: "RRHH", overview: "## Equipo\n\n- Líder: Valeria" }]);
+    expect(result.plan.problems[0].solution).toBeNull();
+    // No areas given is fine, and means "leave the teams' information alone".
+    const plain = validatePlan({ problems: [problem()] });
+    expect(plain.ok && plain.plan.areas).toEqual([]);
+  });
+
+  it("rejects team information without a folder or text, repeated folders, and prices in it", async () => {
+    const { validatePlan } = await load();
+    const bad = (areas: unknown) => validatePlan({ areas, problems: [problem()] });
+    expect(bad("RRHH").ok).toBe(false);
+    expect(bad([{ overview: "texto" }]).ok).toBe(false);
+    expect(bad([{ folder: "RRHH" }]).ok).toBe(false);
+    expect(bad([{ folder: "RRHH", overview: "a" }, { folder: "rrhh", overview: "b" }]).ok).toBe(false);
+    expect(bad([{ folder: "RRHH", overview: "La licencia cuesta US$125 al mes" }]).ok).toBe(false);
+  });
+
   it("rejects duplicate codes, ignoring case", async () => {
     const { validatePlan } = await load();
     const result = validatePlan({ problems: [problem({ code: "DW-1" }), problem({ code: "dw-1" })] });

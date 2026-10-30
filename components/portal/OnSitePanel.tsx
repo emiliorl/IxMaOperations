@@ -102,7 +102,7 @@ export async function OnSitePanel({
         {days.length === 0 ? (
           <div className="space-y-3 px-5 py-5 sm:px-6">
             <p className="text-sm text-zinc-400">{t("onsiteEmpty")}</p>
-            <Link href={{ pathname: "/book", query: { project: slug } }} className={buttonVariants({ size: "sm" })}>
+            <Link href={{ pathname: "/portal/book", query: { project: slug, mode: "in_person" } }} className={buttonVariants({ size: "sm" })}>
               {t("bookCall")}
             </Link>
           </div>
@@ -156,7 +156,7 @@ export async function OnSitePanel({
 
                   <div className="flex flex-wrap items-center gap-3 pt-1">
                     <Link
-                      href={{ pathname: "/book", query: { project: slug, mode: "in_person", day: day.date } }}
+                      href={{ pathname: "/portal/book", query: { project: slug, mode: "in_person", day: day.date } }}
                       className="text-xs text-zinc-300 underline underline-offset-4 hover:text-white"
                     >
                       {t("onsiteBookDay")} →

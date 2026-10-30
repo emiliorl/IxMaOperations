@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link, redirect } from "@/i18n/navigation";
+import { redirect } from "@/i18n/navigation";
+import { BackLink } from "@/components/portal/BackLink";
 import { TicketForm } from "@/components/portal/TicketForm";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { requireUser } from "@/lib/portal/auth";
@@ -45,12 +46,12 @@ export default async function NewTicketPage(props: {
   return (
     <div className="py-10 md:py-14">
       <div className="container mx-auto px-6 max-w-3xl space-y-8">
-        <Link
-          href={{ pathname: `/portal/projects/${slug}`, query: { dept: project.departments.some((d) => d.id === dept) ? dept! : "all" } }}
+        <BackLink
+          fallbackHref={`/portal/projects/${slug}?dept=${project.departments.some((d) => d.id === dept) ? dept : "all"}`}
           className="text-xs text-zinc-500 hover:text-zinc-200 underline underline-offset-4"
         >
-          ← {t("backToProject")}
-        </Link>
+          {t("backToProject")}
+        </BackLink>
         <SectionHeader as="h1" index="00" label={project.name} title={t("openTicket")} description={t("newTicketDescription")} />
         <TicketForm
           locale={locale}

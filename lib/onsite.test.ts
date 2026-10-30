@@ -63,13 +63,13 @@ describe("suggestCloserStart", () => {
   it("moves the later meeting to just after the first, rounded up to the half hour", () => {
     const suggestion = suggestCloserStart([m("10:00", "10:30"), m("14:30", "15:00")], 0, CONFIG);
     expect(suggestion).toBeTruthy();
-    expect(hhmm(suggestion!.newStart)).toBe("11:00"); // 10:30 + 15 min buffer → 10:45 → 11:00
+    expect(hhmm(suggestion!.newStart)).toBe("11:00"); // 10:30 + 10 min buffer → 10:40 → 11:00
     expect(suggestion!.meetingIndex).toBe(1);
   });
 
-  it("never proposes a time inside the lunch hour", () => {
-    // First meeting ends 11:30 → 11:45 → rounds to 12:00, which is lunch → pushed to 13:00.
-    const suggestion = suggestCloserStart([m("11:00", "11:30"), m("15:00", "15:30")], 0, CONFIG);
+  it("never proposes a time inside lunch (12:30–13:00)", () => {
+    // First meeting ends 12:00 → 12:10 → rounds to 12:30, which is lunch → pushed to 13:00.
+    const suggestion = suggestCloserStart([m("11:30", "12:00"), m("15:00", "15:30")], 0, CONFIG);
     expect(hhmm(suggestion!.newStart)).toBe("13:00");
   });
 

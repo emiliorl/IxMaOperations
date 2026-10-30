@@ -34,6 +34,9 @@ import {
 } from "@/lib/meetings";
 import { analyzeOnSiteDay, describeOnSiteDay } from "@/lib/onsite";
 import { resolveBookingContext } from "@/lib/portal/booking-context";
+import { portalContextLine, portalEventDescription, portalMeetingTitle, type PortalBookingTopic } from "@/lib/portal/booking-description";
+import { resolveTopic } from "@/lib/portal/booking-topic";
+import { OUTGOING_URL } from "@/lib/site-url";
 import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 import { loadScheduleInputs } from "@/lib/schedule-data";
 import { addDays, localDate, zonedTimeToUtc } from "@/lib/tz";
@@ -73,7 +76,21 @@ export async function POST(req: Request) {
   const guestName = context?.name || booking.name;
   const guestEmail = context?.email || booking.email;
   const inPersonLocation = booking.mode === "in_person" ? context?.officeAddress || booking.location : undefined;
-  const portalNote = context ? `${context.projectName}${context.ticketNumber ? ` · ticket #${context.ticketNumber}` : ""}` : "";
+  // The team and problem it is about: kept only if they are among the ones this person can open.
+  const topic = context
+    ? resolveTopic({ areas: context.areas, problems: context.problems, areaId: booking.departmentId, problemId: booking.milestoneId })
+    : null;
+  const topicProblem = (topic && context?.problems.find((p) => p.id === topic.problemId)) || null;
+  const topicLabels: PortalBookingTopic | null = context && {
+    projectName: context.projectName,
+    areaName: context.areas.find((a) => a.id === topic?.areaId)?.name ?? null,
+    problem: topicProblem && { code: topicProblem.code, title: topicProblem.title, priority: topicProblem.priority },
+    ticketNumber: context.ticketNumber,
+  };
+  const portalNote = topicLabels ? portalContextLine(topicLabels) : "";
+  const portalUrl = context
+    ? `${OUTGOING_URL}${context.ticketId ? `/portal/tickets/${context.ticketId}` : `/portal/projects/${context.projectSlug}${topic?.areaId ? `?dept=${topic.areaId}` : ""}`}`
+    : null;
 
   const config = DEFAULT_AVAILABILITY;
   const tz = config.hostTimezone;
@@ -104,8 +121,8 @@ export async function POST(req: Request) {
   }
 
   // 4. Reserve the slot.
-  const title =
-    booking.mode === "in_person" ? `On-site meeting — ${guestName}` : `IxMaOperations call — ${guestName}`;
+  const baseTitle = booking.mode === "in_person" ? `On-site meeting — ${guestName}` : `IxMaOperations call — ${guestName}`;
+  const title = topicLabels ? portalMeetingTitle(baseTitle, topicLabels) : baseTitle;
   let reservation: Awaited<ReturnType<typeof insertPendingMeeting>>;
   try {
     reservation = await insertPendingMeeting({
@@ -120,6 +137,8 @@ export async function POST(req: Request) {
       location: inPersonLocation,
       projectId: context?.projectId,
       ticketId: context?.ticketId ?? undefined,
+      departmentId: topic?.areaId ?? undefined,
+      milestoneId: topic?.problemId ?? undefined,
     });
   } catch (error) {
     console.error("[schedule] reservation failed:", error);
@@ -150,9 +169,9 @@ export async function POST(req: Request) {
     const event = await createMeetingEvent({
       mode: booking.mode,
       title,
-      description: [portalNote && `Booked from the client portal: ${portalNote}`, booking.notes && `Notes from ${guestName}:\n${booking.notes}`, `Visitor timezone: ${booking.timezone}`]
-        .filter(Boolean)
-        .join("\n\n"),
+      description: topicLabels
+        ? portalEventDescription({ topic: topicLabels, guestName, guestEmail, notes: booking.notes, visitorTimezone: booking.timezone, portalUrl })
+        : [booking.notes && `Notes from ${guestName}:\n${booking.notes}`, `Visitor timezone: ${booking.timezone}`].filter(Boolean).join("\n\n"),
       start,
       end,
       hostTimezone: tz,

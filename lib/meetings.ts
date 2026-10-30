@@ -67,6 +67,9 @@ export interface NewMeeting {
   /** Set when a signed-in client booked from the portal (already verified): it ties the meeting to the project. */
   projectId?: string;
   ticketId?: string;
+  /** The team and problem the call is about (already checked against what the person can open). */
+  departmentId?: string;
+  milestoneId?: string;
 }
 
 export type InsertResult = { ok: true; id: string } | { ok: false; reason: "conflict" };
@@ -85,30 +88,60 @@ export async function insertPendingMeeting(meeting: NewMeeting): Promise<InsertR
     .eq("status", "pending")
     .lt("created_at", new Date(Date.now() - STALE_PENDING_MS).toISOString());
 
-  const { data, error } = await db
+  const row = {
+    mode: meeting.mode,
+    title: meeting.title,
+    start_time: new Date(meeting.start).toISOString(),
+    end_time: new Date(meeting.end).toISOString(),
+    timezone: meeting.visitorTimezone,
+    guest_name: encryptField(meeting.guestName),
+    guest_email: encryptField(meeting.guestEmail),
+    notes: encryptOptional(meeting.notes),
+    location: encryptOptional(meeting.location),
+    project_id: meeting.projectId ?? null,
+    ticket_id: meeting.ticketId ?? null,
+    status: "pending",
+  };
+  const topic = { department_id: meeting.departmentId ?? null, milestone_id: meeting.milestoneId ?? null };
+  const hasTopic = topic.department_id !== null || topic.milestone_id !== null;
+
+  let { data, error } = await db
     .from("meetings")
-    .insert({
-      mode: meeting.mode,
-      title: meeting.title,
-      start_time: new Date(meeting.start).toISOString(),
-      end_time: new Date(meeting.end).toISOString(),
-      timezone: meeting.visitorTimezone,
-      guest_name: encryptField(meeting.guestName),
-      guest_email: encryptField(meeting.guestEmail),
-      notes: encryptOptional(meeting.notes),
-      location: encryptOptional(meeting.location),
-      project_id: meeting.projectId ?? null,
-      ticket_id: meeting.ticketId ?? null,
-      status: "pending",
-    })
+    .insert(hasTopic ? { ...row, ...topic } : row)
     .select("id")
     .single();
+  // Before the meeting-topic migration those two columns don't exist: the booking must still go through without them.
+  if (error && hasTopic && /department_id|milestone_id/.test(error.message)) {
+    console.warn(`[schedule] meeting topic not saved (run 20261029001600_meeting_topic.sql): ${error.message}`);
+    ({ data, error } = await db.from("meetings").insert(row).select("id").single());
+  }
 
   if (error) {
     if (error.code === PG_EXCLUSION_VIOLATION) return { ok: false, reason: "conflict" };
     throw new Error(`Failed to reserve slot: ${error.message}`);
   }
-  return { ok: true, id: data.id };
+  return { ok: true, id: data!.id };
+}
+
+/** Confirmed meetings that have not ended yet and have a Google event, soonest first: the ones worth checking against the calendar. */
+export async function listUpcomingConfirmedWithEvents(limit: number): Promise<{ id: string; googleEventId: string }[]> {
+  const { data, error } = await supabaseAdmin()
+    .from("meetings")
+    .select("id,google_event_id")
+    .eq("status", "confirmed")
+    .not("google_event_id", "is", null)
+    .gt("end_time", new Date().toISOString())
+    .order("start_time")
+    .limit(limit);
+  if (error) throw new Error(`Failed to read upcoming meetings: ${error.message}`);
+  return (data ?? []).map((row) => ({ id: row.id as string, googleEventId: row.google_event_id as string }));
+}
+
+/** Marks meetings cancelled. That frees their time: the overlap rule and every count only look at pending and confirmed ones. */
+export async function cancelMeetings(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const { error } = await supabaseAdmin().from("meetings").update({ status: "cancelled" }).in("id", ids).eq("status", "confirmed");
+  if (error) throw new Error(`Failed to cancel meetings: ${error.message}`);
 }
 
 export async function confirmMeeting(id: string, event: { googleEventId: string; meetLink: string | null }): Promise<void> {

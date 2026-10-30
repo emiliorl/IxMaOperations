@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { updateTicketStatus } from "@/app/[locale]/portal/actions";
 import { AttachmentList } from "@/components/portal/AttachmentList";
+import { BackLink } from "@/components/portal/BackLink";
 import { CommentForm } from "@/components/portal/CommentForm";
 import { ConfirmFixedForm } from "@/components/portal/ConfirmFixedForm";
 import { Pill } from "@/components/portal/Pills";
@@ -58,15 +59,13 @@ export default async function TicketPage(props: {
     <>
       <div className="py-10 md:py-14">
         <div className="container mx-auto px-6 max-w-3xl space-y-8">
-          <Link
-            href={{
-              pathname: `/portal/projects/${ticket.project.slug}`,
-              query: { tab: "tickets", ...(ticket.departmentId ? { dept: ticket.departmentId } : { dept: "all" }) },
-            }}
+          {/* Back goes to the page the person came from (a filtered list, a problem…); the project's tickets are only the fallback. */}
+          <BackLink
+            fallbackHref={`/portal/projects/${ticket.project.slug}?tab=tickets&dept=${ticket.departmentId ?? "all"}`}
             className="text-xs text-zinc-500 hover:text-zinc-200 underline underline-offset-4"
           >
-            ← {t("backToProject")} · {ticket.project.name}
-          </Link>
+            {t("backToProject")} · {ticket.project.name}
+          </BackLink>
 
           <header className="space-y-3">
             <p className="font-mono text-xs text-zinc-500">#{ticket.number}</p>
@@ -105,7 +104,7 @@ export default async function TicketPage(props: {
                 )}
               </div>
               <Link
-                href={{ pathname: "/book", query: { project: ticket.project.slug, ticket: ticket.id } }}
+                href={{ pathname: "/portal/book", query: { project: ticket.project.slug, ticket: ticket.id } }}
                 className={buttonVariants({ variant: "outline", size: "sm" })}
               >
                 {t("talkBook")}

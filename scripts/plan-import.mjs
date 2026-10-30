@@ -6,6 +6,9 @@
  * File format (JSON):
  * {
  *   "overview": "Markdown shown to everyone on the project (context, tools, calendar). NO prices.",
+ *   "areas": [                              // optional: each team's general information, apart from its problems
+ *     { "folder": "Finance", "overview": "Markdown: who the team is, what it works with, the calendar. NO prices." }
+ *   ],
  *   "problems": [
  *     {
  *       "code": "DW-1",                  // optional, unique; also how a re-import finds the item
@@ -34,6 +37,8 @@ export const STATUSES = ["pending", "in_progress", "completed", "blocked"];
 
 export const LIMITS = {
   overview: 100_000,
+  areaOverview: 100_000,
+  areas: 50,
   code: 40,
   title: 200,
   folder: 120,
@@ -76,7 +81,7 @@ const clean = (v) => (isText(v) ? v.replace(/\r\n/g, "\n").trim() : v);
  */
 
 /**
- * @returns {{ ok: true, plan: { overview: string | null, problems: PlanProblem[] } } | { ok: false, errors: string[] }}
+ * @returns {{ ok: true, plan: { overview: string | null, areas: { folder: string, overview: string }[], problems: PlanProblem[] } } | { ok: false, errors: string[] }}
  */
 export function validatePlan(input) {
   const errors = [];
@@ -102,6 +107,28 @@ export function validatePlan(input) {
   };
 
   const overview = checkText("overview", input.overview, LIMITS.overview);
+
+  // Each team's general information. It is not a problem: it is stored on the area itself.
+  const areas = [];
+  if (input.areas !== undefined) {
+    if (!Array.isArray(input.areas)) bad("areas", "must be a list");
+    else {
+      if (input.areas.length > LIMITS.areas) bad("areas", `at most ${LIMITS.areas}`);
+      const seenFolders = new Set();
+      input.areas.forEach((raw, i) => {
+        const at = `areas[${i}]`;
+        if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return bad(at, "must be an object");
+        const folder = checkText(`${at}.folder`, raw.folder, LIMITS.folder, { required: true, money: false });
+        const text = checkText(`${at}.overview`, raw.overview, LIMITS.areaOverview, { required: true });
+        if (folder) {
+          const key = folder.toLowerCase();
+          if (seenFolders.has(key)) bad(`${at}.folder`, `"${folder}" is used twice`);
+          seenFolders.add(key);
+        }
+        if (folder && text) areas.push({ folder, overview: text });
+      });
+    }
+  }
 
   if (!Array.isArray(input.problems) || input.problems.length === 0) {
     bad("problems", "must be a non-empty list");
@@ -169,5 +196,5 @@ export function validatePlan(input) {
   });
 
   if (errors.length > 0) return { ok: false, errors };
-  return { ok: true, plan: { overview, problems } };
+  return { ok: true, plan: { overview, areas, problems } };
 }

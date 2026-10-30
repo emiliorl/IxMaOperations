@@ -1,6 +1,7 @@
 import "server-only";
 import { DEFAULT_AVAILABILITY } from "./availability-config";
 import { getAvailabilityOverrides, getHostBusy } from "./google-calendar";
+import { syncCancelledMeetingsQuietly } from "./meeting-sync";
 import { listActiveMeetings } from "./meetings";
 import type { DayOverride, ExistingMeeting, Interval } from "./availability";
 import { supabaseAdmin } from "./supabase-admin";
@@ -44,16 +45,17 @@ export interface ScheduleInputs {
  * constraint is the real guard, so it must be reachable.
  */
 export async function loadScheduleInputs(from: number, to: number, { strict = false } = {}): Promise<ScheduleInputs> {
-  const [hostBusy, overrides, announced, meetings] = await Promise.all([
-    getHostBusy(from, to),
-    getAvailabilityOverrides(from, to),
-    announcedVisitDates(from, to),
-    listActiveMeetings(from, to).catch((error) => {
-      if (strict) throw error;
-      console.error("[schedule] meetings lookup failed — continuing without lunch-rule data:", error);
-      return [] as ExistingMeeting[];
-    }),
-  ]);
+  // Meetings the owner deleted from Google Calendar are cancelled here first, so a removed
+  // in-person meeting stops counting as an on-site day, a used slot of the week, or busy time.
+  // It runs alongside the Google reads; the booking route (strict) always gets a fresh answer.
+  const synced = syncCancelledMeetingsQuietly({ force: strict });
+  const [hostBusy, overrides, announced] = await Promise.all([getHostBusy(from, to), getAvailabilityOverrides(from, to), announcedVisitDates(from, to)]);
+  await synced;
+  const meetings = await listActiveMeetings(from, to).catch((error) => {
+    if (strict) throw error;
+    console.error("[schedule] meetings lookup failed — continuing without lunch-rule data:", error);
+    return [] as ExistingMeeting[];
+  });
   for (const date of announced) overrides[date] ??= "IN_PERSON";
   return { hostBusy, overrides, meetings };
 }

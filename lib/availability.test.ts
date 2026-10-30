@@ -71,13 +71,23 @@ describe("online slots", () => {
     expect(startsOn(slots, MON)[0]).toBe("10:30");
   });
 
-  it("keeps a 15-minute buffer around busy time", () => {
+  it("keeps the buffer around busy time", () => {
     const slots = startsOn(generateSlots(query({ hostBusy: [block(MON, "10:00", "11:00")] })), MON);
-    expect(slots).toContain("09:00"); // 09:00–09:30, padded to 09:45
-    expect(slots).not.toContain("09:30"); // padded to 10:15, touches the busy block
+    expect(slots).toContain("09:00"); // 09:00–09:30, padded to 09:40
+    expect(slots).not.toContain("09:30"); // padded to 10:10, touches the busy block
     expect(slots).not.toContain("10:30");
-    expect(slots).not.toContain("11:00"); // padded start 10:45 overlaps
-    expect(slots).toContain("11:30"); // padded start 11:15 is clear
+    expect(slots).not.toContain("11:00"); // padded start 10:50 overlaps
+    expect(slots).toContain("11:30"); // padded start 11:20 is clear
+  });
+
+  it("the buffer is 10 minutes: an event that ends at 10:50 leaves 11:00 open", () => {
+    expect(DEFAULT_AVAILABILITY.online.bufferMinutes).toBe(10);
+    expect(DEFAULT_AVAILABILITY.inPerson.bufferMinutes).toBe(10);
+    const slots = startsOn(generateSlots(query({ hostBusy: [block(MON, "10:00", "10:50")] })), MON);
+    expect(slots).toContain("11:00"); // padded start 10:50 just touches the end of the event
+    // One minute less of gap is still too close.
+    const tight = startsOn(generateSlots(query({ hostBusy: [block(MON, "10:00", "10:51")] })), MON);
+    expect(tight).not.toContain("11:00");
   });
 
   it("respects a day marked OFF but not other days", () => {
@@ -334,16 +344,19 @@ describe("lunch rule", () => {
 });
 
 describe("lunch rule inside generateSlots (on-site day)", () => {
-  it("with a morning and an afternoon meeting booked, 12:00 and 12:30 disappear", () => {
+  it("lunch is 12:30–13:00", () => {
+    expect(DEFAULT_AVAILABILITY.lunch).toEqual({ start: "12:30", end: "13:00" });
+  });
+
+  it("with a morning and an afternoon meeting booked, the 12:30 slot disappears", () => {
     const slots = startsOn(
       generateSlots(
         query({ mode: "in_person", meetings: [meeting(WED, "10:00", "10:30"), meeting(WED, "14:00", "14:30")] })
       ),
       WED
     );
-    expect(slots).not.toContain("12:00");
     expect(slots).not.toContain("12:30");
-    expect(slots).toContain("11:30"); // ends exactly when lunch starts
+    expect(slots).toContain("12:00"); // ends exactly when lunch starts
     expect(slots).toContain("13:00"); // starts exactly when lunch ends
   });
 
@@ -359,6 +372,23 @@ describe("lunch rule inside generateSlots (on-site day)", () => {
       TUE
     );
     expect(slots).toContain("12:00");
+  });
+});
+
+describe("a cancelled in-person meeting", () => {
+  it("stops the day being an on-site day when it was the only one: online times come back", () => {
+    const withMeeting = startsOn(generateSlots(query({ mode: "online", meetings: [meeting(WED, "10:00", "10:30")] })), WED);
+    expect(withMeeting).toEqual([]); // the day is for in-person meetings, so online is hidden
+    // Cancelled meetings are not read any more (only pending and confirmed ones are), so the day is ordinary again.
+    const cancelled = startsOn(generateSlots(query({ mode: "online", meetings: [] })), WED);
+    expect(cancelled.length).toBeGreaterThan(0);
+  });
+
+  it("gives its slot of the week back: a third in-person day can be claimed again", () => {
+    const twoDays = [meeting(MON, "10:00", "10:30"), meeting(WED, "10:00", "10:30")];
+    expect(startsOn(generateSlots(query({ mode: "in_person", meetings: twoDays })), FRI)).toEqual([]); // the week's limit is used
+    const oneCancelled = [meeting(MON, "10:00", "10:30")];
+    expect(startsOn(generateSlots(query({ mode: "in_person", meetings: oneCancelled })), FRI).length).toBeGreaterThan(0);
   });
 });
 
