@@ -50,7 +50,8 @@ const A_INTERNAL = "50000000-0000-0000-0000-000000000003";
 
 let db: PGlite;
 
-type Who = { id: string; admin?: boolean; userMetadataAdmin?: boolean } | null;
+/** `aal` is how the session was verified: "aal2" once the authenticator code was entered (Supabase puts it in the token). */
+type Who = { id: string; admin?: boolean; userMetadataAdmin?: boolean; aal?: "aal1" | "aal2" } | null;
 
 /** Switch the session to a Supabase-style role + JWT. */
 async function as(who: Who) {
@@ -65,6 +66,7 @@ async function as(who: Who) {
     role: "authenticated",
     app_metadata: who.admin ? { role: "admin" } : {},
     user_metadata: who.userMetadataAdmin ? { role: "admin" } : {},
+    aal: who.aal ?? "aal1",
   };
   await db.query("select set_config('request.jwt.claims', $1, false)", [JSON.stringify(claims)]);
   await db.exec("set role authenticated");
@@ -103,6 +105,8 @@ beforeAll(async () => {
   await db.exec(`
     create schema auth;
     create table auth.users (id uuid primary key);
+    -- Supabase's table of authenticator apps (only the columns the rules read).
+    create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid not null, status text not null, factor_type text not null default 'totp');
     create function auth.jwt() returns jsonb language sql stable as $$
       select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
     create function auth.uid() returns uuid language sql stable as $$
@@ -138,6 +142,7 @@ beforeAll(async () => {
   await db.exec(sql("20261029001600_meeting_topic.sql"));
   await db.exec(sql("20261029001700_meeting_client.sql"));
   await db.exec(sql("20261029001800_office_days.sql"));
+  await db.exec(sql("20261029001900_admin_two_step.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -1344,6 +1349,77 @@ describe("a team's general information (apart from its problems)", () => {
     }
     await owner();
     expect(await rows(`select 1 from public.project_departments where overview = 'changed'`)).toHaveLength(0);
+  });
+});
+
+describe("the owner's powers need the second step once it is set up", () => {
+  const SECOND_OWNER = "00000000-0000-0000-0000-0000000000fe";
+  const addFactor = async (userId: string, status = "verified") => {
+    await db.exec("reset role");
+    await db.exec(`insert into auth.mfa_factors (user_id, status) values ('${userId}', '${status}')`);
+  };
+  /** How many projects the session can see: the owner sees all three, a stranger none. */
+  const projectsSeen = async (who: Parameters<typeof as>[0]) => {
+    await as(who);
+    return (await rows(`select id from public.projects`)).length;
+  };
+  const owner = (aal: "aal1" | "aal2") => ({ id: U.admin, admin: true, aal });
+
+  it("changes nothing for an owner who has not set it up: the password alone still works", async () => {
+    expect(await projectsSeen(owner("aal1"))).toBe(3);
+  });
+
+  it("once it is set up, a session that only used the password gets none of the owner's powers", async () => {
+    await addFactor(U.admin);
+    expect(await projectsSeen(owner("aal1"))).toBe(0);
+    await as(owner("aal1"));
+    expect(await rejection(`insert into public.onsite_visits (project_id, visit_date) values ('${P1}', '2026-11-06')`)).toMatch(/row-level security/i);
+    expect(await affected(`update public.projects set office_weekdays = '{1}' where id = '${P1}'`)).toBe(0);
+  });
+
+  it("and a session that entered the code has them all", async () => {
+    await addFactor(U.admin);
+    expect(await projectsSeen(owner("aal2"))).toBe(3);
+    await as(owner("aal2"));
+    expect(await rejection(`insert into public.onsite_visits (project_id, visit_date) values ('${P1}', '2026-11-06')`)).toBeNull();
+  });
+
+  it("a setup that was started but never confirmed protects nothing and locks nothing", async () => {
+    await addFactor(U.admin, "unverified");
+    expect(await projectsSeen(owner("aal1"))).toBe(3);
+  });
+
+  it("another person's authenticator app does not affect this owner", async () => {
+    await addFactor(SECOND_OWNER);
+    expect(await projectsSeen(owner("aal1"))).toBe(3);
+    expect(await projectsSeen({ id: SECOND_OWNER, admin: true, aal: "aal1" })).toBe(0);
+  });
+
+  it("removing the authenticator app (the reset command) gives the owner their powers back on the next sign-in", async () => {
+    await addFactor(U.admin);
+    expect(await projectsSeen(owner("aal1"))).toBe(0);
+    await db.exec("reset role");
+    await db.exec(`delete from auth.mfa_factors where user_id = '${U.admin}'`);
+    expect(await projectsSeen(owner("aal1"))).toBe(3);
+  });
+
+  it("does not touch anyone who is not the owner, even one who set it up", async () => {
+    await addFactor(U.leadAll);
+    await as({ id: U.leadAll, aal: "aal1" });
+    expect(sorted((await rows<{ id: string }>(`select id from public.projects`)).map((r) => r.id))).toContain(P1);
+  });
+
+  it("a marker in the person's own profile data still does not make them the owner", async () => {
+    await as({ id: U.leadAll, userMetadataAdmin: true, aal: "aal2" });
+    expect(await rejection(`insert into public.onsite_visits (project_id, visit_date) values ('${P1}', '2026-11-06')`)).toMatch(/row-level security/i);
+  });
+
+  it("a token with no aal claim at all is treated as the password-only kind", async () => {
+    await addFactor(U.admin);
+    await db.exec("reset role");
+    await db.query("select set_config('request.jwt.claims', $1, false)", [JSON.stringify({ sub: U.admin, role: "authenticated", app_metadata: { role: "admin" } })]);
+    await db.exec("set role authenticated");
+    expect((await rows(`select id from public.projects`)).length).toBe(0);
   });
 });
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { redirect } from "@/i18n/navigation";
 import { decryptLoose } from "@/lib/field-crypto";
 import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server";
+import { aalFromAccessToken, ownerTwoStepRequired, twoStepGate, verifiedTotpCount } from "./mfa";
 
 /**
  * Who is making this request? Asks Supabase to VERIFY the session (getUser()
@@ -25,12 +26,26 @@ const loadSession = cache(async () => {
   }
   if (!user) return { supabase, user: null };
 
+  // app_metadata is writable only with the service role, so people can't set these themselves.
+  const isAdmin = user.app_metadata?.role === "admin";
+  // Two-step verification. The authenticator apps come from the auth server's own answer about this user; how the
+  // session was verified (has the code been entered?) is a claim in the access token that getUser() just validated.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const twoStep = twoStepGate({
+    isAdmin,
+    ownerRequired: ownerTwoStepRequired(process.env.PORTAL_REQUIRE_OWNER_2FA),
+    verifiedFactors: verifiedTotpCount(user.factors),
+    aal: aalFromAccessToken(session?.access_token),
+  });
+
   return {
     supabase,
     user,
-    // app_metadata is writable only with the service role, so people can't set these themselves.
-    isAdmin: user.app_metadata?.role === "admin",
+    isAdmin,
     mustChangePassword: user.app_metadata?.must_change_password === true,
+    twoStep,
   };
 });
 
@@ -53,23 +68,38 @@ export async function getPortalSession() {
 /**
  * The gate for every portal page and server action: not signed in → login;
  * signed in with a temporary password (just created by the owner) → must
- * choose their own password first. proxy.ts only refreshes sessions; this is
- * the real check.
+ * choose their own password first; has two-step verification set up but has not
+ * entered a code in this session → the code page; the owner without it set up →
+ * the setup page (see lib/portal/mfa.ts). proxy.ts only refreshes sessions; this
+ * is the real check.
  *
  * `isAdmin` is for choosing what to *show*; row-level security enforces what
  * is actually allowed, so a wrong value here can never expose data.
  */
-export async function requireUser(locale: string, { allowPasswordChange = false } = {}) {
+export async function requireUser(locale: string, { allowPasswordChange = false, allowTwoStep = false } = {}) {
   const session = await loadSession();
   if (!session) notFound();
   if (!session.user) redirect({ href: "/portal/login", locale });
   if (session.mustChangePassword && !allowPasswordChange) redirect({ href: "/portal/set-password", locale });
+  // Only the two-step pages themselves (and sign-out) may be opened before the second step is done.
+  if (!allowTwoStep && session.twoStep === "verify") redirect({ href: "/portal/verify", locale });
+  if (!allowTwoStep && session.twoStep === "enroll") redirect({ href: "/portal/two-step", locale });
   return {
     supabase: session.supabase,
     user: session.user!,
     isAdmin: session.isAdmin!,
     mustChangePassword: session.mustChangePassword!,
+    twoStep: session.twoStep!,
   };
+}
+
+/**
+ * For routes that are not pages (a file download): has this signed-in person finished the second step? False when
+ * nobody is signed in, or when a code is still owed. (The owner who has not set it up yet is not "owed a code".)
+ */
+export async function twoStepComplete(): Promise<boolean> {
+  const session = await loadSession();
+  return Boolean(session?.user) && session?.twoStep !== "verify";
 }
 
 export async function currentUser() {

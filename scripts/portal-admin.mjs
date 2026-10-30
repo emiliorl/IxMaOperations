@@ -43,6 +43,11 @@
  *   doctor                                              is this database and machine ready for real clients? (read-only:
  *                                                       migrations applied, owner exists, demo data gone, sign-up off, settings present)
  *   make-admin <email>                                  mark yourself as the owner (sign in again afterwards)
+ *   mfa-status                                          who has two-step verification set up (and how many authenticator apps)
+ *   mfa-reset <email>                                   LOST PHONE: removes that person's authenticator apps, so they can sign in with
+ *                                                       the password again; the portal then asks the owner to set it up again.
+ *                                                       Uses the secret key: run it only on your own machine, and only for someone
+ *                                                       whose identity you have checked (this is the way around the second step).
  *   list                                                show companies, projects and who can see them
  *
  * Example — a company with a Finance and an Operations team lead:
@@ -561,6 +566,17 @@ const commands = {
     const users = (await db.auth.admin.listUsers({ perPage: 200 })).data?.users ?? [];
     const owners = users.filter((u) => u.app_metadata?.role === "admin");
     owners.length === 0 ? bad("nobody is the owner", "node --env-file=.env.local scripts/portal-admin.mjs make-admin you@yourdomain.com") : ok(`${owners.length} owner login${owners.length === 1 ? "" : "s"}`);
+    // Two-step verification for the owner (the portal insists on it; until it is set up the password is the only protection).
+    const appsOf = (u) => (u.factors ?? []).filter((factor) => factor.status === "verified").length;
+    const unprotected = owners.filter((u) => appsOf(u) === 0);
+    unprotected.length > 0
+      ? warn(`owner login without two-step verification: ${unprotected.map((u) => u.email).join(", ")}`, "sign in to the portal: it asks to set it up (/portal/two-step). Do it right away: until then the password is the only protection")
+      : owners.length > 0 && ok(`two-step verification is on for ${owners.length === 1 ? "the owner" : "every owner"}`);
+    owners.length > 0 && owners.every((u) => appsOf(u) === 1) && warn("the owner has only one authenticator app", "add a second (a backup) at /portal/two-step, so a lost phone isn't a lockout");
+    ["false", "off", "no", "0"].includes((process.env.PORTAL_REQUIRE_OWNER_2FA ?? "").trim().toLowerCase())
+      ? warn("PORTAL_REQUIRE_OWNER_2FA is switched OFF here", "remove it (or set it to true) so the owner is always required to use two-step verification; set it on Vercel too")
+      : ok("two-step verification is required of the owner");
+    warn("migration 20261029001900_admin_two_step.sql (the owner's database powers need the second step)", "can't be checked from here: run it in the Supabase SQL editor if you haven't; it is safe to run twice");
     const demo = users.filter((u) => /@demo-co\.test$/i.test(u.email ?? ""));
     demo.length > 0 ? warn(`${demo.length} demo login(s) still exist`, "node --env-file=.env.local scripts/seed-demo.mjs --wipe") : ok("no demo logins");
     const demoOrg = must(await db.from("organizations").select("id").eq("slug", "demo-co").maybeSingle(), "Looking for the demo company");
@@ -607,6 +623,33 @@ const commands = {
     const { error } = await db.auth.admin.updateUserById(profile.id, { app_metadata: { role: "admin" } });
     if (error) fail(`Making admin: ${error.message}`);
     console.log(`✓ ${profile.display_name} is now the owner. Sign out and in again so the new permission takes effect.`);
+  },
+
+  async "mfa-status"() {
+    const users = (await db.auth.admin.listUsers({ perPage: 200 })).data?.users ?? [];
+    const rows = users
+      .map((u) => ({ email: u.email ?? "?", owner: u.app_metadata?.role === "admin", apps: (u.factors ?? []).filter((factor) => factor.status === "verified").length }))
+      .filter((u) => u.owner || u.apps > 0)
+      .sort((a, b) => Number(b.owner) - Number(a.owner));
+    if (rows.length === 0) return console.log("(nobody is an owner, and nobody has two-step verification set up)");
+    for (const u of rows) {
+      console.log(`  ${u.owner ? "★ owner " : "         "} ${u.email.padEnd(34)} ${u.apps > 0 ? `two-step ON (${u.apps} app${u.apps === 1 ? "" : "s"})` : "two-step OFF"}`);
+    }
+  },
+
+  async "mfa-reset"() {
+    need(1, "mfa-reset <email>");
+    const profile = await profileByEmail(positional[0]);
+    const listed = await db.auth.admin.mfa.listFactors({ userId: profile.id });
+    if (listed.error) fail(`Reading their authenticator apps: ${listed.error.message}`);
+    const factors = listed.data?.factors ?? [];
+    if (factors.length === 0) return console.log(`✓ ${profile.display_name} has no authenticator apps: nothing to reset.`);
+    for (const factor of factors) {
+      const removed = await db.auth.admin.mfa.deleteFactor({ id: factor.id, userId: profile.id });
+      if (removed.error) fail(`Removing "${factor.friendly_name ?? factor.id}": ${removed.error.message}`);
+      console.log(`  removed: ${factor.friendly_name ?? factor.id} (${factor.status})`);
+    }
+    console.log(`✓ ${profile.display_name} can sign in with the password again. The portal will ask the owner to set up two-step verification again at the next sign-in: do it right away.`);
   },
 
   async list() {

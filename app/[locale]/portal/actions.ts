@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 import { hasLocale } from "next-intl";
 import { redirect } from "@/i18n/navigation";
@@ -16,6 +17,7 @@ import { validateNewPassword } from "@/lib/portal/password";
 import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
 import { saveAttachments } from "@/lib/portal/save-attachments";
 import { resolveTicketFolder, resolveTicketTitle } from "@/lib/portal/ticket-title";
+import { canRemoveFactor, normalizeCode, ownerTwoStepRequired, verifiedTotpCount } from "@/lib/portal/mfa";
 import { isOfficeDay, officeDaysFromForm } from "@/lib/portal/office-days";
 import { getOfficeWeekdays } from "@/lib/portal/queries";
 import { cancelProjectMeeting } from "@/lib/portal/project-meetings";
@@ -36,6 +38,9 @@ import {
   settingsInput,
   ticketInput,
   ticketStatusInput,
+  twoStepCodeInput,
+  twoStepConfirmInput,
+  twoStepRemoveInput,
 } from "@/lib/portal/schemas";
 import { checkRateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
 import { OUTGOING_URL } from "@/lib/site-url";
@@ -128,6 +133,97 @@ export async function signOut(formData: FormData): Promise<void> {
     await supabase.auth.signOut();
   }
   redirect({ href: "/portal/login", locale });
+}
+
+// ------------------------------------------------------- two-step verification
+
+export interface TwoStepState {
+  error?: "invalid" | "rate" | "generic";
+  /** After the setup was started: what to show so the person can add the app (a QR code and the same thing as text). */
+  setup?: { factorId: string; qr: string; secret: string };
+}
+
+/**
+ * Trying a code is the one thing here that can be guessed (a million possibilities), so it is limited per
+ * ACCOUNT, not per address, and fails closed in production. Supabase limits it too; this is ours.
+ */
+async function codeAttemptAllowed(userId: string): Promise<boolean> {
+  return (await checkRateLimit("portal-2fa-code", userId, 10, 900, { failClosed: true })).allowed;
+}
+
+/**
+ * Start adding an authenticator app: makes a new one on the account and returns the QR code and the secret to
+ * type in by hand. It does nothing until a code from the app is confirmed. Half-finished earlier attempts are
+ * removed first: they protect nothing, and would otherwise pile up.
+ */
+export async function startTwoStepSetup(_prev: TwoStepState, formData: FormData): Promise<TwoStepState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, user } = await requireUser(locale, { allowTwoStep: true });
+  if (!(await checkRateLimit("portal-2fa-setup", user.id, 10, 3600, { failClosed: true })).allowed) return { error: "rate" };
+
+  const { data: existing } = await supabase.auth.mfa.listFactors();
+  for (const factor of existing?.all ?? []) {
+    if (factor.factor_type === "totp" && factor.status === "unverified") await supabase.auth.mfa.unenroll({ factorId: factor.id });
+  }
+  const label = `IxMa ${new Date().toISOString().slice(0, 16).replace("T", " ")} ${randomBytes(2).toString("hex")}`;
+  const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: label, issuer: "IxMa Operations" });
+  if (error || !data) return { error: "generic" };
+  return { setup: { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret } };
+}
+
+/** Finish adding it: the first code the app shows proves the person really has it. Then the session counts as verified. */
+export async function confirmTwoStepSetup(_prev: TwoStepState, formData: FormData): Promise<TwoStepState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, user } = await requireUser(locale, { allowTwoStep: true });
+  const parsed = twoStepConfirmInput.safeParse({ factorId: text(formData, "factorId"), code: normalizeCode(text(formData, "code")) });
+  if (!parsed.success) return { error: "invalid" };
+  if (!(await codeAttemptAllowed(user.id))) return { error: "rate" };
+
+  const { error } = await supabase.auth.mfa.challengeAndVerify(parsed.data);
+  if (error) return { error: "invalid" };
+  redirect({ href: { pathname: "/portal/two-step", query: { result: "on" } }, locale });
+  return {};
+}
+
+/** Sign-in, second step: a code from any of the person's authenticator apps. The same message whatever went wrong. */
+export async function verifyTwoStep(_prev: TwoStepState, formData: FormData): Promise<TwoStepState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, user } = await requireUser(locale, { allowTwoStep: true });
+  const parsed = twoStepCodeInput.safeParse({ code: normalizeCode(text(formData, "code")) });
+  if (!parsed.success) return { error: "invalid" };
+  if (!(await codeAttemptAllowed(user.id))) return { error: "rate" };
+
+  const { data: factors } = await supabase.auth.mfa.listFactors();
+  for (const factor of factors?.totp ?? []) {
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code: parsed.data.code });
+    if (!error) {
+      redirect({ href: "/portal", locale });
+      return {};
+    }
+  }
+  return { error: "invalid" };
+}
+
+/**
+ * Remove one authenticator app. Supabase itself only allows it from a session that entered a code, and the owner
+ * cannot remove their last one while two-step is required of them (it would only send them straight back to set it up).
+ */
+export async function removeTwoStepFactor(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, user, isAdmin } = await requireUser(locale, { allowTwoStep: true });
+  const back = (result: "removed" | "keep" | "error"): never =>
+    redirect({ href: { pathname: "/portal/two-step", query: { result } }, locale });
+  const parsed = twoStepRemoveInput.safeParse({ factorId: text(formData, "factorId") });
+  if (!parsed.success) return back("error");
+  if (!(await checkRateLimit("portal-2fa-setup", user.id, 10, 3600, { failClosed: true })).allowed) return back("error");
+
+  const { data: factors } = await supabase.auth.mfa.listFactors();
+  const mine = factors?.totp ?? [];
+  if (!mine.some((factor) => factor.id === parsed.data.factorId)) return back("error");
+  if (!canRemoveFactor({ isAdmin, ownerRequired: ownerTwoStepRequired(process.env.PORTAL_REQUIRE_OWNER_2FA), verifiedFactors: verifiedTotpCount(mine) })) return back("keep");
+
+  const { error } = await supabase.auth.mfa.unenroll({ factorId: parsed.data.factorId });
+  return back(error ? "error" : "removed");
 }
 
 // -------------------------------------------------------------------- tickets

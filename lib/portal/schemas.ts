@@ -6,6 +6,7 @@ import {
   TICKET_PRIORITIES,
   TICKET_STATUSES,
 } from "./constants";
+import { TWO_STEP_CODE } from "./mfa";
 import { LANGUAGES, isValidTimeZone } from "./preferences";
 
 /** Server-side validation for portal form submissions (the browser is never trusted). */
@@ -148,3 +149,11 @@ export const removeCompanyAccessInput = z.object({
 });
 
 export type TicketInput = z.infer<typeof ticketInput>;
+
+/** The 6-digit code from the authenticator app (already stripped of spaces and dashes). */
+export const twoStepCodeInput = z.object({ code: z.string().regex(TWO_STEP_CODE) });
+
+/** Finishing the setup: which pending authenticator app, and the first code it shows. */
+export const twoStepConfirmInput = z.object({ factorId: z.string().uuid(), code: z.string().regex(TWO_STEP_CODE) });
+
+export const twoStepRemoveInput = z.object({ factorId: z.string().uuid() });

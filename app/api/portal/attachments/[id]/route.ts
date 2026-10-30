@@ -14,6 +14,7 @@
  */
 import { NextResponse } from "next/server";
 import { decryptLoose } from "@/lib/field-crypto";
+import { twoStepComplete } from "@/lib/portal/auth";
 import { INLINE_TYPES, sanitizeFileName } from "@/lib/portal/attachments";
 import { attachmentPath, getDecrypted } from "@/lib/portal/storage";
 import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server";
@@ -27,11 +28,9 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   const { id } = await context.params;
   if (!UUID.test(id) || !supabaseConfigured()) return NOT_FOUND();
 
+  // Signed in AND past the second step (a person with two-step verification who only entered their password gets nothing).
+  if (!(await twoStepComplete())) return new NextResponse("Unauthorized", { status: 401, headers: { "Cache-Control": "no-store" } });
   const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return new NextResponse("Unauthorized", { status: 401, headers: { "Cache-Control": "no-store" } });
 
   const { data: row } = await supabase
     .from("ticket_attachments")
