@@ -58,6 +58,17 @@ if (process.argv.includes("--wipe")) {
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } });
   const org = await db.from("organizations").select("id").eq("slug", "demo-co").maybeSingle();
   if (org.data) {
+    // Attachment files live in storage, not in the tables, so deleting the company would leave them behind. Remove them first.
+    const projects = await db.from("projects").select("id").eq("organization_id", org.data.id);
+    const projectIds = (projects.data ?? []).map((p) => p.id);
+    const tickets = projectIds.length ? await db.from("tickets").select("id").in("project_id", projectIds) : { data: [] };
+    let files = 0;
+    for (const { id } of tickets.data ?? []) {
+      const { data: inside } = await db.storage.from("ticket-attachments").list(id, { limit: 1000 });
+      const paths = (inside ?? []).map((file) => `${id}/${file.name}`);
+      if (paths.length > 0 && !(await db.storage.from("ticket-attachments").remove(paths)).error) files += paths.length;
+    }
+    console.log(`✓ ${files} attachment file(s) removed from storage`);
     const del = await db.from("organizations").delete().eq("id", org.data.id);
     console.log(del.error ? `✗ ${del.error.message}` : "✓ Company demo-co removed (projects, folders, plan, tickets, access)");
   } else console.log("✓ No demo company found");

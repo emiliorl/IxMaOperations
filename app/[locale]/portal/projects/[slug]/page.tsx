@@ -6,6 +6,7 @@ import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { AccessPanel } from "@/components/portal/AccessPanel";
 import { FilterSelect } from "@/components/portal/FilterSelect";
 import { Highlight } from "@/components/portal/Highlight";
+import { OnSitePanel } from "@/components/portal/OnSitePanel";
 import { Markdown } from "@/components/portal/Markdown";
 import { Pill, PriorityDot } from "@/components/portal/Pills";
 import { SearchBox } from "@/components/portal/SearchBox";
@@ -48,7 +49,11 @@ import {
   listCompanyAccess,
   listCostMilestoneIds,
   listProjectCostFlags,
+  PROJECT_TICKET_LIMIT,
 } from "@/lib/portal/queries";
+import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
+import { loadOnSiteDays, listUpcomingVisits } from "@/lib/portal/onsite";
+import { formatVisit } from "@/lib/portal/onsite-format";
 import { cn } from "@/lib/utils";
 
 const panel = "rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidden";
@@ -57,7 +62,7 @@ const REVIEW_LIST_MAX = 3;
 
 export default async function ProjectPage(props: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ dept?: string; tab?: string; q?: string; access?: string; tickets?: string; sort?: string; mine?: string; psort?: string }>;
+  searchParams: Promise<{ dept?: string; tab?: string; q?: string; access?: string; tickets?: string; sort?: string; mine?: string; psort?: string; visit?: string }>;
 }) {
   const { locale, slug } = await props.params;
   const {
@@ -69,6 +74,7 @@ export default async function ProjectPage(props: {
     sort: sortParam,
     mine: mineParam,
     psort: planSortParamRaw,
+    visit: visitNotice,
   } = await props.searchParams;
   setRequestLocale(locale);
 
@@ -77,7 +83,7 @@ export default async function ProjectPage(props: {
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
   // Only the project is needed to start all of these, so they run together.
-  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone] = await Promise.all([
+  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone, visits] = await Promise.all([
     getTranslations("Portal"),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     listCostMilestoneIds(supabase),
@@ -85,6 +91,8 @@ export default async function ProjectPage(props: {
       ? Promise.all([listCompanyAccess(supabase, project.organizationId), listProjectCostFlags(supabase, project.id)])
       : Promise.resolve([[], []] as [Awaited<ReturnType<typeof listCompanyAccess>>, string[]]),
     getMyTimeZone(supabase, user.id),
+    // The days ahead at this project's office (cheap: the database only; the owner's calendar is read only on the On-site tab).
+    listUpcomingVisits(supabase, { id: project.id, showOnsite: project.showOnsite }, isAdmin),
   ]);
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
@@ -133,6 +141,21 @@ export default async function ProjectPage(props: {
   // Opening a ticket from an area keeps that area.
   const newTicketHref = { pathname: `/portal/projects/${slug}/tickets/new`, query: filterFolder ? { dept: filterFolder } : {} };
 
+  // The on-site tab is for projects the owner visits: when the owner announced days or booked meetings there, or the project has an office.
+  const showOnsiteTab = isAdmin || (project.showOnsite && (Boolean(project.officeAddress) || visits.length > 0));
+  const hostZone = DEFAULT_AVAILABILITY.hostTimezone;
+  const nextVisit = visits[0] ? formatVisit(visits[0], locale, timeZone, hostZone) : null;
+  const nextOnsite = nextVisit && showOnsiteTab && (
+    <Link
+      href={projectFilterHref(slug, { dept: deptParam, tab: "onsite" })}
+      className="inline-flex flex-wrap items-center gap-x-2 text-xs text-zinc-400 transition-colors hover:text-zinc-100"
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
+      {t("onsiteNext", { day: nextVisit.day, hours: nextVisit.hours })}
+      <span aria-hidden>→</span>
+    </Link>
+  );
+
   const actions = (
     <div className="flex flex-wrap items-center gap-2">
       {mayOpenTickets && (
@@ -140,6 +163,9 @@ export default async function ProjectPage(props: {
           {t("openTicket")}
         </Link>
       )}
+      <Link href={{ pathname: "/book", query: { project: slug } }} className={buttonVariants({ variant: "outline", size: "sm" })}>
+        {t("bookCall")}
+      </Link>
       {showLog && (
         <Link href={`/portal/projects/${slug}/log`} className={buttonVariants({ variant: "outline", size: "sm" })}>
           {t("logLink")} →
@@ -215,6 +241,7 @@ export default async function ProjectPage(props: {
               <Pill kind="project" value={project.status} label={t(`projectStatus.${project.status}`)} />
             </div>
             {project.description && <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-2xl">{project.description}</p>}
+            {nextOnsite}
             {!mayOpenTickets && <p className="text-xs text-zinc-500">{t("viewOnlyNote")}</p>}
           </header>
 
@@ -324,7 +351,8 @@ export default async function ProjectPage(props: {
   );
 
   const hasDetails = Boolean(project.overview || links || project.description || !mayOpenTickets);
-  const tab: ProjectTab = requestedTab === "details" && !hasDetails ? "plan" : (requestedTab ?? "plan");
+  const tab: ProjectTab =
+    (requestedTab === "details" && !hasDetails) || (requestedTab === "onsite" && !showOnsiteTab) ? "plan" : (requestedTab ?? "plan");
 
   const canReport = (m: { status: string; departmentId: string | null }) =>
     mayOpenTickets && m.status !== "pending" && canWriteIn(access, isAdmin, m.departmentId);
@@ -338,6 +366,7 @@ export default async function ProjectPage(props: {
   const tabs: { id: ProjectTab; label: string; count?: number; dot?: boolean }[] = [
     { id: "plan", label: t("planTab"), count: areaMilestones.length },
     { id: "tickets", label: t("ticketsTitle"), count: areaTickets.length, dot: toReview.length > 0 },
+    ...(showOnsiteTab ? [{ id: "onsite" as const, label: t("onsiteTab") }] : []),
     { id: "team", label: isAdmin ? t("accessTitle") : t("teamTitle"), count: isAdmin ? undefined : project.team.length },
     ...(hasDetails ? [{ id: "details" as const, label: t("detailsTitle") }] : []),
   ];
@@ -525,6 +554,8 @@ export default async function ProjectPage(props: {
     );
   }
 
+  // The owner's calendar is read only when this tab is open.
+  const onsiteDays = tab === "onsite" ? await loadOnSiteDays(visits, project.id) : [];
   const problems = sortProblems(areaMilestones, planSort, { areaLabel, openTickets: (id) => ticketCounts.get(id)?.open ?? 0 });
   const sortHead = (key: PlanSortKey, label: string, className?: string) => {
     const active = planSort?.key === key;
@@ -569,6 +600,7 @@ export default async function ProjectPage(props: {
             </div>
             {actions}
           </div>
+          {nextOnsite}
         </header>
 
         {/* Find things instead of scrolling for them */}
@@ -850,7 +882,25 @@ export default async function ProjectPage(props: {
                 ) : (
                   <TicketList tickets={tickets} locale={locale} folderLabel={areaLabel} problemCodes={problemLabels} showFolder={filterFolder === null} timeZone={timeZone} />
                 )}
+                {project.tickets.length >= PROJECT_TICKET_LIMIT && (
+                  <p className="border-t border-zinc-800 px-5 py-3 text-xs text-zinc-500">{t("ticketsLimited", { n: PROJECT_TICKET_LIMIT })}</p>
+                )}
               </section>
+            )}
+
+            {/* On-site — when the owner is at this project's office, and the free stretches */}
+            {tab === "onsite" && (
+              <OnSitePanel
+                locale={locale}
+                slug={slug}
+                timeZone={timeZone}
+                days={onsiteDays}
+                isAdmin={isAdmin}
+                showOnsite={project.showOnsite}
+                officeLabel={project.officeLabel}
+                officeAddress={project.officeAddress}
+                notice={visitNotice === "saved" || visitNotice === "error" ? visitNotice : null}
+              />
             )}
 
             {/* Team — the owner manages access here, so the read-only list would only repeat it */}

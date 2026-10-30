@@ -107,6 +107,7 @@ describe("workspace tabs and search", () => {
   it("parses only known tabs; nothing chosen is null so the page can pick a sensible one", () => {
     expect(parseProjectTab("tickets")).toBe("tickets");
     expect(parseProjectTab("team")).toBe("team");
+    expect(parseProjectTab("onsite")).toBe("onsite");
     expect(parseProjectTab("nope")).toBeNull();
     expect(parseProjectTab(undefined)).toBeNull();
   });

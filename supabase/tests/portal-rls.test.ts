@@ -133,6 +133,7 @@ beforeAll(async () => {
   await db.exec(sql("20261029001100_preferences.sql"));
   // The WhatsApp migration was dropped from the project; this removes it for anyone who ran it, and does nothing for everyone else.
   await db.exec(sql("20261029001300_remove_whatsapp.sql"));
+  await db.exec(sql("20261029001400_onsite_visits.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -1293,5 +1294,101 @@ describe("the project log is for leaders", () => {
       `select by_owner, actor_id from public.project_events where kind = 'ticket_status' and ticket_id = '${T_FIN}' and to_status = 'open'`
     );
     expect(reopened).toEqual({ by_owner: false, actor_id: U.leadFin });
+  });
+});
+
+describe("the owner's on-site days", () => {
+  const owner = () => as({ id: U.admin, admin: true });
+  /** One announced day at each company's project. */
+  const seedDays = async () => {
+    await owner();
+    await db.exec(`
+      insert into public.onsite_visits (project_id, visit_date, start_time, end_time) values
+        ('${P1}', '2026-11-05', '10:00', '15:30'),
+        ('${P2}', '2026-11-05', '09:00', '13:00')`);
+  };
+  const daysOf = async (who: string) => {
+    await as({ id: who });
+    return (await rows<{ project_id: string }>(`select project_id from public.onsite_visits order by 1`)).map((r) => r.project_id);
+  };
+
+  it("people on a project see that project's days, and only those", async () => {
+    await seedDays();
+    for (const who of [U.leadAll, U.leadFin, U.memberOps, U.multi]) expect(await daysOf(who)).toEqual([P1]);
+  });
+
+  it("a company-wide executive sees the days of their company's projects, view-only ones included", async () => {
+    await seedDays();
+    expect(await daysOf(U.cfo)).toEqual([P1]);
+    expect(await daysOf(U.ceo)).toEqual([P1]);
+  });
+
+  it("another company's people see only their own project's day, never this one's", async () => {
+    await seedDays();
+    expect(await daysOf(U.outsider)).toEqual([P2]);
+    expect(await daysOf(U.betaExec)).toEqual([P2]);
+  });
+
+  it("a signed-in stranger and the public key see nothing", async () => {
+    await seedDays();
+    expect(await daysOf(U.nobody)).toEqual([]);
+    await as(null);
+    expect(await rejection(`select * from public.onsite_visits`)).toMatch(/permission denied/i);
+  });
+
+  it("the owner sees every project's days", async () => {
+    await seedDays();
+    await owner();
+    expect(sorted((await rows<{ project_id: string }>(`select project_id from public.onsite_visits`)).map((r) => r.project_id))).toEqual(sorted([P1, P2]));
+  });
+
+  it("switching the schedule off hides it from the project's people, but not from the owner", async () => {
+    await seedDays();
+    await owner();
+    await db.exec(`update public.projects set show_onsite_presence = false where id = '${P1}'`);
+    expect(await daysOf(U.leadAll)).toEqual([]);
+    expect(await daysOf(U.cfo)).toEqual([]);
+    await owner();
+    expect(await rows(`select 1 from public.onsite_visits where project_id = '${P1}'`)).toHaveLength(1);
+    // The other company's project is not affected.
+    expect(await daysOf(U.outsider)).toEqual([P2]);
+  });
+
+  it("only the owner can announce, change or remove a day: nobody else, a team lead and a full-access executive included", async () => {
+    await seedDays();
+    for (const who of [U.leadAll, U.leadFin, U.memberOps, U.cfo, U.ceo, U.outsider]) {
+      await as({ id: who });
+      expect(await rejection(`insert into public.onsite_visits (project_id, visit_date) values ('${P1}', '2026-11-06')`)).toMatch(/row-level security/i);
+      expect(await affected(`update public.onsite_visits set end_time = '23:00' where project_id = '${P1}'`)).toBe(0);
+      expect(await affected(`delete from public.onsite_visits where project_id = '${P1}'`)).toBe(0);
+    }
+    await owner();
+    expect(await rows(`select 1 from public.onsite_visits`)).toHaveLength(2);
+    expect(await affected(`update public.onsite_visits set end_time = '14:00' where project_id = '${P1}'`)).toBe(1);
+    expect(await affected(`delete from public.onsite_visits where project_id = '${P1}'`)).toBe(1);
+  });
+
+  it("a person cannot give themselves the owner's power through their own account data", async () => {
+    await as({ id: U.leadAll, userMetadataAdmin: true });
+    expect(await rejection(`insert into public.onsite_visits (project_id, visit_date) values ('${P1}', '2026-11-06')`)).toMatch(/row-level security/i);
+  });
+
+  it("a day must end after it starts, and a project has one entry per date", async () => {
+    await owner();
+    expect(await rejection(`insert into public.onsite_visits (project_id, visit_date, start_time, end_time) values ('${P1}', '2026-11-09', '15:00', '10:00')`)).toMatch(/check constraint/i);
+    expect(await rejection(`insert into public.onsite_visits (project_id, visit_date, start_time, end_time) values ('${P1}', '2026-11-09', '10:00', '10:00')`)).toMatch(/check constraint/i);
+    await db.exec(`insert into public.onsite_visits (project_id, visit_date) values ('${P1}', '2026-11-09')`);
+    expect(await rejection(`insert into public.onsite_visits (project_id, visit_date) values ('${P1}', '2026-11-09')`)).toMatch(/unique|duplicate/i);
+    // The same date at another company's project is fine.
+    expect(await rejection(`insert into public.onsite_visits (project_id, visit_date) values ('${P2}', '2026-11-09')`)).toBeNull();
+  });
+
+  it("new days get the usual hours, and disappear with their project", async () => {
+    await owner();
+    await db.exec(`insert into public.onsite_visits (project_id, visit_date) values ('${P1}', '2026-11-10')`);
+    const [day] = await rows<{ start_time: string; end_time: string }>(`select start_time::text, end_time::text from public.onsite_visits`);
+    expect(day).toEqual({ start_time: "10:00:00", end_time: "15:30:00" });
+    await db.exec(`delete from public.projects where id = '${P1}'`);
+    expect(await rows(`select 1 from public.onsite_visits`)).toHaveLength(0);
   });
 });

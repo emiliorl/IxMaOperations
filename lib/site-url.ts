@@ -20,7 +20,20 @@ import { routing, type AppLocale } from "@/i18n/routing";
  * live at the *real* domain but the sitemap it served still declared URLs
  * under the wrong one — a live host/sitemap mismatch, not a local bug.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ixmaoperations.com").replace(/\/+$/, "");
+export const PRODUCTION_SITE_URL = "https://www.ixmaoperations.com";
+export const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? PRODUCTION_SITE_URL).replace(/\/+$/, "");
+
+/**
+ * The base for links that LEAVE the app: the portal emails, the owner's alerts and
+ * digest, and invite links. Local development and the live site share one
+ * Supabase project, so something done from a local copy can email a real person;
+ * a link to localhost would then be useless to them. Anything that looks like the
+ * local machine becomes the real site (the tokens and tickets behind the link
+ * live in the same database, so the link works). To test a link against your own
+ * machine, open it by hand.
+ */
+const isLocalAddress = (url: string) => /^https?:\/\/(localhost|127\.|0\.0\.0\.0|\[::1\])/i.test(url);
+export const OUTGOING_URL = isLocalAddress(SITE_URL) ? PRODUCTION_SITE_URL : SITE_URL;
 
 /**
  * Builds the canonical absolute URL for a public route in a specific locale,

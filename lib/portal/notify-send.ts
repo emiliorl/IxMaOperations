@@ -1,7 +1,7 @@
 import "server-only";
 import { sendPortalEmail } from "@/lib/email";
 import { decryptLoose } from "@/lib/field-crypto";
-import { SITE_URL } from "@/lib/site-url";
+import { OUTGOING_URL } from "@/lib/site-url";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { clientEmail, ownerAlertHeaders, ownerAlertMode, ownerSubject, shouldEmailAboutReply, type ClientEmailKind, type OwnerEvent } from "./notify";
 import { notificationPreferencesFrom, parseLanguage, wantsEmail } from "./preferences";
@@ -9,7 +9,7 @@ import { notificationPreferencesFrom, parseLanguage, wantsEmail } from "./prefer
 /** Minutes within which several owner replies count as one email to the person. */
 const REPLY_BURST_MINUTES = 10;
 
-const siteHost = () => new URL(SITE_URL).host;
+const siteHost = () => new URL(OUTGOING_URL).host;
 /** Where the owner's alerts go: a plus-address or a dedicated mailbox keeps them out of the main inbox. */
 const ownerInbox = () => process.env.OWNER_ALERT_EMAIL || process.env.OWNER_EMAIL || null;
 
@@ -85,7 +85,7 @@ export async function notifyTicketPerson(input: { ticketId: string; kind: Client
         number: ticket.ticket_number,
         title: decryptLoose(ticket.title) ?? "",
         project: decryptLoose((project as { name?: string } | null)?.name) ?? "",
-        url: `${SITE_URL}/portal/tickets/${ticket.id}`,
+        url: `${OUTGOING_URL}/portal/tickets/${ticket.id}`,
       },
       parseLanguage(person.locale)
     );

@@ -22,7 +22,7 @@ import { sendPortalEmail } from "@/lib/email";
 import { decryptLoose } from "@/lib/field-crypto";
 import { buildOwnerDigest, digestWindowHours, ownerAlertHeaders, wasAlertedInstantly, type DigestEvent } from "@/lib/portal/notify";
 import { ownerInbox, siteHost } from "@/lib/portal/notify-send";
-import { SITE_URL } from "@/lib/site-url";
+import { OUTGOING_URL } from "@/lib/site-url";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -123,7 +123,7 @@ export async function GET(req: Request) {
       });
     }
 
-    const digest = buildOwnerDigest(digestEvents, SITE_URL);
+    const digest = buildOwnerDigest(digestEvents, OUTGOING_URL);
     if (!digest) return NextResponse.json({ sent: false, events: events.length, tickets: 0 });
 
     const sent = await sendPortalEmail({

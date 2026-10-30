@@ -106,6 +106,8 @@ export interface ProjectDetail {
   productionUrl: string | null;
   officeLabel: string | null;
   officeAddress: string | null;
+  /** The owner's switch: does this project show when the owner is on-site? */
+  showOnsite: boolean;
   /** The folders the viewer can open. */
   departments: Department[];
   milestones: Milestone[];
@@ -211,6 +213,7 @@ interface ProjectDetailRow {
   production_url: string | null;
   office_label: string | null;
   office_address: string | null;
+  show_onsite_presence?: boolean | null;
   organizations: unknown;
   project_departments: { departments: unknown }[] | null;
   project_milestones:
@@ -255,8 +258,15 @@ interface ProjectDetailRow {
     | null;
 }
 
+/**
+ * Tickets loaded with a project, newest first. The counts, the queue and the
+ * progress on the project page all come from these, so the page says so when a
+ * project ever reaches the limit (see the tickets tab).
+ */
+export const PROJECT_TICKET_LIMIT = 1000;
+
 const PROJECT_CORE =
-  "id,organization_id,name,slug,description,status,staging_url,production_url,office_label,office_address,organizations(name)," +
+  "id,organization_id,name,slug,description,status,staging_url,production_url,office_label,office_address,show_onsite_presence,organizations(name)," +
   "project_departments(departments(id,name))," +
   "project_members(user_id,role,all_departments,profiles(display_name),project_member_departments(department_id))," +
   "tickets(id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,updated_at,created_by,profiles!created_by(display_name))";
@@ -281,7 +291,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       .order("sort_order", { referencedTable: "project_milestones" })
       .order("due_date", { referencedTable: "project_milestones", nullsFirst: false })
       .order("created_at", { referencedTable: "tickets", ascending: false })
-      .limit(200, { referencedTable: "tickets" })
+      .limit(PROJECT_TICKET_LIMIT, { referencedTable: "tickets" })
       .maybeSingle();
 
   let { data, error } = await run(true);
@@ -307,6 +317,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
     productionUrl: plainOrNull(project.production_url),
     officeLabel: plainOrNull(project.office_label),
     officeAddress: plainOrNull(project.office_address),
+    showOnsite: project.show_onsite_presence ?? true,
     departments: (project.project_departments ?? [])
       .map((row) => one<Department>(row.departments as never))
       .filter((d): d is Department => d !== null)
@@ -393,7 +404,7 @@ export interface SearchText {
   problems: Map<string, { source: string; text: string }[]>;
 }
 
-const SEARCH_TICKET_LIMIT = 200;
+const SEARCH_TICKET_LIMIT = 500;
 const SEARCH_COMMENTS_PER_TICKET = 20;
 
 /**
@@ -540,7 +551,7 @@ export interface TicketDetail {
   createdAt: string;
   updatedAt: string;
   createdByName: string | null;
-  project: { id: string; organizationId: string; name: string; slug: string };
+  project: { id: string; organizationId: string; name: string; slug: string; showOnsite: boolean };
   comments: TicketComment[];
 }
 
@@ -548,7 +559,7 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
   const { data: ticket, error } = await supabase
     .from("tickets")
     .select(
-      "id,ticket_number,title,description,status,priority,category,environment,affected_url,department_id,milestone_id,created_at,updated_at,created_by,projects(id,organization_id,name,slug)"
+      "id,ticket_number,title,description,status,priority,category,environment,affected_url,department_id,milestone_id,created_at,updated_at,created_by,projects(id,organization_id,name,slug,show_onsite_presence)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -584,7 +595,7 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
   // A problem loading files must not take the whole ticket down: log it, show the ticket without them.
   if (files.error) console.error(`[portal] could not load attachments for ticket ${ticket.id}: ${files.error.message}`);
 
-  const project = one<{ id: string; organization_id: string; name: string; slug: string }>(ticket.projects as never);
+  const project = one<{ id: string; organization_id: string; name: string; slug: string; show_onsite_presence?: boolean | null }>(ticket.projects as never);
   if (!project) return null;
 
   return {
@@ -616,7 +627,13 @@ export async function getTicketDetail(supabase: SupabaseClient, id: string): Pro
         isImage: INLINE_TYPES.has(mime),
       };
     }),
-    project: { id: project.id, organizationId: project.organization_id, name: plain(project.name), slug: project.slug },
+    project: {
+      id: project.id,
+      organizationId: project.organization_id,
+      name: plain(project.name),
+      slug: project.slug,
+      showOnsite: project.show_onsite_presence ?? true,
+    },
     comments: (comments.data ?? []).map((c) => ({
       id: c.id,
       message: plain(c.message),

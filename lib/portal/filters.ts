@@ -54,10 +54,11 @@ export function matchesTicketFilter(status: string, filter: TicketFilter): boole
  * the plan to reach the tickets.
  *   plan     the problems and their progress
  *   tickets  every ticket, open ones first
+ *   onsite   when the owner is at the project's office, and the free stretches
  *   team     who is on the project (the owner manages access here)
  *   details  overview, meeting place and links
  */
-export const PROJECT_TABS = ["plan", "tickets", "team", "details"] as const;
+export const PROJECT_TABS = ["plan", "tickets", "onsite", "team", "details"] as const;
 export type ProjectTab = (typeof PROJECT_TABS)[number];
 
 export function parseProjectTab(value: string | undefined): ProjectTab | null {

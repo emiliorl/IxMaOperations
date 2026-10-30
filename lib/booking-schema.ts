@@ -32,6 +32,9 @@ export function createBookingSchema(t: (key: keyof typeof EN_ERRORS) => string) 
       email: z.string().trim().email(t("emailError")).max(254),
       notes: z.string().trim().max(1000).optional().default(""),
       location: z.string().trim().max(200).optional().default(""),
+      /** Set when a signed-in client books from the portal. Only a hint: the server checks it and ignores it if it does not hold. */
+      projectSlug: z.string().trim().max(120).optional().default(""),
+      ticketId: z.union([z.string().uuid(), z.literal("")]).optional().default(""),
     })
     .refine((v) => v.mode !== "in_person" || v.location.length >= 3, {
       message: t("locationError"),

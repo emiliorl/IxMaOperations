@@ -714,6 +714,10 @@
     "timesIn": "Horarios en {zone}",
     "selectDay": "Elige un día para ver los horarios disponibles.",
     "changeTime": "Cambiar hora",
+    "forProject": "Reserva para {project}",
+    "forTicket": "ticket #{n}",
+    "backToPortal": "Volver al portal",
+    "atYourOffice": "En tu oficina: la dirección ya está puesta.",
     "legendBothFree": "Ambos libres",
     "slotsAvailable": "{n} horarios disponibles",
     "legendOnSite": "Ya estaré en sitio ese día",
@@ -1007,6 +1011,44 @@
     "notifyReplies": "Cuando IxMa responda en un ticket que abrí",
     "settingsSecurity": "Seguridad",
     "settingsSaved": "Guardado.",
+    "ticketsLimited": "Se muestran los últimos {n} tickets de este proyecto. Los más antiguos no se cuentan aquí.",
+    "onsiteTab": "En sitio",
+    "bookCall": "Agendar una llamada",
+    "onsiteNext": "Próxima visita: {day} · {hours}",
+    "onsiteTitle": "Cuándo estoy en tu oficina",
+    "onsiteIntro": "Pasa a verme cuando la barra esté en verde, sin necesidad de agendar. Si necesitas más tiempo, agenda una cita. Los horarios se muestran en tu reloj.",
+    "onsiteLegend": "Qué significan los colores",
+    "onsiteFree": "Libre",
+    "onsiteBusy": "En una reunión",
+    "onsiteMine": "Tu reunión",
+    "onsiteLunch": "Comida",
+    "onsiteToday": "Hoy",
+    "onsiteUntil": "hasta las {time}",
+    "onsiteFromMeeting": "por una reunión agendada",
+    "onsiteFreeWindows": "Libre:",
+    "onsiteNoFree": "Sin tiempo libre este día. Agenda una cita si me necesitas.",
+    "onsiteUnknown": "Por ahora solo se conoce el horario: no se pueden mostrar los tiempos libres de este día.",
+    "onsiteBookDay": "Agendar una cita este día",
+    "onsiteEmpty": "Todavía no hay días en sitio programados. Agenda una llamada o pide una visita.",
+    "onsiteSaved": "Guardado.",
+    "onsiteError": "No se guardó. Revisa la fecha (que no sea pasada) y el horario.",
+    "onsiteAdminTitle": "Administrar días en sitio",
+    "onsiteAddDay": "Anunciar un día en esta oficina",
+    "onsiteDate": "Fecha",
+    "onsiteFrom": "Desde",
+    "onsiteTo": "Hasta",
+    "onsiteAdd": "Agregar día",
+    "onsiteRemove": "Quitar",
+    "onsiteAdminNote": "Un día anunciado también abre horarios presenciales en la página de reservas y oculta los horarios en línea ese día. La comida ({from}–{to}) nunca aparece como libre. Anunciar la misma fecha otra vez cambia su horario.",
+    "onsiteVisible": "Visible para las personas de este proyecto",
+    "onsiteHidden": "Oculto para las personas de este proyecto",
+    "onsiteVisibleHelp": "Ocultarlo también deja de mostrar los días que vienen de reuniones agendadas. Tú siempre lo ves.",
+    "onsiteHide": "Ocultar",
+    "onsiteShow": "Mostrar",
+    "talkTitle": "¿Quieres hablarlo?",
+    "talkBook": "Agendar una llamada sobre este ticket",
+    "talkOnsite": "En tu oficina próximamente: {day} · {hours}",
+    "talkSeeSchedule": "Ver el horario",
     "chooseArea": "Elige un área",
     "viewAllAreas": "Ver todas las áreas ({done} de {total} hitos)",
     "noOpenTickets": "Sin tickets abiertos",
@@ -1027,7 +1069,7 @@
   },
   "Legal": {
     "lastUpdatedLabel": "Última actualización",
-    "lastUpdated": "28 de octubre de 2026",
+    "lastUpdated": "29 de octubre de 2026",
     "Privacy": {
       "title": "Política de Privacidad",
       "intro": "Esta política explica qué información recopila IxMaOperations a través de este sitio web, cómo se usa y qué opciones tienes. Está escrita en lenguaje sencillo a propósito.",
@@ -1071,13 +1113,16 @@
         {
           "heading": "Cuentas de clientes",
           "paragraphs": [
-            "Las cuentas del área de clientes las creamos nosotros para clientes existentes; no hay registro público. La información de una cuenta de cliente, como el estado del proyecto, los tickets y los archivos que adjuntes, solo la ven tú y nosotros."
+            "Las cuentas del área de clientes las creamos nosotros para clientes existentes; no hay registro público. En una cuenta guardamos tu nombre, tu correo de acceso, el idioma y la zona horaria que eliges en Configuración y tus preferencias de correo, junto con lo que pones en el portal: tickets, comentarios y los archivos que adjuntes. Los textos y los archivos se guardan cifrados.",
+          "Lo que hay en una cuenta de cliente lo ven tú, las personas de tu empresa a quienes les hemos dado acceso (cada una solo a las áreas del proyecto que puede abrir) y nosotros.",
+          "Te escribimos por correo sobre tus propios tickets, por ejemplo cuando una corrección está lista para que la revises o cuando respondemos. Estos correos contienen el título del ticket y un enlace, nunca el mensaje en sí, y puedes desactivarlos en Configuración."
           ]
         },
         {
           "heading": "Cuánto tiempo conservamos la información",
           "paragraphs": [
-            "Los correos de solicitud de proyecto y los registros de reuniones se conservan el tiempo necesario para responderte, llevar a cabo cualquier trabajo y cumplir nuestras propias necesidades de registro. Los eliminamos antes si lo pides."
+            "Los correos de solicitud de proyecto y los registros de reuniones se conservan el tiempo necesario para responderte, llevar a cabo cualquier trabajo y cumplir nuestras propias necesidades de registro. Los eliminamos antes si lo pides.",
+          "La información de las cuentas de clientes, incluidos los tickets y los archivos, se conserva mientras trabajamos juntos y después durante el tiempo que requieran nuestras propias necesidades de registro. La eliminamos antes si lo pides."
           ]
         },
         {
@@ -1089,7 +1134,7 @@
         {
           "heading": "Tus opciones",
           "paragraphs": [
-            "Puedes pedirnos que te mostremos, corrijamos o eliminemos la información que tenemos sobre ti, o que cancelemos una reserva, escribiendo a eramirez@ixmaoperations.com. Este sitio no está dirigido a menores de 18 años."
+            "Puedes pedirnos que te mostremos, corrijamos o eliminemos la información que tenemos sobre ti, o que cancelemos una reserva, escribiendo a eramirez@ixmaoperations.com. Si tienes una cuenta de cliente, puedes cambiar tu nombre, idioma, zona horaria y avisos por correo tú mismo en Configuración. Este sitio no está dirigido a menores de 18 años."
           ]
         },
         {

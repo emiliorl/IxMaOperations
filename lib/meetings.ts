@@ -64,6 +64,9 @@ export interface NewMeeting {
   guestEmail: string;
   notes?: string;
   location?: string;
+  /** Set when a signed-in client booked from the portal (already verified): it ties the meeting to the project. */
+  projectId?: string;
+  ticketId?: string;
 }
 
 export type InsertResult = { ok: true; id: string } | { ok: false; reason: "conflict" };
@@ -94,6 +97,8 @@ export async function insertPendingMeeting(meeting: NewMeeting): Promise<InsertR
       guest_email: encryptField(meeting.guestEmail),
       notes: encryptOptional(meeting.notes),
       location: encryptOptional(meeting.location),
+      project_id: meeting.projectId ?? null,
+      ticket_id: meeting.ticketId ?? null,
       status: "pending",
     })
     .select("id")

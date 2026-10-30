@@ -20,6 +20,31 @@ export const settingsInput = z.object({
   notifyReplies: z.boolean(),
 });
 
+const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+/** An on-site day: the project, the owner's local date, and the hours at the office. */
+export const onsiteVisitInput = z
+  .object({
+    projectSlug: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,119}$/),
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .refine((value) => !Number.isNaN(Date.parse(`${value}T00:00:00Z`))),
+    start: clock,
+    end: clock,
+  })
+  .refine((value) => value.end > value.start);
+
+export const removeOnsiteVisitInput = z.object({
+  projectSlug: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,119}$/),
+  visitId: z.string().uuid(),
+});
+
+export const onsitePresenceInput = z.object({
+  projectSlug: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,119}$/),
+  enabled: z.boolean(),
+});
+
 export const loginInput = z.object({
   email: z.string().trim().email().max(254),
   password: z.string().min(1).max(200),

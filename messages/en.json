@@ -714,6 +714,10 @@
     "timesIn": "Times shown in {zone}",
     "selectDay": "Select a day to see available times.",
     "changeTime": "Change time",
+    "forProject": "Booking for {project}",
+    "forTicket": "ticket #{n}",
+    "backToPortal": "Back to the portal",
+    "atYourOffice": "At your office: the address is already filled in.",
     "legendBothFree": "Both free",
     "slotsAvailable": "{n} times available",
     "legendOnSite": "I'm already on-site that day",
@@ -1007,6 +1011,44 @@
     "notifyReplies": "When IxMa replies to a ticket I opened",
     "settingsSecurity": "Security",
     "settingsSaved": "Saved.",
+    "ticketsLimited": "Showing the latest {n} tickets of this project. Older ones are not counted here.",
+    "onsiteTab": "On-site",
+    "bookCall": "Book a call",
+    "onsiteNext": "On-site next: {day} · {hours}",
+    "onsiteTitle": "When I'm at your office",
+    "onsiteIntro": "Drop by when the bar is green, no booking needed. If you need me for longer, book a time. Times are shown on your clock.",
+    "onsiteLegend": "What the colours mean",
+    "onsiteFree": "Free",
+    "onsiteBusy": "In a meeting",
+    "onsiteMine": "Your meeting",
+    "onsiteLunch": "Lunch",
+    "onsiteToday": "Today",
+    "onsiteUntil": "until {time}",
+    "onsiteFromMeeting": "from a booked meeting",
+    "onsiteFreeWindows": "Free:",
+    "onsiteNoFree": "No free time this day. Book a time if you need me.",
+    "onsiteUnknown": "Only the hours are known right now: the free times for this day can't be shown.",
+    "onsiteBookDay": "Book a time this day",
+    "onsiteEmpty": "No on-site days are scheduled yet. Book a call, or ask for a visit.",
+    "onsiteSaved": "Saved.",
+    "onsiteError": "That wasn't saved. Check the date (not in the past) and the hours.",
+    "onsiteAdminTitle": "Manage on-site days",
+    "onsiteAddDay": "Announce a day at this office",
+    "onsiteDate": "Date",
+    "onsiteFrom": "From",
+    "onsiteTo": "To",
+    "onsiteAdd": "Add day",
+    "onsiteRemove": "Remove",
+    "onsiteAdminNote": "An announced day also opens in-person times on the booking page, and online times are hidden that day. Lunch ({from}–{to}) is never shown as free. Announcing the same date again changes its hours.",
+    "onsiteVisible": "Visible to this project's people",
+    "onsiteHidden": "Hidden from this project's people",
+    "onsiteVisibleHelp": "Hiding it also stops listing days that come from booked meetings. You always see it.",
+    "onsiteHide": "Hide it",
+    "onsiteShow": "Show it",
+    "talkTitle": "Want to talk this through?",
+    "talkBook": "Book a call about this ticket",
+    "talkOnsite": "At your office next: {day} · {hours}",
+    "talkSeeSchedule": "See the schedule",
     "chooseArea": "Choose an area",
     "viewAllAreas": "See all areas ({done} of {total} milestones)",
     "noOpenTickets": "No open tickets",
@@ -1027,7 +1069,7 @@
   },
   "Legal": {
     "lastUpdatedLabel": "Last updated",
-    "lastUpdated": "October 28, 2026",
+    "lastUpdated": "October 29, 2026",
     "Privacy": {
       "title": "Privacy Policy",
       "intro": "This policy explains what information IxMaOperations collects through this website, how it is used, and the choices you have. It is written in plain language on purpose.",
@@ -1071,13 +1113,16 @@
         {
           "heading": "Client accounts",
           "paragraphs": [
-            "Accounts for the client area are created by us for existing clients; there is no public sign-up. Information in a client account, such as project status, tickets and files you attach, is visible only to you and to us."
+            "Accounts for the client area are created by us for existing clients; there is no public sign-up. In an account we keep your name, your sign-in email, the language and time zone you choose in Settings, and your email preferences, together with what you put in the portal: tickets, comments and files you attach. Text and files are stored encrypted.",
+          "What is in a client account is visible to you, to colleagues at your company whom we have given access (each one only to the project areas they can open), and to us.",
+          "We email you about your own tickets, for example when a fix is ready for you to check or when we reply. These emails contain the ticket's title and a link, never the message itself, and you can turn them off in Settings."
           ]
         },
         {
           "heading": "How long we keep information",
           "paragraphs": [
-            "Project request emails and meeting records are kept for as long as needed to respond to you, carry out any engagement, and meet our own record-keeping needs. We delete them sooner if you ask."
+            "Project request emails and meeting records are kept for as long as needed to respond to you, carry out any engagement, and meet our own record-keeping needs. We delete them sooner if you ask.",
+          "Client account information, including tickets and files, is kept while we work together and for as long afterwards as our own record-keeping needs require. We delete it sooner if you ask."
           ]
         },
         {
@@ -1089,7 +1134,7 @@
         {
           "heading": "Your choices",
           "paragraphs": [
-            "You can ask us to show, correct or delete the information we hold about you, or to cancel a booking, by emailing eramirez@ixmaoperations.com. This site is not directed at children under 18."
+            "You can ask us to show, correct or delete the information we hold about you, or to cancel a booking, by emailing eramirez@ixmaoperations.com. If you have a client account, you can change your name, language, time zone and email notifications yourself in Settings. This site is not directed at children under 18."
           ]
         },
         {

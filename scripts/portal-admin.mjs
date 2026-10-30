@@ -38,6 +38,8 @@
  *                                                       links, cost) from a JSON file; re-running updates the same
  *                                                       items (matched by code). Prices must be in "cost" only.
  *                                                       See scripts/plan-import.mjs for the file format.
+ *   doctor                                              is this database and machine ready for real clients? (read-only:
+ *                                                       migrations applied, owner exists, demo data gone, sign-up off, settings present)
  *   make-admin <email>                                  mark yourself as the owner (sign in again afterwards)
  *   list                                                show companies, projects and who can see them
  *
@@ -493,6 +495,89 @@ const commands = {
       if (!dryRun) must(await db.from("projects").update({ overview: encryptField(plan.overview) }).eq("id", project.id), "Saving the overview");
     }
     console.log(`✓ ${dryRun ? "Would create" : "Created"} ${created}, ${dryRun ? "would update" : "updated"} ${updated}.`);
+  },
+
+  /**
+   * Is this database and this machine ready for real clients? Read-only: it asks, it never changes anything.
+   * Run it after applying migrations and before the first invite.
+   */
+  async doctor() {
+    const rows = [];
+    const ok = (name) => rows.push(["✓", name]);
+    const bad = (name, fix) => rows.push(["✗", `${name}\n      → ${fix}`]);
+    const warn = (name, note) => rows.push(["!", `${name}\n      → ${note}`]);
+    const column = async (table, col) => !(await db.from(table).select(col).limit(1)).error;
+    const rpcExists = async (name, args) => {
+      const { error } = await db.rpc(name, args);
+      return !(error && /could not find the function|does not exist/i.test(error.message));
+    };
+    const nothing = "00000000-0000-0000-0000-000000000000";
+
+    // --- the database: each migration leaves something behind that can be asked about
+    const migrations = [
+      ["20261029000400_problem_details.sql", () => column("project_milestones", "code")],
+      ["20261029000500_project_log.sql", () => column("project_events", "kind")],
+      ["20261029000600_reopen_ticket.sql", () => rpcExists("reopen_ticket", { p_ticket: nothing })],
+      ["20261029000700_confirm_ticket_fixed.sql", () => rpcExists("confirm_ticket_fixed", { p_ticket: nothing })],
+      ["20261029000800_leader_logs.sql", () => rpcExists("is_project_leader", { p_project: nothing })],
+      ["20261029001000_email_notifications.sql", () => column("profiles", "notify_email")],
+      ["20261029001100_preferences.sql", () => column("profiles", "notify_replies")],
+      ["20261029001400_onsite_visits.sql", () => column("onsite_visits", "visit_date")],
+    ];
+    for (const [file, check] of migrations) {
+      (await check().catch(() => false)) ? ok(`migration ${file}`) : bad(`migration ${file} is not applied`, `run supabase/migrations/${file} in the Supabase SQL editor`);
+    }
+    // Policies can't be read from outside, so these two can only be reminded about. Both are safe to run twice.
+    warn("migration 20261029000900_closed_tickets.sql (closed tickets take no comments)", "can't be checked from here; if unsure, run it: it is safe to run twice");
+    (await column("profiles", "phone")) || (await column("profiles", "notify_whatsapp"))
+      ? bad("the dropped WhatsApp columns are still there", "run supabase/migrations/20261029001300_remove_whatsapp.sql")
+      : ok("no leftover WhatsApp columns");
+
+    // --- storage, owner, sign-up
+    const bucket = await db.storage.getBucket("ticket-attachments");
+    !bucket.data ? bad('storage bucket "ticket-attachments" is missing', "create it (private) in Supabase -> Storage") : bucket.data.public ? bad("the attachments bucket is PUBLIC", "make it private in Supabase -> Storage") : ok("attachments bucket exists and is private");
+
+    const users = (await db.auth.admin.listUsers({ perPage: 200 })).data?.users ?? [];
+    const owners = users.filter((u) => u.app_metadata?.role === "admin");
+    owners.length === 0 ? bad("nobody is the owner", "node --env-file=.env.local scripts/portal-admin.mjs make-admin you@yourdomain.com") : ok(`${owners.length} owner login${owners.length === 1 ? "" : "s"}`);
+    const demo = users.filter((u) => /@demo-co\.test$/i.test(u.email ?? ""));
+    demo.length > 0 ? warn(`${demo.length} demo login(s) still exist`, "node --env-file=.env.local scripts/seed-demo.mjs --wipe") : ok("no demo logins");
+    const demoOrg = must(await db.from("organizations").select("id").eq("slug", "demo-co").maybeSingle(), "Looking for the demo company");
+    demoOrg ? warn("the demo company still exists", "node --env-file=.env.local scripts/seed-demo.mjs --wipe") : ok("no demo company");
+
+    try {
+      const settings = await (await fetch(`${url}/auth/v1/settings`, { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "" } })).json();
+      settings.disable_signup === true ? ok("public sign-up is off") : bad("public sign-up is ON", "Supabase -> Authentication -> turn OFF \"Allow new users to sign up\"");
+    } catch {
+      warn("couldn't read the sign-up setting", "check Supabase -> Authentication by hand");
+    }
+
+    // --- this machine's settings. Vercel has its own copy of each: they must be set there too.
+    const set = (name) => Boolean(process.env[name]);
+    for (const [name, why] of [
+      ["DATA_ENCRYPTION_KEY", "encrypts every personal field; lose it and that data is gone, so keep a backup"],
+      ["RESEND_API_KEY", "sends email"],
+      ["OWNER_EMAIL", "where your alerts go"],
+      ["UPSTASH_REDIS_REST_URL", "login rate limiting: with none, sign-in is REFUSED in production"],
+      ["UPSTASH_REDIS_REST_TOKEN", "login rate limiting: with none, sign-in is REFUSED in production"],
+    ]) {
+      set(name) ? ok(`${name} is set here`) : bad(`${name} is not set here`, why);
+    }
+    set("CRON_SECRET") ? ok("CRON_SECRET is set here") : warn("CRON_SECRET is not set here", "set it on Vercel or the morning digest never runs");
+    set("PORTAL_EMAIL_FROM")
+      ? ok("PORTAL_EMAIL_FROM is set here")
+      : warn("PORTAL_EMAIL_FROM is not set here", "emails use Resend's sandbox sender: yours arrive, clients' do not. Verify a domain in Resend, then set it (on Vercel too)");
+    /localhost|127\./.test(process.env.NEXT_PUBLIC_APP_URL ?? "")
+      ? warn("NEXT_PUBLIC_APP_URL is localhost here", "fine for development: links in emails and invites already use the real site. On Vercel it should be your real address")
+      : ok("NEXT_PUBLIC_APP_URL is not localhost here");
+
+    console.log("");
+    for (const [mark, text] of rows) console.log(`${mark} ${text}`);
+    const failed = rows.filter(([mark]) => mark === "✗").length;
+    const warned = rows.filter(([mark]) => mark === "!").length;
+    console.log(`\n${failed === 0 ? "✓" : "✗"} ${failed} problem${failed === 1 ? "" : "s"}, ${warned} thing${warned === 1 ? "" : "s"} to check.`);
+    console.log("Checks about settings are for THIS machine's .env.local. Vercel keeps its own copy of each: set them there too.");
+    if (failed > 0) process.exit(1);
   },
 
   async "make-admin"() {

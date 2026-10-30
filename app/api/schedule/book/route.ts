@@ -33,6 +33,7 @@ import {
   releasePendingMeeting,
 } from "@/lib/meetings";
 import { analyzeOnSiteDay, describeOnSiteDay } from "@/lib/onsite";
+import { resolveBookingContext } from "@/lib/portal/booking-context";
 import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 import { loadScheduleInputs } from "@/lib/schedule-data";
 import { addDays, localDate, zonedTimeToUtc } from "@/lib/tz";
@@ -66,6 +67,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Scheduling is not configured yet." }, { status: 503 });
   }
 
+  // From the portal: the project, ticket, name, email and office come from the signed-in account, not from the request.
+  // If the request says it is for a project this person cannot open, it is just an ordinary booking.
+  const context = booking.projectSlug ? await resolveBookingContext({ projectSlug: booking.projectSlug, ticketId: booking.ticketId }) : null;
+  const guestName = context?.name || booking.name;
+  const guestEmail = context?.email || booking.email;
+  const inPersonLocation = booking.mode === "in_person" ? context?.officeAddress || booking.location : undefined;
+  const portalNote = context ? `${context.projectName}${context.ticketNumber ? ` · ticket #${context.ticketNumber}` : ""}` : "";
+
   const config = DEFAULT_AVAILABILITY;
   const tz = config.hostTimezone;
   const start = Date.parse(booking.start);
@@ -96,7 +105,7 @@ export async function POST(req: Request) {
 
   // 4. Reserve the slot.
   const title =
-    booking.mode === "in_person" ? `On-site meeting — ${booking.name}` : `IxMaOperations call — ${booking.name}`;
+    booking.mode === "in_person" ? `On-site meeting — ${guestName}` : `IxMaOperations call — ${guestName}`;
   let reservation: Awaited<ReturnType<typeof insertPendingMeeting>>;
   try {
     reservation = await insertPendingMeeting({
@@ -105,10 +114,12 @@ export async function POST(req: Request) {
       start,
       end,
       visitorTimezone: booking.timezone,
-      guestName: booking.name,
-      guestEmail: booking.email,
+      guestName,
+      guestEmail,
       notes: booking.notes,
-      location: booking.mode === "in_person" ? booking.location : undefined,
+      location: inPersonLocation,
+      projectId: context?.projectId,
+      ticketId: context?.ticketId ?? undefined,
     });
   } catch (error) {
     console.error("[schedule] reservation failed:", error);
@@ -139,15 +150,15 @@ export async function POST(req: Request) {
     const event = await createMeetingEvent({
       mode: booking.mode,
       title,
-      description: [booking.notes && `Notes from ${booking.name}:\n${booking.notes}`, `Visitor timezone: ${booking.timezone}`]
+      description: [portalNote && `Booked from the client portal: ${portalNote}`, booking.notes && `Notes from ${guestName}:\n${booking.notes}`, `Visitor timezone: ${booking.timezone}`]
         .filter(Boolean)
         .join("\n\n"),
       start,
       end,
       hostTimezone: tz,
-      guestEmail: booking.email,
-      guestName: booking.name,
-      location: booking.mode === "in_person" ? booking.location : undefined,
+      guestEmail,
+      guestName,
+      location: inPersonLocation,
     });
     eventId = event.id;
     await confirmMeeting(reservation.id, { googleEventId: event.id, meetLink: event.meetLink });
@@ -165,17 +176,18 @@ export async function POST(req: Request) {
     }
     await sendBookingEmails({
       mode: booking.mode,
-      guestName: booking.name,
-      guestEmail: booking.email,
+      guestName,
+      guestEmail,
       start,
       end,
       visitorTimezone: booking.timezone,
       hostTimezone: tz,
       locale: booking.locale,
       meetLink: event.meetLink,
-      location: booking.mode === "in_person" ? booking.location : undefined,
+      location: inPersonLocation,
       notes: booking.notes,
       ownerNotes,
+      context: portalNote || undefined,
     });
 
     return NextResponse.json({
@@ -184,7 +196,7 @@ export async function POST(req: Request) {
       start: new Date(start).toISOString(),
       end: new Date(end).toISOString(),
       meetLink: event.meetLink,
-      location: booking.mode === "in_person" ? booking.location : null,
+      location: inPersonLocation ?? null,
     });
   } catch (error) {
     console.error("[schedule] booking failed after reservation — rolling back:", error);

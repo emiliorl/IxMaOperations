@@ -52,6 +52,8 @@ export interface BookingEmailPayload {
   notes?: string;
   /** On-site heads-up lines (lib/onsite.ts describeOnSiteDay) appended to the owner's email. */
   ownerNotes?: string[];
+  /** Set when a signed-in client booked from the portal, e.g. "Demo Automation · ticket #3". Owner's email only. */
+  context?: string;
 }
 
 function formatWhen(start: number, end: number, timeZone: string, locale: "en" | "es") {
@@ -112,6 +114,7 @@ export async function sendBookingEmails(payload: BookingEmailPayload): Promise<{
           `Format: ${modeLabel}`,
           `${payload.mode === "online" ? "Link" : "Address"}: ${where}`,
           `Visitor timezone: ${payload.visitorTimezone}`,
+          payload.context ? `From the client portal: ${payload.context}` : "",
           payload.notes ? `\nNotes:\n${payload.notes}` : "",
           ...(payload.ownerNotes?.length ? ["", "--- On-site heads-up ---", ...payload.ownerNotes] : []),
         ],

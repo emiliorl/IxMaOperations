@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Scheduler } from "@/components/book/Scheduler";
+import { Scheduler, type SchedulerContext } from "@/components/book/Scheduler";
+import { resolveBookingContext } from "@/lib/portal/booking-context";
 import { publicAlternates } from "@/lib/site-url";
 
 export async function generateMetadata(props: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -22,10 +23,30 @@ export async function generateMetadata(props: { params: Promise<{ locale: string
  * this page is a tool, and the calendar, times and form should be on screen
  * together without scrolling.
  */
-export default async function BookPage(props: { params: Promise<{ locale: string }> }) {
+export default async function BookPage(props: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ project?: string; ticket?: string; mode?: string; day?: string }>;
+}) {
   const params = await props.params;
+  const { project, ticket, mode, day } = await props.searchParams;
   setRequestLocale(params.locale);
   const t = await getTranslations("Book");
+
+  // Opened from a project or ticket in the portal: the booking is for that project, with the person's own
+  // details and their office. Looked up as the signed-in person, so a project they can't open (or nobody
+  // signed in) is just the ordinary public page.
+  const found = project ? await resolveBookingContext({ projectSlug: project, ticketId: ticket }) : null;
+  const context: SchedulerContext | null = found && {
+    projectSlug: found.projectSlug,
+    projectName: found.projectName,
+    ticketId: found.ticketId,
+    ticketNumber: found.ticketNumber,
+    officeAddress: found.officeAddress,
+    name: found.name,
+    email: found.email,
+    timeZone: found.timeZone,
+    backHref: found.ticketId ? `/portal/tickets/${found.ticketId}` : `/portal/projects/${found.projectSlug}`,
+  };
 
   return (
     <div className="py-8 md:py-10">
@@ -40,7 +61,7 @@ export default async function BookPage(props: { params: Promise<{ locale: string
           </div>
           <p className="max-w-md text-sm text-zinc-400 leading-relaxed hidden sm:block">{t("description")}</p>
         </header>
-        <Scheduler />
+        <Scheduler context={context} initialMode={mode === "in_person" ? "in_person" : "online"} initialDay={day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null} />
       </div>
     </div>
   );

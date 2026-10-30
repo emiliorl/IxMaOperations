@@ -10,6 +10,10 @@ import { StatusForm } from "@/components/portal/StatusForm";
 import { StillBrokenForm } from "@/components/portal/StillBrokenForm";
 import { TICKET_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
 import { requireUser } from "@/lib/portal/auth";
+import { buttonVariants } from "@/components/ui/Button";
+import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
+import { formatVisit } from "@/lib/portal/onsite-format";
+import { listUpcomingVisits } from "@/lib/portal/onsite";
 import { isActiveTicket } from "@/lib/portal/plan";
 import { canWriteIn, getMyTimeZone, getProjectAccess, getProjectEvents, getTicketDetail } from "@/lib/portal/queries";
 import { cn } from "@/lib/utils";
@@ -35,13 +39,15 @@ export default async function TicketPage(props: {
 
   // Whether to OFFER a comment box (a view-only executive can read but not write;
   // the database refuses their comment either way).
-  const [access, events, t, timeZone] = await Promise.all([
+  const [access, events, t, timeZone, visits] = await Promise.all([
     getProjectAccess(supabase, user.id, ticket.project.id, ticket.project.organizationId),
     // This ticket's own status history. Everyone who can see the ticket may read this; the project-wide log is for leaders.
     getProjectEvents(supabase, ticket.project.id, null, 100, { ticketId: ticket.id }),
     getTranslations("Portal"),
     getMyTimeZone(supabase, user.id),
+    listUpcomingVisits(supabase, ticket.project, isAdmin),
   ]);
+  const nextVisit = visits[0] ? formatVisit(visits[0], locale, timeZone, DEFAULT_AVAILABILITY.hostTimezone) : null;
   const mayComment = canWriteIn(access, isAdmin, ticket.departmentId);
   // Oldest first, so it reads as a story: opened → in progress → fixed → still broken → closed.
   const statusChanges = events.filter((event) => event.kind === "ticket_status").reverse();
@@ -80,6 +86,32 @@ export default async function TicketPage(props: {
               </p>
             )}
           </header>
+
+          {/* A way to reach the owner from here, and when they will be at the office. (The owner doesn't need it on their own tickets.) */}
+          {!isAdmin && (
+            <section className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-lg border border-zinc-800/80 bg-zinc-900/30 px-5 py-3.5">
+              <div className="space-y-0.5">
+                <p className="text-sm text-zinc-100">{t("talkTitle")}</p>
+                {nextVisit && (
+                  <p className="text-xs text-zinc-500">
+                    {t("talkOnsite", { day: nextVisit.day, hours: nextVisit.hours })} ·{" "}
+                    <Link
+                      href={{ pathname: `/portal/projects/${ticket.project.slug}`, query: { tab: "onsite" } }}
+                      className="text-zinc-300 underline underline-offset-4 hover:text-white"
+                    >
+                      {t("talkSeeSchedule")}
+                    </Link>
+                  </p>
+                )}
+              </div>
+              <Link
+                href={{ pathname: "/book", query: { project: ticket.project.slug, ticket: ticket.id } }}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                {t("talkBook")}
+              </Link>
+            </section>
+          )}
 
           {/* The owner says it's fixed → the person can say "still broken" and reopen this same ticket. */}
           {ticket.status === "needs_review" && mayComment && !isAdmin && (

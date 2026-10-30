@@ -9,6 +9,8 @@ import { requireUser } from "@/lib/portal/auth";
 import { prepareFiles, type FileProblem } from "@/lib/portal/attachments";
 import { alertOwner, notifyTicketPerson } from "@/lib/portal/notify-send";
 import { parseLanguage } from "@/lib/portal/preferences";
+import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
+import { localDate } from "@/lib/tz";
 import { isActiveTicket } from "@/lib/portal/plan";
 import { validateNewPassword } from "@/lib/portal/password";
 import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
@@ -21,6 +23,9 @@ import {
   loginInput,
   memberAccessInput,
   milestoneStatusInput,
+  onsitePresenceInput,
+  onsiteVisitInput,
+  removeOnsiteVisitInput,
   removeCompanyAccessInput,
   removeMemberInput,
   reopenTicketInput,
@@ -29,7 +34,7 @@ import {
   ticketStatusInput,
 } from "@/lib/portal/schemas";
 import { checkRateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
-import { SITE_URL } from "@/lib/site-url";
+import { OUTGOING_URL } from "@/lib/site-url";
 import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -200,7 +205,7 @@ export async function createTicket(_prev: FormState, formData: FormData): Promis
         "",
         input.description,
         "",
-        `${SITE_URL}/portal/tickets/${ticket.id}`,
+        `${OUTGOING_URL}/portal/tickets/${ticket.id}`,
       ],
     });
   }
@@ -322,7 +327,7 @@ export async function reopenTicket(_prev: FormState, formData: FormData): Promis
         input.message,
         files.files.length > 0 ? `\nFiles attached: ${files.files.length - failedFiles}` : "",
         "",
-        `${SITE_URL}/portal/tickets/${input.ticketId}`,
+        `${OUTGOING_URL}/portal/tickets/${input.ticketId}`,
       ],
     });
   }
@@ -442,6 +447,65 @@ export async function updateMilestoneStatus(_prev: FormState, formData: FormData
   if (error) return { error: classify(error) };
   if (!data || data.length === 0) return { error: "denied" };
   return { ok: true };
+}
+
+// ------------------------------------------------- owner: when I'm at a client's office
+
+/** Back to the project's On-site tab with a one-word result the page turns into a message. */
+function backToOnsite(locale: string, slug: string, result: "saved" | "error"): never {
+  return redirect({ href: { pathname: `/portal/projects/${slug}`, query: { tab: "onsite", visit: result } }, locale });
+}
+
+/**
+ * Owner: announce a day at a project's office (date and hours). One per project and
+ * day: announcing it again changes the hours. The database refuses anyone else, and
+ * it also opens in-person times on that day at /book.
+ */
+export async function saveOnSiteVisit(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const safeSlug = SLUG.test(slug) ? slug : "";
+  const parsed = onsiteVisitInput.safeParse({ projectSlug: slug, date: text(formData, "date"), start: text(formData, "start"), end: text(formData, "end") });
+  // Not in the past, by the owner's own calendar.
+  if (!isAdmin || !parsed.success || parsed.data.date < localDate(Date.now(), DEFAULT_AVAILABILITY.hostTimezone)) {
+    return backToOnsite(locale, safeSlug, "error");
+  }
+  const { data: project } = await supabase.from("projects").select("id").eq("slug", slug).maybeSingle();
+  if (!project) return backToOnsite(locale, slug, "error");
+  const { error } = await supabase
+    .from("onsite_visits")
+    .upsert(
+      { project_id: project.id, visit_date: parsed.data.date, start_time: parsed.data.start, end_time: parsed.data.end },
+      { onConflict: "project_id,visit_date" }
+    );
+  return backToOnsite(locale, slug, error ? "error" : "saved");
+}
+
+/** Owner: take an announced day off the project. */
+export async function removeOnSiteVisit(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const safeSlug = SLUG.test(slug) ? slug : "";
+  const parsed = removeOnsiteVisitInput.safeParse({ projectSlug: slug, visitId: text(formData, "visitId") });
+  if (!isAdmin || !parsed.success) return backToOnsite(locale, safeSlug, "error");
+  const { data: project } = await supabase.from("projects").select("id").eq("slug", slug).maybeSingle();
+  if (!project) return backToOnsite(locale, slug, "error");
+  const { error } = await supabase.from("onsite_visits").delete().eq("id", parsed.data.visitId).eq("project_id", project.id);
+  return backToOnsite(locale, slug, error ? "error" : "saved");
+}
+
+/** Owner: show or hide the on-site schedule for this project's people. Hidden, it also stops listing days from booked meetings. */
+export async function setOnSitePresence(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const slug = text(formData, "projectSlug");
+  const safeSlug = SLUG.test(slug) ? slug : "";
+  const parsed = onsitePresenceInput.safeParse({ projectSlug: slug, enabled: formData.get("enabled") === "yes" });
+  if (!isAdmin || !parsed.success) return backToOnsite(locale, safeSlug, "error");
+  const { data, error } = await supabase.from("projects").update({ show_onsite_presence: parsed.data.enabled }).eq("slug", slug).select("id");
+  return backToOnsite(locale, slug, error || !data?.length ? "error" : "saved");
 }
 
 // ------------------------------------------------- owner: who can see what

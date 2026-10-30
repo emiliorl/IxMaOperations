@@ -46,6 +46,19 @@ interface Busy {
   start: number;
   end: number;
 }
+/** Who is booking and for what, when a signed-in client comes from the portal (checked on the server again when they confirm). */
+export interface SchedulerContext {
+  projectSlug: string;
+  projectName: string;
+  ticketId: string | null;
+  ticketNumber: number | null;
+  officeAddress: string | null;
+  name: string;
+  email: string;
+  timeZone: string;
+  /** Where "back" goes, without the language prefix. */
+  backHref: string;
+}
 interface Booked {
   mode: Mode;
   start: string;
@@ -229,12 +242,21 @@ function MonthCalendar({
 
 // -------------------------------------------------------------------- scheduler
 
-export function Scheduler() {
+export function Scheduler({
+  context = null,
+  initialMode = "online",
+  initialDay = null,
+}: {
+  context?: SchedulerContext | null;
+  initialMode?: Mode;
+  /** A "YYYY-MM-DD" day to open on, if it has openings. */
+  initialDay?: string | null;
+}) {
   const t = useTranslations("Book");
   const locale = useLocale();
   const bookingLocale = locale === "es" ? "es" : "en";
 
-  const [mode, setMode] = useState<Mode>("online");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [duration, setDuration] = useState(30);
   const [tz, setTz] = useState("UTC");
   const [zones, setZones] = useState<string[]>(["UTC"]);
@@ -254,7 +276,12 @@ export function Scheduler() {
   const [day, setDay] = useState<string | null>(null);
   const [slot, setSlot] = useState<Slot | null>(null);
 
-  const [form, setForm] = useState({ name: "", email: "", notes: "", location: "" });
+  const [form, setForm] = useState({
+    name: context?.name ?? "",
+    email: context?.email ?? "",
+    notes: "",
+    location: context?.officeAddress ?? "",
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -264,8 +291,11 @@ export function Scheduler() {
   useEffect(() => {
     const detected = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     const all = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [];
-    setZones(all.includes(detected) ? all : [detected, ...all]);
-    setTz(detected);
+    // A signed-in client's own time zone setting wins over what the browser guesses.
+    const wanted = context?.timeZone ?? detected;
+    setZones(all.includes(wanted) ? all : [wanted, ...all]);
+    setTz(wanted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on load
   }, []);
 
   // Load slots whenever the format or length changes.
@@ -369,6 +399,15 @@ export function Scheduler() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstDay, lastDay]);
 
+  // Opening on a given day (a link from the on-site schedule), once, if it has openings.
+  const appliedInitialDay = useRef(false);
+  useEffect(() => {
+    if (appliedInitialDay.current || !initialDay || !available.has(initialDay)) return;
+    appliedInitialDay.current = true;
+    setDay(initialDay);
+    setMonth(initialDay.slice(0, 7));
+  }, [available, initialDay]);
+
   const daySlots = useMemo(() => visible.filter((s) => day && localDate(s.startMs, tz) === day), [visible, day, tz]);
 
   const hourFmt = useMemo(
@@ -427,6 +466,8 @@ export function Scheduler() {
       email: form.email,
       notes: form.notes,
       location: mode === "in_person" ? form.location : "",
+      projectSlug: context?.projectSlug ?? "",
+      ticketId: context?.ticketId ?? "",
     };
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
@@ -499,6 +540,11 @@ export function Scheduler() {
               </p>
             )}
             <p className="text-xs text-zinc-500 leading-relaxed">{t("successBody", { email: booked.email })}</p>
+            {context && (
+              <Link href={context.backHref} className="inline-block text-xs text-zinc-300 underline underline-offset-4 hover:text-white">
+                {t("backToPortal")} →
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -517,6 +563,18 @@ export function Scheduler() {
           {t("bookingLabel")}
         </span>
       </div>
+
+      {context && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-zinc-800 bg-zinc-900/30 px-5 py-2.5 text-xs text-zinc-400 sm:px-6">
+          <span>
+            {t("forProject", { project: context.projectName })}
+            {context.ticketNumber ? ` · ${t("forTicket", { n: context.ticketNumber })}` : ""}
+          </span>
+          <Link href={context.backHref} className="underline underline-offset-4 hover:text-zinc-100">
+            {t("backToPortal")}
+          </Link>
+        </div>
+      )}
 
       {/* 01–02 options, one row; the zone is detected, so changing it is a small link */}
       <div className="flex flex-wrap items-end gap-x-6 gap-y-3 px-5 py-4 sm:px-6 sm:gap-x-8 border-b border-zinc-800">
@@ -715,7 +773,13 @@ export function Scheduler() {
                   <FieldLabel index={detailIndex(1)} htmlFor="b-name">
                     {t("nameLabel")}
                   </FieldLabel>
-                  <Input id="b-name" autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  <Input
+                    id="b-name"
+                    autoComplete="name"
+                    value={form.name}
+                    readOnly={Boolean(context?.name)}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
                   {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
                 </div>
 
@@ -723,7 +787,14 @@ export function Scheduler() {
                   <FieldLabel index={detailIndex(2)} htmlFor="b-email">
                     {t("emailLabel")}
                   </FieldLabel>
-                  <Input id="b-email" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  <Input
+                    id="b-email"
+                    type="email"
+                    autoComplete="email"
+                    value={form.email}
+                    readOnly={Boolean(context?.email)}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  />
                   {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
                 </div>
               </div>
@@ -738,8 +809,10 @@ export function Scheduler() {
                     autoComplete="street-address"
                     placeholder={t("locationPlaceholder")}
                     value={form.location}
+                    readOnly={Boolean(context?.officeAddress)}
                     onChange={(e) => setForm({ ...form, location: e.target.value })}
                   />
+                  {context?.officeAddress && <p className="text-[11px] text-zinc-500">{t("atYourOffice")}</p>}
                   {errors.location && <p className="text-xs text-red-400">{errors.location}</p>}
                 </div>
               )}

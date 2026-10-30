@@ -1,7 +1,7 @@
 import "server-only";
 import crypto from "node:crypto";
 import { blindIndex, decryptLoose, encryptField } from "@/lib/field-crypto";
-import { SITE_URL } from "@/lib/site-url";
+import { OUTGOING_URL } from "@/lib/site-url";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 /**
@@ -75,7 +75,7 @@ export async function inviteLinkFor(userId: string, locale: string): Promise<str
     console.error("[people] could not generate invite link:", error?.message);
     return null;
   }
-  const link = new URL("/api/portal/auth/confirm", SITE_URL);
+  const link = new URL("/api/portal/auth/confirm", OUTGOING_URL);
   link.searchParams.set("token_hash", token);
   link.searchParams.set("type", "recovery");
   link.searchParams.set("locale", locale);
