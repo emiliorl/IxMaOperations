@@ -1,7 +1,7 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, KeyRound, LogOut, Settings } from "lucide-react";
+import { CalendarDays, ChevronDown, KeyRound, LogOut, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { initialsOf } from "@/lib/portal/initials";
@@ -58,6 +58,15 @@ export function AccountMenu({
 
           <DropdownMenu.Separator className="my-1 h-px bg-zinc-800" />
 
+          {/* The owner's week across every project. */}
+          {isAdmin && (
+            <DropdownMenu.Item asChild>
+              <Link href="/portal/week" className={item}>
+                <CalendarDays className="h-4 w-4 text-zinc-500" aria-hidden />
+                {t("weekMenu")}
+              </Link>
+            </DropdownMenu.Item>
+          )}
           <DropdownMenu.Item asChild>
             <Link href="/portal/settings" className={item}>
               <Settings className="h-4 w-4 text-zinc-500" aria-hidden />

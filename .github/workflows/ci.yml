@@ -1,0 +1,32 @@
+name: CI
+
+# On every push and pull request: the type check and the whole test suite (including the database access rules,
+# which run on an in-process Postgres, so no secrets or database are needed).
+# A change that breaks either shows up here, before it reaches a client.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Tests
+        run: npm test

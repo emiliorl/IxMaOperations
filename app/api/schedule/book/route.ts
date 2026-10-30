@@ -24,6 +24,7 @@ import { isSlotAvailable, isWithinWeekLimit, weekStartOf } from "@/lib/availabil
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { bookingSchema } from "@/lib/booking-schema";
 import { sendBookingEmails } from "@/lib/email";
+import { alertOwnerOfFailure } from "@/lib/failure-alerts";
 import { createMeetingEvent, deleteEvent, isGoogleConfigured } from "@/lib/google-calendar";
 import {
   confirmMeeting,
@@ -138,6 +139,7 @@ export async function POST(req: Request) {
     }
   } catch (error) {
     console.error("[schedule] availability re-check failed:", error);
+    await alertOwnerOfFailure("booking", error, { path: "/api/schedule/book", method: "POST" });
     return NextResponse.json({ error: "Scheduling is temporarily unavailable. Please try again shortly." }, { status: 502 });
   }
 
@@ -164,6 +166,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("[schedule] reservation failed:", error);
+    await alertOwnerOfFailure("booking", error, { path: "/api/schedule/book", method: "POST" });
     return NextResponse.json({ error: "Could not reserve that time. Please try again." }, { status: 502 });
   }
   if (!reservation.ok) {
@@ -180,6 +183,7 @@ export async function POST(req: Request) {
       }
     } catch (error) {
       console.error("[schedule] week-limit re-check failed — releasing:", error);
+      await alertOwnerOfFailure("booking", error, { path: "/api/schedule/book", method: "POST" });
       await releasePendingMeeting(reservation.id).catch(() => undefined);
       return NextResponse.json({ error: "Could not complete the booking. Please try again." }, { status: 502 });
     }
@@ -243,6 +247,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("[schedule] booking failed after reservation — rolling back:", error);
+    await alertOwnerOfFailure("booking", error, { path: "/api/schedule/book", method: "POST" });
     if (eventId) await deleteEvent(eventId).catch((e) => console.error("[schedule] rollback: event delete failed:", e));
     await releasePendingMeeting(reservation.id).catch((e) => console.error("[schedule] rollback: release failed:", e));
     return NextResponse.json({ error: "Could not complete the booking. Please try again." }, { status: 502 });

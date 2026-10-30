@@ -16,7 +16,8 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { sendOwnerAlert } from "@/lib/email";
-import { syncCancelledMeetingsQuietly } from "@/lib/meeting-sync";
+import { alertOwnerOfFailure } from "@/lib/failure-alerts";
+import { syncMeetingsQuietly } from "@/lib/meeting-sync";
 import { listConfirmedInPerson } from "@/lib/meetings";
 import { analyzeOnSiteDay, describeOnSiteDay } from "@/lib/onsite";
 import { addDays, localDate, zonedTimeToUtc } from "@/lib/tz";
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
 
   try {
     // Don't email about an on-site day whose meetings were already removed from the calendar.
-    await syncCancelledMeetingsQuietly({ force: true });
+    await syncMeetingsQuietly({ force: true });
     const meetings = await listConfirmedInPerson(from, to);
     const byDay = new Map<string, typeof meetings>();
     for (const meeting of meetings) {
@@ -70,6 +71,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ sent, onSiteDays: byDay.size, flagged: sections.length });
   } catch (error) {
     console.error("[cron] on-site digest failed:", error);
+    await alertOwnerOfFailure("cron", error, { path: "/api/cron/onsite-digest", method: "GET" });
     return NextResponse.json({ error: "Digest failed." }, { status: 500 });
   }
 }

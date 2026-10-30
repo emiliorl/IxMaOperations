@@ -235,6 +235,43 @@ export async function getEventStatus(eventId: string): Promise<"active" | "gone"
   }
 }
 
+/** What the owner's calendar says about a booked event right now. */
+export type EventState = { state: "gone" } | { state: "active"; start: number | null; end: number | null };
+
+/**
+ * Like getEventStatus, plus the event's start and end, so a meeting the owner dragged to another time can be followed.
+ * Start and end are null for an all-day event (there is no clock time to follow). Anything that goes wrong other than
+ * "deleted" THROWS: not knowing is never the same as the event being gone, or having moved.
+ */
+export async function getEventState(eventId: string): Promise<EventState> {
+  try {
+    const event = await hostFetch<{ status?: string; start?: { dateTime?: string }; end?: { dateTime?: string } }>(
+      `/calendars/${hostCalendarId()}/events/${encodeURIComponent(eventId)}?fields=status,start,end`
+    );
+    if (event?.status === "cancelled") return { state: "gone" };
+    const start = event?.start?.dateTime ? Date.parse(event.start.dateTime) : NaN;
+    const end = event?.end?.dateTime ? Date.parse(event.end.dateTime) : NaN;
+    return { state: "active", start: Number.isFinite(start) ? start : null, end: Number.isFinite(end) ? end : null };
+  } catch (error) {
+    if (error instanceof GoogleApiError && (error.status === 404 || error.status === 410)) return { state: "gone" };
+    throw error;
+  }
+}
+
+/**
+ * Moves a booked event to other times. The same event, so its guests get an UPDATED invitation (not a cancellation
+ * and a new one), and its meeting link or address stay as they were.
+ */
+export async function moveEvent(eventId: string, start: number, end: number, hostTimezone: string): Promise<void> {
+  await hostFetch(`/calendars/${hostCalendarId()}/events/${encodeURIComponent(eventId)}?sendUpdates=all`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      start: { dateTime: new Date(start).toISOString(), timeZone: hostTimezone },
+      end: { dateTime: new Date(end).toISOString(), timeZone: hostTimezone },
+    }),
+  });
+}
+
 export async function deleteEvent(eventId: string): Promise<void> {
   await hostFetch(`/calendars/${hostCalendarId()}/events/${encodeURIComponent(eventId)}?sendUpdates=all`, { method: "DELETE" });
 }

@@ -83,12 +83,21 @@ export async function MeetingsPanel({
                   {about && <p className="text-xs text-zinc-500">{about}</p>}
                   {isAdmin && meeting.bookedBy && <p className="text-xs text-zinc-500">{t("meetingBookedBy", { name: meeting.bookedBy })}</p>}
                 </div>
-                <form action={cancelMeeting}>
-                  <input type="hidden" name="locale" value={locale} />
-                  <input type="hidden" name="projectSlug" value={slug} />
-                  <input type="hidden" name="meetingId" value={meeting.id} />
-                  <CancelMeetingButton label={t("meetingCancel")} confirmText={t("meetingCancelConfirm")} />
-                </form>
+                <div className="flex items-center gap-4">
+                  {/* Moving it keeps the same meeting and calendar event: the guest gets an updated invitation. */}
+                  <Link
+                    href={{ pathname: "/portal/book", query: { project: slug, reschedule: meeting.id } }}
+                    className="text-xs text-zinc-300 underline underline-offset-4 hover:text-white"
+                  >
+                    {t("meetingReschedule")}
+                  </Link>
+                  <form action={cancelMeeting}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="projectSlug" value={slug} />
+                    <input type="hidden" name="meetingId" value={meeting.id} />
+                    <CancelMeetingButton label={t("meetingCancel")} confirmText={t("meetingCancelConfirm")} />
+                  </form>
+                </div>
               </li>
             );
           })}

@@ -133,17 +133,40 @@ export async function insertPendingMeeting(meeting: NewMeeting): Promise<InsertR
 }
 
 /** Confirmed meetings that have not ended yet and have a Google event, soonest first: the ones worth checking against the calendar. */
-export async function listUpcomingConfirmedWithEvents(limit: number): Promise<{ id: string; googleEventId: string }[]> {
+export async function listUpcomingConfirmedWithEvents(limit: number): Promise<{ id: string; googleEventId: string; start: number; end: number }[]> {
   const { data, error } = await supabaseAdmin()
     .from("meetings")
-    .select("id,google_event_id")
+    .select("id,google_event_id,start_time,end_time")
     .eq("status", "confirmed")
     .not("google_event_id", "is", null)
     .gt("end_time", new Date().toISOString())
     .order("start_time")
     .limit(limit);
   if (error) throw new Error(`Failed to read upcoming meetings: ${error.message}`);
-  return (data ?? []).map((row) => ({ id: row.id as string, googleEventId: row.google_event_id as string }));
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    googleEventId: row.google_event_id as string,
+    start: Date.parse(row.start_time as string),
+    end: Date.parse(row.end_time as string),
+  }));
+}
+
+/**
+ * Moves a confirmed meeting to other times. The table's overlap rule is the guard: if the new time collides with another
+ * pending or confirmed meeting, nothing changes and the answer is "conflict".
+ */
+export async function moveMeetingTimes(id: string, start: number, end: number): Promise<"moved" | "conflict" | "missing"> {
+  const { data, error } = await supabaseAdmin()
+    .from("meetings")
+    .update({ start_time: new Date(start).toISOString(), end_time: new Date(end).toISOString() })
+    .eq("id", id)
+    .eq("status", "confirmed")
+    .select("id");
+  if (error) {
+    if (error.code === PG_EXCLUSION_VIOLATION) return "conflict";
+    throw new Error(`Failed to move meeting: ${error.message}`);
+  }
+  return data && data.length > 0 ? "moved" : "missing";
 }
 
 /** Marks meetings cancelled. That frees their time: the overlap rule and every count only look at pending and confirmed ones. */

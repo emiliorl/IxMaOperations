@@ -12,7 +12,10 @@ import { z } from "zod";
 import { generateSlots } from "@/lib/availability";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { GoogleApiError, isGoogleConfigured } from "@/lib/google-calendar";
+import { currentViewer } from "@/lib/portal/auth";
 import { resolveOfficeWeekdays } from "@/lib/portal/booking-context";
+import { loadReschedulable } from "@/lib/portal/reschedule";
+import { withoutMeeting } from "@/lib/portal/reschedule-rules";
 import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 import { loadScheduleInputs } from "@/lib/schedule-data";
 
@@ -23,6 +26,8 @@ const querySchema = z.object({
   duration: z.coerce.number().int().refine((n) => DEFAULT_AVAILABILITY.durationsMinutes.includes(n)),
   /** A signed-in client booking for their project: in-person times then follow that office's open days. */
   project: z.string().trim().max(120).optional(),
+  /** A meeting being moved: its own time and day must not count against it. Honoured only for someone allowed to move it. */
+  reschedule: z.string().uuid().optional(),
 });
 
 export async function GET(req: Request) {
@@ -50,11 +55,15 @@ export async function GET(req: Request) {
     // for them when it is one. Only when the person is signed in and can open that project: otherwise no limit.
     const officeWeekdays = parsed.data.project ? await resolveOfficeWeekdays(parsed.data.project) : null;
     const inputs = await loadScheduleInputs(now, horizonEnd);
+    // Moving a meeting: it does not count against itself (see lib/portal/reschedule-rules.ts). Looked up as the signed-in person.
+    const viewer = parsed.data.reschedule ? await currentViewer() : null;
+    const moving = viewer && parsed.data.reschedule ? await loadReschedulable(parsed.data.reschedule, viewer, now) : null;
     const slots = generateSlots({
       mode: parsed.data.mode,
       durationMinutes: parsed.data.duration,
       now,
       ...inputs,
+      meetings: moving ? withoutMeeting(inputs.meetings, moving) : inputs.meetings,
       config,
       ...(officeWeekdays ? { officeWeekdays } : {}),
     });

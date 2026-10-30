@@ -137,8 +137,16 @@ export async function sendBookingEmails(payload: BookingEmailPayload): Promise<{
         : `${es ? "Lugar" : "Location"}: ${where}`,
       "",
       es
-        ? "También recibirás una invitación de Google Calendar. Para cancelar o reprogramar, responde a ese correo o escribe a eramirez@ixmaoperations.com."
-        : "You will also get a Google Calendar invitation. To cancel or reschedule, reply to that email or write to eramirez@ixmaoperations.com.",
+        ? "También recibirás una invitación de Google Calendar."
+        : "You will also get a Google Calendar invitation.",
+      // Booked from the portal: they can manage it there. Anyone else can still reply or write.
+      payload.context
+        ? es
+          ? "Puedes cancelar o reprogramar esta reunión desde la pestaña Reuniones de tu proyecto en el portal."
+          : "You can cancel or reschedule this meeting from the Meetings tab of your project in the portal."
+        : es
+          ? "Para cancelar o reprogramar, responde a ese correo o escribe a eramirez@ixmaoperations.com."
+          : "To cancel or reschedule, reply to that email or write to eramirez@ixmaoperations.com.",
     ]
   );
 

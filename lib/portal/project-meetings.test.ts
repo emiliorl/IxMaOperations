@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/field-crypto", () => ({ decryptLoose: (value: string | null | undefined) => value ?? null }));
-vi.mock("@/lib/meeting-sync", () => ({ syncCancelledMeetingsQuietly: async () => undefined }));
+vi.mock("@/lib/meeting-sync", () => ({ syncMeetingsQuietly: async () => undefined }));
 
 const NOW = Date.UTC(2026, 10, 5, 12, 0);
 const hour = 3_600_000;

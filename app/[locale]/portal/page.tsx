@@ -21,6 +21,11 @@ export default async function PortalHomePage(props: { params: Promise<{ locale: 
       <div className="py-12 md:py-16">
         <div className="container mx-auto px-6 max-w-5xl space-y-8">
           <SectionHeader as="h1" index="00" label={t("eyebrow")} title={t("projectsTitle")} description={t("projectsDescription")} />
+          {isAdmin && (
+            <Link href="/portal/week" className="inline-flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/40 px-3.5 py-2 text-sm text-zinc-200 transition-colors hover:border-zinc-700 hover:text-white">
+              {t("weekTitle")} →
+            </Link>
+          )}
 
           {projects.length === 0 ? (
             <p className="text-sm text-zinc-400 max-w-lg">{t("noProjects")}</p>

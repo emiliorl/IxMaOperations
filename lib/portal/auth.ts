@@ -106,3 +106,14 @@ export async function currentUser() {
   const session = await loadSession();
   return session?.user ?? null;
 }
+
+/**
+ * The signed-in person, for routes that are not pages (booking, moving a meeting): who they are, and whether they are
+ * the owner. Null unless they are fully through the gate: signed in, past choosing a first password, and past the second
+ * step (or, for the owner, past setting it up): the same bar as every portal page.
+ */
+export async function currentViewer(): Promise<{ id: string; email: string; isAdmin: boolean } | null> {
+  const session = await loadSession();
+  if (!session?.user || session.mustChangePassword || session.twoStep !== "ok") return null;
+  return { id: session.user.id, email: session.user.email ?? "", isAdmin: Boolean(session.isAdmin) };
+}

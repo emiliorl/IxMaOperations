@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendOwnerAlert } from "@/lib/email";
 import { decryptLoose } from "@/lib/field-crypto";
 import { GoogleApiError, deleteEvent, isGoogleConfigured } from "@/lib/google-calendar";
-import { syncCancelledMeetingsQuietly } from "@/lib/meeting-sync";
+import { syncMeetingsQuietly } from "@/lib/meeting-sync";
 import { cancelMeetings } from "@/lib/meetings";
 import { missingColumn } from "@/lib/missing-column";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -38,7 +38,7 @@ export interface ProjectMeeting {
   ticketNumber: number | null;
 }
 
-interface MeetingRow {
+export interface MeetingRow {
   id: string;
   start_time: string;
   end_time: string;
@@ -60,7 +60,7 @@ interface MeetingRow {
  * leaving out any the database doesn't have yet. `build` gets the column list, so it can also leave out
  * a filter on a column that isn't there. Rows come back with those fields missing, which means "unknown".
  */
-async function readMeetings(build: (columns: string) => PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<MeetingRow[]> {
+export async function readMeetings(build: (columns: string) => PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<MeetingRow[]> {
   const optional = ["client_id", "department_id", "milestone_id"];
   for (;;) {
     const result = await build([BASE_COLUMNS, ...optional].join(","));
@@ -78,7 +78,7 @@ export async function listProjectMeetings(
   now = Date.now()
 ): Promise<ProjectMeeting[]> {
   // A meeting the owner removed from the calendar must not stay on the list.
-  await syncCancelledMeetingsQuietly();
+  await syncMeetingsQuietly();
 
   let rows: MeetingRow[];
   try {

@@ -19,6 +19,7 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { sendPortalEmail } from "@/lib/email";
+import { alertOwnerOfFailure } from "@/lib/failure-alerts";
 import { decryptLoose } from "@/lib/field-crypto";
 import { buildOwnerDigest, digestWindowHours, ownerAlertHeaders, wasAlertedInstantly, type DigestEvent } from "@/lib/portal/notify";
 import { ownerInbox, siteHost } from "@/lib/portal/notify-send";
@@ -135,6 +136,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ sent, events: events.length, tickets: digest.tickets });
   } catch (error) {
     console.error("[cron] portal digest failed:", error instanceof Error ? error.message : error);
+    await alertOwnerOfFailure("cron", error, { path: "/api/cron/portal-digest", method: "GET" });
     return NextResponse.json({ error: "Digest failed." }, { status: 500 });
   }
 }

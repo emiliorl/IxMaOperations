@@ -1,7 +1,7 @@
 import "server-only";
 import { DEFAULT_AVAILABILITY } from "./availability-config";
 import { getAvailabilityOverrides, getHostBusy } from "./google-calendar";
-import { syncCancelledMeetingsQuietly } from "./meeting-sync";
+import { syncMeetingsQuietly } from "./meeting-sync";
 import { listActiveMeetings } from "./meetings";
 import type { DayOverride, ExistingMeeting, Interval } from "./availability";
 import { supabaseAdmin } from "./supabase-admin";
@@ -48,7 +48,7 @@ export async function loadScheduleInputs(from: number, to: number, { strict = fa
   // Meetings the owner deleted from Google Calendar are cancelled here first, so a removed
   // in-person meeting stops counting as an on-site day, a used slot of the week, or busy time.
   // It runs alongside the Google reads; the booking route (strict) always gets a fresh answer.
-  const synced = syncCancelledMeetingsQuietly({ force: strict });
+  const synced = syncMeetingsQuietly({ force: strict });
   const [hostBusy, overrides, announced] = await Promise.all([getHostBusy(from, to), getAvailabilityOverrides(from, to), announcedVisitDates(from, to)]);
   await synced;
   const meetings = await listActiveMeetings(from, to).catch((error) => {

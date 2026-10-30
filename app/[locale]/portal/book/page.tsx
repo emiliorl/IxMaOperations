@@ -6,6 +6,7 @@ import { BackLink } from "@/components/portal/BackLink";
 import { requireUser } from "@/lib/portal/auth";
 import { resolveBookingContext } from "@/lib/portal/booking-context";
 import { resolveTopic } from "@/lib/portal/booking-topic";
+import { loadReschedulable } from "@/lib/portal/reschedule";
 import { listProjects } from "@/lib/portal/queries";
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -22,15 +23,15 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
  */
 export default async function PortalBookPage(props: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ project?: string; ticket?: string; area?: string; problem?: string; mode?: string; day?: string }>;
+  searchParams: Promise<{ project?: string; ticket?: string; area?: string; problem?: string; mode?: string; day?: string; reschedule?: string }>;
 }) {
   const { locale } = await props.params;
-  const { project, ticket, area, problem, mode, day } = await props.searchParams;
+  const { project, ticket, area, problem, mode, day, reschedule } = await props.searchParams;
   setRequestLocale(locale);
   const [t, tp] = await Promise.all([getTranslations("Book"), getTranslations("Portal")]);
-  const { supabase } = await requireUser(locale);
+  const { supabase, user, isAdmin } = await requireUser(locale);
 
-  const carried = { ...(ticket ? { ticket } : {}), ...(area ? { area } : {}), ...(problem ? { problem } : {}), ...(mode ? { mode } : {}), ...(day ? { day } : {}) };
+  const carried = { ...(reschedule ? { reschedule } : {}), ...(ticket ? { ticket } : {}), ...(area ? { area } : {}), ...(problem ? { problem } : {}), ...(mode ? { mode } : {}), ...(day ? { day } : {}) };
 
   // No project chosen: the only one, or a short list to pick from.
   if (!project) {
@@ -75,8 +76,13 @@ export default async function PortalBookPage(props: {
     areaId: area || found.ticketTopic?.areaId,
     problemId: problem || found.ticketTopic?.problemId,
   });
+  // Moving a meeting: it must be theirs to move, confirmed, not started, and on THIS project. Otherwise it is just not found.
+  const moving = reschedule ? await loadReschedulable(reschedule, { id: user.id, email: user.email ?? "", isAdmin }) : null;
+  if (reschedule && (!moving || moving.projectId !== found.projectId)) notFound();
   const cameFromProblem = Boolean(problem && topic.problemId === problem);
-  const backHref = found.ticketId
+  const backHref = moving
+    ? `/portal/projects/${found.projectSlug}?tab=onsite`
+    : found.ticketId
     ? `/portal/tickets/${found.ticketId}`
     : cameFromProblem
       ? `/portal/projects/${found.projectSlug}/problems/${topic.problemId}`
@@ -96,6 +102,7 @@ export default async function PortalBookPage(props: {
     problems: found.problems,
     areaId: topic.areaId,
     problemId: topic.problemId,
+    reschedule: moving && { id: moving.id, mode: moving.mode, durationMinutes: moving.durationMinutes, start: new Date(moving.start).toISOString() },
   };
 
   return (

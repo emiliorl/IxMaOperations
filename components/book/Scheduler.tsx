@@ -65,6 +65,8 @@ export interface SchedulerContext {
   problems: TopicProblem[];
   areaId: string | null;
   problemId: string | null;
+  /** Set when the person is moving a meeting they already booked, instead of booking a new one. */
+  reschedule?: { id: string; mode: Mode; durationMinutes: number; start: string } | null;
 }
 interface Booked {
   mode: Mode;
@@ -266,8 +268,11 @@ export function Scheduler({
   const locale = useLocale();
   const bookingLocale = locale === "es" ? "es" : "en";
 
-  const [mode, setMode] = useState<Mode>(initialMode);
-  const [duration, setDuration] = useState(30);
+  // Moving a meeting: the format and length stay as booked, only the time changes.
+  const reschedule = context?.reschedule ?? null;
+  const [mode, setMode] = useState<Mode>(reschedule?.mode ?? initialMode);
+  const [duration, setDuration] = useState(reschedule?.durationMinutes ?? 30);
+  const [moved, setMoved] = useState(false);
   const [tz, setTz] = useState("UTC");
   const [zones, setZones] = useState<string[]>(["UTC"]);
   const [editingTz, setEditingTz] = useState(false);
@@ -330,7 +335,8 @@ export function Scheduler({
     setSlot(null);
     // From the portal the project goes along, so in-person times follow that office's open days.
     const project = context?.projectSlug ? `&project=${encodeURIComponent(context.projectSlug)}` : "";
-    fetch(`/api/schedule/availability?mode=${mode}&duration=${duration}${project}`, { signal: controller.signal })
+    const moving = reschedule ? `&reschedule=${reschedule.id}` : "";
+    fetch(`/api/schedule/availability?mode=${mode}&duration=${duration}${project}${moving}`, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(String(res.status));
         const data = (await res.json()) as { slots: Slot[] };
@@ -479,6 +485,37 @@ export function Scheduler({
     window.requestAnimationFrame(() => target.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
+  /** Moving a meeting: one request, no form. The server checks the time is still on offer and that the meeting is theirs. */
+  const moveIt = async () => {
+    if (!slot || !reschedule) return;
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/schedule/reschedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meetingId: reschedule.id, start: slot.start }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setBooked({ ...data, meetLink: null, location: null, email: context?.email ?? "" });
+        setMoved(true);
+        return;
+      }
+      if (res.status === 409) {
+        setSubmitError(t("errorTaken"));
+        setSlot(null);
+        setReloadKey((k) => k + 1);
+      } else if (res.status === 429) setSubmitError(t("errorRate"));
+      else if (res.status === 503) setSubmitError(t("errorUnavailable"));
+      else setSubmitError(t("errorMove"));
+    } catch {
+      setSubmitError(t("errorMove"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!slot) return;
@@ -553,7 +590,7 @@ export function Scheduler({
         <div className="p-5 sm:p-6 flex items-start gap-3">
           <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
           <div className="space-y-3">
-            <p className="text-sm font-medium text-zinc-100">{t("successTitle")}</p>
+            <p className="text-sm font-medium text-zinc-100">{moved ? t("rescheduleDoneTitle") : t("successTitle")}</p>
             <p className="text-sm text-zinc-300">{longFmt.format(Date.parse(booked.start))}</p>
             {booked.meetLink && (
               <p className="text-xs text-zinc-400">
@@ -584,7 +621,7 @@ export function Scheduler({
                 </span>
               </p>
             )}
-            <p className="text-xs text-zinc-500 leading-relaxed">{t("successBody", { email: booked.email })}</p>
+            <p className="text-xs text-zinc-500 leading-relaxed">{moved ? t("rescheduleDoneBody") : t("successBody", { email: booked.email })}</p>
             {context && (
               <BackLink fallbackHref={context.backHref} prefix="" suffix=" →" className="inline-block text-xs text-zinc-300 underline underline-offset-4 hover:text-white">
                 {t("backToPortal")}
@@ -621,7 +658,7 @@ export function Scheduler({
             </BackLink>
           </div>
           {/* What the call is about: only teams and problems this person can open are offered, and a problem fills in its team. */}
-          {(areas.length > 0 || problems.length > 0) && (
+          {!reschedule && (areas.length > 0 || problems.length > 0) && (
             <div className="grid gap-3 border-t border-zinc-800/80 px-5 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] sm:px-6">
               {areas.length > 0 && (
                 <div className="space-y-1.5">
@@ -686,6 +723,18 @@ export function Scheduler({
 
       {/* 01–02 options, one row; the zone is detected, so changing it is a small link */}
       <div className="flex flex-wrap items-end gap-x-6 gap-y-3 px-5 py-4 sm:px-6 sm:gap-x-8 border-b border-zinc-800">
+        {reschedule ? (
+          <div className="space-y-1.5">
+            <FieldLabel index="01">{t("rescheduleTitle")}</FieldLabel>
+            <p className="text-xs leading-relaxed text-zinc-300">
+              {t("rescheduleNow", { when: longFmt.format(Date.parse(reschedule.start)) })}{" "}
+              <span className="font-mono text-zinc-500">
+                {modeLabel} · {t("minutes", { n: duration })}
+              </span>
+            </p>
+          </div>
+        ) : (
+          <>
         <div className="space-y-1.5">
           <FieldLabel index="01">{t("formatLabel")}</FieldLabel>
           <Segmented
@@ -708,6 +757,8 @@ export function Scheduler({
             options={DURATIONS.map((d) => ({ value: d, label: t("minutes", { n: d }) }))}
           />
         </div>
+          </>
+        )}
         <div className="space-y-1.5 sm:ml-auto">
           <label htmlFor="tz" className="sr-only sm:not-sr-only sm:block text-xs font-mono uppercase tracking-wider text-zinc-400">
             {t("timezoneLabel")}
@@ -819,7 +870,7 @@ export function Scheduler({
                   </div>
 
                   {/* Booking online on a day I'm at an office: not blocked, just a heads-up with a way to meet in person instead. */}
-                  {mode === "online" && onSite.has(day) && (
+                  {mode === "online" && !reschedule && onSite.has(day) && (
                     <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-300">
                       <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-sm bg-zinc-400" aria-hidden="true" />
                       <span>{context?.officeAddress ? t("onSiteDayHintOffice") : t("onSiteDayHint")}</span>
@@ -868,7 +919,40 @@ export function Scheduler({
             </>
           )}
 
-          {slot && (
+          {slot && reschedule && (
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-3 rounded-md border border-zinc-800 bg-zinc-950 p-3">
+                <div className="space-y-1">
+                  <p className="text-sm text-zinc-100">{longFmt.format(Date.parse(slot.start))}</p>
+                  <p className="text-[11px] text-zinc-500 font-mono uppercase tracking-wider">
+                    {modeLabel} · {t("minutes", { n: duration })} · {tzShort || tz}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSlot(null)}
+                  className="inline-flex shrink-0 items-center gap-1 text-xs text-zinc-400 hover:text-zinc-100"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" /> {t("changeTime")}
+                </button>
+              </div>
+              {submitError && <p className="text-xs text-red-400">{submitError}</p>}
+              <div className="space-y-2">
+                <Button type="button" size="lg" disabled={submitting} onClick={moveIt} className="gap-2 w-full">
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {submitting ? t("rescheduleConfirming") : t("rescheduleConfirm")}
+                </Button>
+                <p className="text-[11px] text-zinc-500 leading-relaxed">{t("rescheduleFooter")}</p>
+                {context && (
+                  <BackLink fallbackHref={context.backHref} prefix="" className="inline-block text-xs text-zinc-400 underline underline-offset-4 hover:text-zinc-100">
+                    {t("rescheduleKeep")}
+                  </BackLink>
+                )}
+              </div>
+            </div>
+          )}
+
+          {slot && !reschedule && (
             <form onSubmit={submit} noValidate className="space-y-3">
               {/* The chosen time and the way back to the others, in one line. */}
               <div className="flex items-start justify-between gap-3 rounded-md border border-zinc-800 bg-zinc-950 p-3">
