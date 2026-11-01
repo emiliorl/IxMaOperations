@@ -157,3 +157,31 @@ export const twoStepCodeInput = z.object({ code: z.string().regex(TWO_STEP_CODE)
 export const twoStepConfirmInput = z.object({ factorId: z.string().uuid(), code: z.string().regex(TWO_STEP_CODE) });
 
 export const twoStepRemoveInput = z.object({ factorId: z.string().uuid() });
+
+const slugField = z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,119}$/);
+
+/** Owner: share a file with a project, a team, or one problem (the file's team then follows the problem). */
+export const sharedFileInput = z.object({
+  projectSlug: slugField,
+  milestoneId: uuidOrEmpty,
+  departmentId: uuidOrEmpty,
+  label: z.string().trim().max(120),
+});
+
+export const removeSharedFileInput = z.object({
+  projectSlug: slugField,
+  fileId: z.string().uuid(),
+  returnTo: uuidOrEmpty, // the problem page to come back to, if any
+});
+
+/** Owner: edit a problem's text. Limits match scripts/plan-import.mjs. */
+export const problemEditInput = z.object({
+  projectSlug: slugField,
+  milestoneId: z.string().uuid(),
+  title: z.string().trim().min(1).max(200),
+  summary: z.string().trim().max(2000),
+  delivery: z.string().trim().max(120),
+  priority: z.enum(["high", "medium", "low"]),
+  solution: z.string().max(100_000),
+  links: z.string().max(10_000),
+});

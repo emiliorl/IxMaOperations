@@ -685,7 +685,11 @@ export default async function ProjectPage(props: {
           searchView
         ) : (
           <>
-            <FilesPanel files={sharedFiles} folderLabel={areaLabel} />
+            <FilesPanel
+              files={sharedFiles}
+              folderLabel={areaLabel}
+              admin={isAdmin ? { locale, projectSlug: slug, teams: project.departments.map((d) => ({ id: d.id, name: d.name })) } : undefined}
+            />
 
             {/* The numbers that matter, each one a shortcut to the list behind it. */}
             <section aria-label={t("statsLabel")} className="grid grid-cols-2 gap-3 sm:grid-cols-4">

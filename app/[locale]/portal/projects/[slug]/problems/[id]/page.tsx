@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { BackLink } from "@/components/portal/BackLink";
 import { FilesPanel } from "@/components/portal/FilesPanel";
+import { ProblemEditor } from "@/components/portal/ProblemEditor";
 import { LogList } from "@/components/portal/LogList";
 import { Markdown } from "@/components/portal/Markdown";
 import { Pill } from "@/components/portal/Pills";
@@ -112,6 +113,22 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
           )}
         </header>
 
+        {isAdmin && (
+          <ProblemEditor
+            locale={locale}
+            projectSlug={slug}
+            milestoneId={id}
+            initial={{
+              title: problem.title,
+              summary: problem.summary ?? "",
+              delivery: problem.delivery ?? "",
+              priority: problem.priority,
+              solution: problem.solution ?? "",
+              links: problem.resources.map((link) => `${link.label} | ${link.url}`).join("\n"),
+            }}
+          />
+        )}
+
         {/* Action plan */}
         <section className={panel}>
           <div className={band}>
@@ -153,7 +170,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
         )}
 
         {/* Files shared with whoever can open this problem */}
-        <FilesPanel files={sharedFiles} folderLabel={folderLabel} />
+        <FilesPanel files={sharedFiles} folderLabel={folderLabel} admin={isAdmin ? { locale, projectSlug: slug, milestoneId: id } : undefined} />
 
         {/* Cost — the database only returns it to people allowed to see costs */}
         {problem.cost && (

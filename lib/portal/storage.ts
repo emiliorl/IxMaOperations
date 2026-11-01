@@ -21,9 +21,9 @@ export const projectFilePath = (projectId: string, fileId: string) => `${project
 
 export const attachmentPath = (ticketId: string, attachmentId: string) => `${ticketId}/${attachmentId}`;
 
-export async function putEncrypted(path: string, plain: Buffer): Promise<boolean> {
+export async function putEncrypted(path: string, plain: Buffer, bucket: string = BUCKET): Promise<boolean> {
   const { error } = await supabaseAdmin()
-    .storage.from(BUCKET)
+    .storage.from(bucket)
     .upload(path, encryptBuffer(plain), { contentType: "application/octet-stream", upsert: false });
   if (error) console.error("[attachments] upload failed:", error.message);
   return !error;
@@ -40,3 +40,11 @@ export async function getDecrypted(path: string, bucket: string = BUCKET): Promi
 
 /** Reads a shared project file (installer, deliverable). Access is decided by the caller, as for attachments. */
 export const getDecryptedProjectFile = (path: string) => getDecrypted(path, PROJECT_FILES_BUCKET);
+
+export const putProjectFile = (path: string, plain: Buffer) => putEncrypted(path, plain, PROJECT_FILES_BUCKET);
+
+/** Owner: remove a shared file's encrypted bytes. Best effort: a missing object is not an error. */
+export async function removeProjectFile(path: string): Promise<void> {
+  const { error } = await supabaseAdmin().storage.from(PROJECT_FILES_BUCKET).remove([path]);
+  if (error) console.error("[project-files] remove failed:", error.message);
+}

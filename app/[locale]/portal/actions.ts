@@ -16,6 +16,9 @@ import { isActiveTicket } from "@/lib/portal/plan";
 import { validateNewPassword } from "@/lib/portal/password";
 import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
 import { saveAttachments } from "@/lib/portal/save-attachments";
+import { putProjectFile, projectFilePath, removeProjectFile } from "@/lib/portal/storage";
+import { sanitizeFileName } from "@/lib/portal/attachments";
+import { serializeResources } from "@/lib/portal/plan";
 import { resolveTicketFolder, resolveTicketTitle } from "@/lib/portal/ticket-title";
 import { canRemoveFactor, normalizeCode, ownerTwoStepRequired, verifiedTotpCount } from "@/lib/portal/mfa";
 import { isOfficeDay, officeDaysFromForm } from "@/lib/portal/office-days";
@@ -34,6 +37,9 @@ import {
   removeOnsiteVisitInput,
   removeCompanyAccessInput,
   removeMemberInput,
+  removeSharedFileInput,
+  problemEditInput,
+  sharedFileInput,
   reopenTicketInput,
   settingsInput,
   ticketInput,
@@ -840,4 +846,134 @@ export async function createInvite(_prev: InviteState, formData: FormData): Prom
   if (!isAdmin || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) return { error: true };
   const link = await inviteLinkFor(userId, locale);
   return link ? { link } : { error: true };
+}
+
+// ------------------------------------------------ owner: files and problem text
+
+/** Most a portal upload may carry: Vercel caps a request near 4.5 MB. Bigger files go through scripts/portal-admin.mjs. */
+const MAX_SHARED_FILE_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Owner: share a file with a project, a team, or one problem. The row is written on the
+ * owner's own client (the database refuses anyone else), then the encrypted bytes are stored.
+ * If storing fails, the row is removed again.
+ */
+export async function addSharedFile(_prev: FormState, formData: FormData): Promise<FormState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  if (!isAdmin) return { error: "denied" };
+  const parsed = sharedFileInput.safeParse({
+    projectSlug: text(formData, "projectSlug"),
+    milestoneId: text(formData, "milestoneId"),
+    departmentId: text(formData, "departmentId"),
+    label: text(formData, "label"),
+  });
+  const file = uploadedFiles(formData)[0];
+  if (!parsed.success || !file) return { error: "invalid" };
+  if (file.size > MAX_SHARED_FILE_BYTES) return { error: "files_too_big" };
+
+  const { data: project } = await supabase.from("projects").select("id").eq("slug", parsed.data.projectSlug).maybeSingle();
+  if (!project) return { error: "invalid" };
+
+  // A file for a problem takes that problem's team, so the same people see both.
+  let departmentId = parsed.data.departmentId || null;
+  const milestoneId = parsed.data.milestoneId || null;
+  if (milestoneId) {
+    const { data: problem } = await supabase.from("project_milestones").select("department_id").eq("id", milestoneId).eq("project_id", project.id).maybeSingle();
+    if (!problem) return { error: "invalid" };
+    departmentId = problem.department_id;
+  }
+
+  const name = sanitizeFileName(file.name);
+  const { data: row, error } = await supabase
+    .from("project_files")
+    .insert({
+      project_id: project.id,
+      department_id: departmentId,
+      milestone_id: milestoneId,
+      file_name: encryptField(name),
+      mime_type: encryptField("application/octet-stream"),
+      label: encryptOptional(parsed.data.label || null),
+      size_bytes: file.size,
+    })
+    .select("id")
+    .single();
+  if (error || !row) return { error: error ? classify(error) : "generic" };
+
+  const stored = await putProjectFile(projectFilePath(project.id, row.id), Buffer.from(await file.arrayBuffer()));
+  if (!stored) {
+    await supabase.from("project_files").delete().eq("id", row.id);
+    return { error: "generic" };
+  }
+  return { ok: true };
+}
+
+/** Owner: stop sharing a file (row and stored bytes). */
+export async function removeSharedFile(formData: FormData): Promise<void> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  const parsed = removeSharedFileInput.safeParse({
+    projectSlug: text(formData, "projectSlug"),
+    fileId: text(formData, "fileId"),
+    returnTo: text(formData, "returnTo"),
+  });
+  if (!parsed.success) return redirect({ href: "/portal", locale });
+  const slug = parsed.data.projectSlug;
+  const back = parsed.data.returnTo ? `/portal/projects/${slug}/problems/${parsed.data.returnTo}` : `/portal/projects/${slug}`;
+  if (!isAdmin) return redirect({ href: back, locale });
+  const { data: project } = await supabase.from("projects").select("id").eq("slug", slug).maybeSingle();
+  if (project) {
+    const { data: removed } = await supabase.from("project_files").delete().eq("id", parsed.data.fileId).eq("project_id", project.id).select("id");
+    if (removed?.length) await removeProjectFile(projectFilePath(project.id, parsed.data.fileId));
+  }
+  return redirect({ href: back, locale });
+}
+
+/** Owner: edit a problem's title, summary, delivery, priority, action plan and links. Text is encrypted before it is stored. */
+export async function updateProblem(_prev: FormState, formData: FormData): Promise<FormState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { supabase, isAdmin } = await requireUser(locale);
+  if (!isAdmin) return { error: "denied" };
+  const parsed = problemEditInput.safeParse({
+    projectSlug: text(formData, "projectSlug"),
+    milestoneId: text(formData, "milestoneId"),
+    title: text(formData, "title"),
+    summary: text(formData, "summary"),
+    delivery: text(formData, "delivery"),
+    priority: text(formData, "priority"),
+    solution: text(formData, "solution"),
+    links: text(formData, "links"),
+  });
+  if (!parsed.success) return { error: "invalid" };
+  const input = parsed.data;
+
+  // One link per line: "Label | https://..." or just the address.
+  const links = input.links
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const bar = line.lastIndexOf("|");
+      return bar < 0 ? { url: line } : { label: line.slice(0, bar), url: line.slice(bar + 1).trim() };
+    });
+  const resources = links.length ? serializeResources(links) : null;
+  if (links.length && !resources) return { error: "invalid" };
+
+  const { data: project } = await supabase.from("projects").select("id").eq("slug", input.projectSlug).maybeSingle();
+  if (!project) return { error: "invalid" };
+  const { data, error } = await supabase
+    .from("project_milestones")
+    .update({
+      title: encryptField(input.title),
+      summary: encryptOptional(input.summary || null),
+      delivery: encryptOptional(input.delivery || null),
+      priority: input.priority,
+      solution: encryptOptional(input.solution.replace(/\r\n/g, "\n").trim() || null),
+      resources: encryptOptional(resources),
+    })
+    .eq("id", input.milestoneId)
+    .eq("project_id", project.id)
+    .select("id");
+  if (error) return { error: classify(error) };
+  return data?.length ? { ok: true } : { error: "denied" };
 }
