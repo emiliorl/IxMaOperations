@@ -40,6 +40,14 @@
  *                                                       An optional "areas" list holds each team's general information
  *                                                       (shown apart from its problems, only to people who can open that folder).
  *                                                       See scripts/plan-import.mjs for the file format.
+ *   file <projectSlug> <path> [--problem BIM-1] [--dept "<name>"] [--label "<title>"]
+ *                                                       share a downloadable file (encrypted, max 50 MB). Audience:
+ *                                                       --problem  only people who can open that problem (its team's folder)
+ *                                                       --dept     only people with that team's folder
+ *                                                       neither    every member of the project
+ *                                                       Re-sending the same file name to the same audience replaces it.
+ *   files <projectSlug>                                 list shared files and their audience
+ *   unfile <projectSlug> <fileId>                       remove a shared file
  *   doctor                                              is this database and machine ready for real clients? (read-only:
  *                                                       migrations applied, owner exists, demo data gone, sign-up off, settings present)
  *   make-admin <email>                                  mark yourself as the owner (sign in again afterwards)
@@ -77,7 +85,8 @@
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs";
-import { blindIndex, decryptLoose, encryptField, encryptOptional } from "./crypto.mjs";
+import path from "node:path";
+import { blindIndex, decryptLoose, encryptBuffer, encryptField, encryptOptional } from "./crypto.mjs";
 import { validatePlan } from "./plan-import.mjs";
 import { assignMissingCodes, areaPrefix, nextProblemCode } from "./problem-codes.mjs";
 
@@ -285,6 +294,84 @@ const commands = {
     console.log(
       `✓ ${profile.display_name} → ${project.name} · ${allFolders ? "all folders" : folders.map((f) => f.name).join(", ")} · ${role} · ${seesCosts ? "can see costs" : "no costs"}`
     );
+  },
+
+  async file() {
+    need(2, 'file <projectSlug> <path> [--problem BIM-1] [--dept "<name>"] [--label "<title>"]');
+    const project = await projectBySlug(positional[0]);
+    const filePath = positional[1];
+    if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) fail(`No such file: ${filePath}`);
+    const bytes = fs.readFileSync(filePath);
+    if (bytes.length < 1 || bytes.length > 52428800) fail("A file must be between 1 byte and 50 MB.");
+    const fileName = path.basename(filePath);
+
+    let departmentId = null;
+    let milestoneId = null;
+    let audience = "every member of the project";
+    if (flags.problem) {
+      const wanted = flags.problem.trim().toLowerCase();
+      const items = must(await db.from("project_milestones").select("id,code,department_id").eq("project_id", project.id), "Looking up problem");
+      const item = items.find((m) => (decryptLoose(m.code) ?? "").trim().toLowerCase() === wanted);
+      if (!item) fail(`No problem with code "${flags.problem}" in ${project.name}.`);
+      milestoneId = item.id;
+      departmentId = item.department_id; // the file follows the problem's team
+      audience = `only people who can open ${flags.problem}`;
+    } else if (flags.dept) {
+      departmentId = (await departmentByName(project.organization_id, flags.dept)).id;
+      audience = `only people with the "${flags.dept}" folder`;
+    }
+
+    // Same name + same audience = replace.
+    const existing = must(
+      await db.from("project_files").select("id,file_name,department_id,milestone_id").eq("project_id", project.id),
+      "Checking existing files"
+    ).filter((f) => decryptLoose(f.file_name) === fileName && f.department_id === departmentId && f.milestone_id === milestoneId);
+    for (const old of existing) {
+      await db.storage.from("project-files").remove([`${project.id}/${old.id}`]);
+      must(await db.from("project_files").delete().eq("id", old.id), "Replacing old file");
+    }
+
+    const id = crypto.randomUUID();
+    const up = await db.storage.from("project-files").upload(`${project.id}/${id}`, encryptBuffer(bytes), { contentType: "application/octet-stream", upsert: false });
+    if (up.error) fail(`Uploading: ${up.error.message} (did you run migration 20261029002000_project_files.sql?)`);
+    const saved = await db.from("project_files").insert({
+      id,
+      project_id: project.id,
+      department_id: departmentId,
+      milestone_id: milestoneId,
+      file_name: encryptField(fileName),
+      mime_type: encryptField("application/octet-stream"),
+      label: encryptOptional(flags.label ?? null),
+      size_bytes: bytes.length,
+    });
+    if (saved.error) {
+      await db.storage.from("project-files").remove([`${project.id}/${id}`]);
+      fail(`Saving file: ${saved.error.message}`);
+    }
+    console.log(`✓ ${fileName} (${(bytes.length / 1024).toFixed(1)} KB) shared with ${audience} in ${project.name}${existing.length ? " (replaced the previous copy)" : ""}`);
+  },
+
+  async files() {
+    need(1, "files <projectSlug>");
+    const project = await projectBySlug(positional[0]);
+    const rows = must(await db.from("project_files").select("id,file_name,label,size_bytes,department_id,milestone_id").eq("project_id", project.id), "Listing files");
+    if (!rows.length) return console.log("(no shared files)");
+    const items = must(await db.from("project_milestones").select("id,code").eq("project_id", project.id), "Looking up problems");
+    const depts = must(await db.from("departments").select("id,name").eq("organization_id", project.organization_id), "Looking up departments");
+    for (const f of rows) {
+      const problem = items.find((m) => m.id === f.milestone_id);
+      const dept = depts.find((d) => d.id === f.department_id);
+      const who = problem ? `problem ${decryptLoose(problem.code)}` : dept ? `team ${decryptLoose(dept.name)}` : "whole project";
+      console.log(`${f.id}  ${decryptLoose(f.file_name)}  ${(f.size_bytes / 1024).toFixed(1)} KB  → ${who}`);
+    }
+  },
+
+  async unfile() {
+    need(2, "unfile <projectSlug> <fileId>");
+    const project = await projectBySlug(positional[0]);
+    must(await db.from("project_files").delete().eq("id", positional[1]).eq("project_id", project.id), "Removing file");
+    await db.storage.from("project-files").remove([`${project.id}/${positional[1]}`]);
+    console.log("✓ File removed");
   },
 
   async unmember() {

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { BackLink } from "@/components/portal/BackLink";
+import { FilesPanel } from "@/components/portal/FilesPanel";
 import { LogList } from "@/components/portal/LogList";
 import { Markdown } from "@/components/portal/Markdown";
 import { Pill } from "@/components/portal/Pills";
@@ -19,6 +20,7 @@ import {
   getProjectEvents,
   getProjectShell,
   getMyTimeZone,
+  listSharedFiles,
 } from "@/lib/portal/queries";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -35,13 +37,14 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
   if (!project) notFound();
 
   // None of these depend on each other, only on the project.
-  const [problem, access, allActivity, t, timeZone] = await Promise.all([
+  const [problem, access, allActivity, t, timeZone, sharedFiles] = await Promise.all([
     getProblem(supabase, project.id, id),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     // "Ticket opened" is already visible as a row in the ticket history below, so it's left out here.
     getProjectEvents(supabase, project.id, null, 30, { milestoneId: id, excludeKind: "ticket_opened" }),
     getTranslations("Portal"),
     getMyTimeZone(supabase, user.id),
+    listSharedFiles(supabase, project.id, id),
   ]);
   if (!problem) notFound();
   // The activity feed is for leaders (owner, executives, team leads); everyone else sees the tickets above, not the audit trail.
@@ -148,6 +151,9 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
             </ul>
           </section>
         )}
+
+        {/* Files shared with whoever can open this problem */}
+        <FilesPanel files={sharedFiles} folderLabel={folderLabel} />
 
         {/* Cost — the database only returns it to people allowed to see costs */}
         {problem.cost && (

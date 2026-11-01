@@ -950,6 +950,7 @@
     "deliveryLabel": "Entrega",
     "actionPlan": "Plan de acción",
     "noActionPlan": "Aún no se ha agregado el plan de acción.",
+    "filesTitle": "Archivos",
     "linksTitle": "Enlaces",
     "costTitle": "Costo",
     "costHelp": "Solo lo ven las personas con acceso a costos.",

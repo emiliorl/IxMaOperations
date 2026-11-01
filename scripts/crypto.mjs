@@ -48,3 +48,11 @@ export function blindIndex(value) {
   const subkey = createHmac("sha256", getKey()).update("blind-index-v1").digest();
   return createHmac("sha256", subkey).update(value.trim().toLowerCase()).digest("hex");
 }
+
+/** Same format as lib/field-crypto.ts encryptBuffer: iv(12) | auth tag(16) | ciphertext. */
+export function encryptBuffer(plain) {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", getKey(), iv);
+  const ciphertext = Buffer.concat([cipher.update(plain), cipher.final()]);
+  return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]);
+}

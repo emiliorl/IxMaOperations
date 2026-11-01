@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { AccessPanel } from "@/components/portal/AccessPanel";
+import { FilesPanel } from "@/components/portal/FilesPanel";
 import { FilterSelect } from "@/components/portal/FilterSelect";
 import { Highlight } from "@/components/portal/Highlight";
 import { MeetingsPanel } from "@/components/portal/MeetingsPanel";
@@ -47,6 +48,7 @@ import {
   getMyTimeZone,
   getOfficeWeekdays,
   getProjectAccess,
+  listSharedFiles,
   getProjectDetail,
   getSearchText,
   listAreaInfo,
@@ -89,7 +91,7 @@ export default async function ProjectPage(props: {
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
   // Only the project is needed to start all of these, so they run together.
-  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone, visits, areaInfo, meetings, officeDays] = await Promise.all([
+  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone, visits, areaInfo, meetings, officeDays, sharedFiles] = await Promise.all([
     getTranslations("Portal"),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     listCostMilestoneIds(supabase),
@@ -105,6 +107,8 @@ export default async function ProjectPage(props: {
     listProjectMeetings(supabase, { id: project.id }, { id: user.id, email: user.email ?? "", isAdmin }),
     // The weekdays this client's office is open for visits (their home-office days are left out).
     getOfficeWeekdays(supabase, project.id),
+    // Downloads shared with this person's project or teams (the database returns only what they may see).
+    listSharedFiles(supabase, project.id, null),
   ]);
   const dueFmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" });
 
@@ -681,6 +685,8 @@ export default async function ProjectPage(props: {
           searchView
         ) : (
           <>
+            <FilesPanel files={sharedFiles} folderLabel={areaLabel} />
+
             {/* The numbers that matter, each one a shortcut to the list behind it. */}
             <section aria-label={t("statsLabel")} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[

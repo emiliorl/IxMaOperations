@@ -950,6 +950,7 @@
     "deliveryLabel": "Delivery",
     "actionPlan": "Action plan",
     "noActionPlan": "The action plan hasn't been added yet.",
+    "filesTitle": "Files",
     "linksTitle": "Links",
     "costTitle": "Cost",
     "costHelp": "Only people with cost access can see this.",

@@ -15,6 +15,10 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
  */
 const BUCKET = "ticket-attachments";
 
+const PROJECT_FILES_BUCKET = "project-files";
+
+export const projectFilePath = (projectId: string, fileId: string) => `${projectId}/${fileId}`;
+
 export const attachmentPath = (ticketId: string, attachmentId: string) => `${ticketId}/${attachmentId}`;
 
 export async function putEncrypted(path: string, plain: Buffer): Promise<boolean> {
@@ -25,11 +29,14 @@ export async function putEncrypted(path: string, plain: Buffer): Promise<boolean
   return !error;
 }
 
-export async function getDecrypted(path: string): Promise<Buffer | null> {
-  const { data, error } = await supabaseAdmin().storage.from(BUCKET).download(path);
+export async function getDecrypted(path: string, bucket: string = BUCKET): Promise<Buffer | null> {
+  const { data, error } = await supabaseAdmin().storage.from(bucket).download(path);
   if (error || !data) {
     console.error("[attachments] download failed:", error?.message);
     return null;
   }
   return decryptBuffer(Buffer.from(await data.arrayBuffer()));
 }
+
+/** Reads a shared project file (installer, deliverable). Access is decided by the caller, as for attachments. */
+export const getDecryptedProjectFile = (path: string) => getDecrypted(path, PROJECT_FILES_BUCKET);

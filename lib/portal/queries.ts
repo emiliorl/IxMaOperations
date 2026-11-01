@@ -934,3 +934,35 @@ export async function listCostMilestoneIds(supabase: SupabaseClient): Promise<Se
   }
   return new Set((data ?? []).map((row) => row.milestone_id as string));
 }
+
+export interface SharedFile {
+  id: string;
+  name: string;
+  label: string | null;
+  sizeBytes: number;
+  departmentId: string | null;
+}
+
+/**
+ * Shared downloads (installers, deliverables) this person may see. Row-level
+ * security decides: project-wide files reach every member, team files only
+ * people with that team's folder. `milestoneId` = files for one problem;
+ * null = project and team files that aren't tied to a problem.
+ * Returns [] if the files migration hasn't been run yet.
+ */
+export async function listSharedFiles(supabase: SupabaseClient, projectId: string, milestoneId: string | null): Promise<SharedFile[]> {
+  let query = supabase.from("project_files").select("id,file_name,label,size_bytes,department_id").eq("project_id", projectId);
+  query = milestoneId ? query.eq("milestone_id", milestoneId) : query.is("milestone_id", null);
+  const { data, error } = await query.order("created_at", { ascending: true }).limit(100);
+  if (error) {
+    console.warn(`[portal] shared files unavailable: ${error.message}`);
+    return [];
+  }
+  return (data ?? []).map((f) => ({
+    id: f.id,
+    name: decryptLoose(f.file_name) ?? "file",
+    label: decryptLoose(f.label),
+    sizeBytes: Number(f.size_bytes),
+    departmentId: f.department_id,
+  }));
+}
