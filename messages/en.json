@@ -1186,7 +1186,11 @@
     "historyStatus": "{who} set the status to {status}",
     "logTruncated": "Showing the latest {n} events. Pick a single week to see the rest.",
     "canSeeCosts": "Can see costs",
-    "costsHelp": "People with full access always see costs. Switch this on to let someone else see them too."
+    "costsHelp": "People with full access always see costs. Switch this on to let someone else see them too.",
+    "promptBadge": "Prompt ready to copy",
+    "templateBadge": "Template to copy",
+    "openPromptCard": "Open",
+    "closePromptCard": "Close"
   },
   "Legal": {
     "lastUpdatedLabel": "Last updated",

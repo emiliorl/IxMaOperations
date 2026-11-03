@@ -24,8 +24,8 @@ import {
   listSharedFiles,
 } from "@/lib/portal/queries";
 
-const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
-const panel = "rounded-lg border border-zinc-800/80 bg-zinc-900/30 overflow-hidden";
+const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 sm:px-6 py-3.5 text-sm font-semibold text-zinc-100";
+const panel = "rounded-xl border border-zinc-800/80 bg-zinc-900/30 overflow-hidden";
 
 export default async function ProblemPage(props: { params: Promise<{ locale: string; slug: string; id: string }> }) {
   const { locale, slug, id } = await props.params;
@@ -58,15 +58,8 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
 
   const open = ticketCountsByProblem(problem.tickets.map((tk) => ({ milestoneId: id, status: tk.status }))).get(id)?.open ?? 0;
 
-  // Section numbers follow what is actually shown (links, cost and activity are optional).
   const hasLinks = problem.resources.length > 0;
-  const hasCost = Boolean(problem.cost);
   const hasActivity = activity.length > 0;
-  const n = (position: number) => String(position).padStart(2, "0");
-  const linksNo = 2;
-  const costNo = linksNo + (hasLinks ? 1 : 0);
-  const historyNo = costNo + (hasCost ? 1 : 0);
-  const activityNo = historyNo + 1;
 
   const newTicket = { pathname: `/portal/projects/${slug}/tickets/new`, query: { item: id } };
 
@@ -87,8 +80,8 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
             <Pill kind="priority" value={problem.priority} label={t(`problemPriority.${problem.priority}`)} />
           </div>
           <h1 className="break-words text-2xl sm:text-4xl font-semibold text-white tracking-tight">{problem.title}</h1>
-          {problem.summary && <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-2xl">{problem.summary}</p>}
-          <p className="font-mono text-[11px] text-zinc-500">
+          {problem.summary && <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl">{problem.summary}</p>}
+          <p className="text-xs text-zinc-400">
             {folderLabel(problem.departmentId)}
             {problem.delivery && ` · ${t("deliveryLabel")}: ${problem.delivery}`}
             {problem.dueDate && ` · ${t("due", { date: dueFmt.format(Date.parse(problem.dueDate)) })}`}
@@ -132,12 +125,9 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
         {/* Action plan */}
         <section className={panel}>
           <div className={band}>
-            <span>
-              <span className="text-zinc-600">{"// 01 "}</span>
-              {t("actionPlan")}
-            </span>
+            <span>{t("actionPlan")}</span>
           </div>
-          <div className="p-5 sm:p-6">
+          <div className="p-5 sm:p-7">
             {problem.solution ? <Markdown>{problem.solution}</Markdown> : <p className="text-sm text-zinc-500">{problem.description ?? t("noActionPlan")}</p>}
           </div>
         </section>
@@ -146,10 +136,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
         {hasLinks && (
           <section className={panel}>
             <div className={band}>
-              <span>
-                <span className="text-zinc-600">{`// ${n(linksNo)} `}</span>
-                {t("linksTitle")}
-              </span>
+              <span>{t("linksTitle")}</span>
             </div>
             <ul className="divide-y divide-zinc-800/80">
               {problem.resources.map((link) => (
@@ -176,11 +163,8 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
         {problem.cost && (
           <section className={panel}>
             <div className={band}>
-              <span>
-                <span className="text-zinc-600">{`// ${n(costNo)} `}</span>
-                {t("costTitle")}
-              </span>
-              <span className="normal-case tracking-normal text-zinc-600">{t("costHelp")}</span>
+              <span>{t("costTitle")}</span>
+              <span className="text-xs font-normal text-zinc-400">{t("costHelp")}</span>
             </div>
             <div className="p-5 sm:p-6">
               <Markdown>{problem.cost}</Markdown>
@@ -191,11 +175,8 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
         {/* Ticket history */}
         <section className={panel}>
           <div className={band}>
-            <span>
-              <span className="text-zinc-600">{`// ${n(historyNo)} `}</span>
-              {t("ticketHistory")}
-            </span>
-            <span className="normal-case tracking-normal text-zinc-500">{t("openTicketsCount", { count: open })}</span>
+            <span>{t("ticketHistory")}</span>
+            <span className="text-xs font-normal text-zinc-400">{t("openTicketsCount", { count: open })}</span>
           </div>
           {problem.tickets.length === 0 ? (
             <p className="p-5 sm:p-6 text-sm text-zinc-500">{t("noProblemTickets")}</p>
@@ -208,11 +189,8 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
         {hasActivity && (
           <section className={panel}>
             <div className={band}>
-              <span>
-                <span className="text-zinc-600">{`// ${n(activityNo)} `}</span>
-                {t("logTitle")}
-              </span>
-              <Link href={`/portal/projects/${slug}/log`} className="normal-case tracking-normal text-zinc-500 hover:text-zinc-200 underline underline-offset-4">
+              <span>{t("logTitle")}</span>
+              <Link href={`/portal/projects/${slug}/log`} className="text-xs font-normal text-zinc-400 hover:text-zinc-200 underline underline-offset-4">
                 {t("logLink")} →
               </Link>
             </div>

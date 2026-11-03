@@ -1186,7 +1186,11 @@
     "historyStatus": "{who} cambió el estado a {status}",
     "logTruncated": "Mostrando los últimos {n} eventos. Elige una semana para ver el resto.",
     "canSeeCosts": "Puede ver costos",
-    "costsHelp": "Quienes tienen acceso completo siempre ven los costos. Actívalo para que otra persona también los vea."
+    "costsHelp": "Quienes tienen acceso completo siempre ven los costos. Actívalo para que otra persona también los vea.",
+    "promptBadge": "Prompt listo para copiar",
+    "templateBadge": "Plantilla para copiar",
+    "openPromptCard": "Ver",
+    "closePromptCard": "Cerrar"
   },
   "Legal": {
     "lastUpdatedLabel": "Última actualización",
