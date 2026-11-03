@@ -257,7 +257,9 @@ const commands = {
     const { data, error } = await db.auth.admin.generateLink({ type: "recovery", email });
     const token = data?.properties?.hashed_token;
     if (error || !token) fail(`Creating the link: ${error?.message ?? "no token returned"}`);
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.ixmaoperations.com";
+    // A link to localhost is useless to anyone else, so only a real (non-local) address is used.
+    const configured = process.env.NEXT_PUBLIC_APP_URL ?? "";
+    const base = configured && !/localhost|127\.0\.0\.1/.test(configured) ? configured : "https://www.ixmaoperations.com";
     const link = new URL("/api/portal/auth/confirm", base);
     link.searchParams.set("token_hash", token);
     link.searchParams.set("type", "recovery");
