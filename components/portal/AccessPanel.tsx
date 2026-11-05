@@ -11,6 +11,7 @@ import type { CompanyAccessEntry, Department, TeamMember } from "@/lib/portal/qu
 import { cn } from "@/lib/utils";
 import { selectClass } from "./Field";
 import { InviteLink } from "./InviteLink";
+import { TeamMemberList } from "./TeamMemberList";
 
 const band = "flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-900/60 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500";
 const label = "font-mono text-[11px] uppercase tracking-wider text-zinc-500";
@@ -175,9 +176,13 @@ export async function AccessPanel({
             {hidden()}
             <input type="hidden" name="organizationId" value={organizationId} />
             {newPersonFields("company")}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {levelSelect("full")}
               {costsCheck(false)}
+              <label className={check}>
+                <input type="checkbox" name="sendInviteNow" defaultChecked className="accent-zinc-300" />
+                {t("sendInviteCheckbox")}
+              </label>
               <button type="submit" className={buttonVariants({ size: "sm" })}>
                 {t("add")}
               </button>
@@ -191,44 +196,32 @@ export async function AccessPanel({
         </div>
 
         {/* Project team and folders */}
-        <div className="space-y-3 border-t border-zinc-800 pt-6">
+        <div className="space-y-4 border-t border-zinc-800 pt-6">
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-zinc-100">{t("projectAccessTitle")}</h3>
             <p className="text-[11px] text-zinc-500 leading-relaxed max-w-2xl">{t("projectAccessHelp")}</p>
           </div>
 
-          <ul className="divide-y divide-zinc-800/80 rounded-md border border-zinc-800">
-            {team.map((member) => (
-              <li key={member.userId} className="px-4 py-3 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-zinc-100">{member.name}</p>
-                  <form action={removeMemberAccess}>
-                    {hidden(member.userId)}
-                    <button type="submit" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-                      {t("remove")}
-                    </button>
-                  </form>
-                </div>
-                <form action={saveMemberAccess} className="flex flex-wrap items-center gap-x-4 gap-y-3">
-                  {hidden(member.userId)}
-                  {roleSelect(member.role)}
-                  {folderChecks(member)}
-                  {costsCheck(costUserIds.includes(member.userId))}
-                  <button type="submit" className={buttonVariants({ variant: "secondary", size: "sm" })}>
-                    {t("save")}
-                  </button>
-                </form>
-                <InviteLink locale={locale} userId={member.userId} />
-              </li>
-            ))}
-          </ul>
+          <TeamMemberList
+            team={team}
+            departments={departments}
+            costUserIds={costUserIds}
+            projectSlug={projectSlug}
+            locale={locale}
+          />
 
           <form action={saveMemberAccess} className="space-y-3 rounded-md border border-dashed border-zinc-800 p-4">
             {hidden()}
             {newPersonFields("member")}
             <div className="flex flex-wrap items-center gap-3">{roleSelect("member")}</div>
             {folderChecks()}
-            {costsCheck(false)}
+            <div className="flex flex-wrap items-center gap-4">
+              {costsCheck(false)}
+              <label className={check}>
+                <input type="checkbox" name="sendInviteNow" defaultChecked className="accent-zinc-300" />
+                {t("sendInviteCheckbox")}
+              </label>
+            </div>
             <button type="submit" className={buttonVariants({ size: "sm" })}>
               {t("add")}
             </button>

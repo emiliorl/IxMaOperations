@@ -190,6 +190,7 @@ export async function sendPortalEmail(input: {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   headers?: Record<string, string>;
 }): Promise<boolean> {
   try {
@@ -198,6 +199,7 @@ export async function sendPortalEmail(input: {
       to: input.to,
       subject: input.subject,
       text: input.text,
+      html: input.html,
       headers: input.headers,
     });
     if (result.error) throw new Error(result.error.message);

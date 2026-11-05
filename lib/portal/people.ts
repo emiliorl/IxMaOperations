@@ -3,6 +3,8 @@ import crypto from "node:crypto";
 import { blindIndex, decryptLoose, encryptField } from "@/lib/field-crypto";
 import { OUTGOING_URL } from "@/lib/site-url";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendPortalEmail } from "@/lib/email";
+import { buildBrandedEmailHtml } from "./email-template";
 
 /**
  * Creating people and inviting them. Uses the owner-only secret key (it has
@@ -80,4 +82,82 @@ export async function inviteLinkFor(userId: string, locale: string): Promise<str
   link.searchParams.set("type", "recovery");
   link.searchParams.set("locale", locale);
   return link.toString();
+}
+
+/**
+ * Sends an onboarding / access invitation email to a user with their one-time
+ * setup link. Fails safely if Resend is unconfigured or the email cannot be sent.
+ */
+export async function sendInviteEmailFor(input: {
+  userId: string;
+  locale: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const admin = supabaseAdmin();
+  const { data: profile } = await admin.from("profiles").select("email,display_name").eq("id", input.userId).maybeSingle();
+  const email = decryptLoose(profile?.email);
+  const name = decryptLoose(profile?.display_name) || "";
+  if (!email) return { ok: false, error: "no_email" };
+
+  const link = await inviteLinkFor(input.userId, input.locale);
+  if (!link) return { ok: false, error: "link_failed" };
+
+  const isEs = input.locale === "es";
+  const subject = isEs
+    ? "Invitación a tu espacio en IxMa Operations"
+    : "Invitation to your IxMa Operations workspace";
+
+  const title = isEs ? "Activa tu cuenta de acceso" : "Activate your access account";
+  const greeting = name ? (isEs ? `Hola ${name},` : `Hello ${name},`) : undefined;
+  const intro = isEs
+    ? "Has sido invitado a colaborar en el Portal de Operaciones de IxMa. Para comenzar, haz clic en el botón de abajo para activar tu cuenta y configurar tu contraseña privada."
+    : "You have been invited to collaborate in the IxMa Operations Client Portal. To get started, click the button below to activate your account and set your private password.";
+
+  const actionLabel = isEs ? "Activar cuenta y definir contraseña" : "Activate account and set password";
+  const notice = isEs
+    ? "Este enlace es de uso único y expira en 1 hora por seguridad. Si no esperabas esta invitación, puedes ignorar este mensaje."
+    : "This one-time link will expire in 1 hour for security. If you were not expecting this invitation, you may safely ignore this message.";
+
+  const html = buildBrandedEmailHtml({
+    title,
+    greeting,
+    intro,
+    action: {
+      label: actionLabel,
+      url: link,
+    },
+    notice,
+    locale: isEs ? "es" : "en",
+  });
+
+  const plainGreeting = greeting ?? (isEs ? "Hola," : "Hello,");
+  const text = isEs
+    ? `${plainGreeting}
+
+${intro}
+
+Enlace de activación:
+${link}
+
+${notice}
+
+— Equipo de IxMa Operations`
+    : `${plainGreeting}
+
+${intro}
+
+Activation link:
+${link}
+
+${notice}
+
+— The IxMa Operations Team`;
+
+  const sent = await sendPortalEmail({
+    to: email,
+    subject,
+    text,
+    html,
+  });
+
+  return sent ? { ok: true } : { ok: false, error: "send_failed" };
 }

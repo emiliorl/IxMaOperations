@@ -14,7 +14,7 @@ import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { localDate } from "@/lib/tz";
 import { isActiveTicket } from "@/lib/portal/plan";
 import { validateNewPassword } from "@/lib/portal/password";
-import { createPortalAccount, inviteLinkFor } from "@/lib/portal/people";
+import { createPortalAccount, inviteLinkFor, sendInviteEmailFor } from "@/lib/portal/people";
 import { saveAttachments } from "@/lib/portal/save-attachments";
 import { putProjectFile, projectFilePath, removeProjectFile } from "@/lib/portal/storage";
 import { sanitizeFileName } from "@/lib/portal/attachments";
@@ -728,6 +728,10 @@ export async function saveMemberAccess(formData: FormData): Promise<void> {
     });
   if (member.error) return backToAccess(locale, slug, "error");
 
+  if (formData.get("sendInviteNow") === "on") {
+    await sendInviteEmailFor({ userId, locale });
+  }
+
   const cleared = await supabase.from("project_member_departments").delete().eq("project_id", project.id).eq("user_id", userId);
   if (cleared.error) return backToAccess(locale, slug, "error");
   if (!input.allDepartments && input.departmentIds.length > 0) {
@@ -780,6 +784,9 @@ export async function saveCompanyAccess(formData: FormData): Promise<void> {
       access_level: input.level,
       can_view_costs: input.canViewCosts,
     });
+  if (!saved.error && formData.get("sendInviteNow") === "on") {
+    await sendInviteEmailFor({ userId, locale });
+  }
   return backToAccess(locale, slug, saved.error ? "error" : "saved");
 }
 
@@ -836,6 +843,23 @@ export async function setPassword(_prev: PasswordState, formData: FormData): Pro
 export interface InviteState {
   link?: string;
   error?: boolean;
+}
+
+export interface SendInviteState {
+  ok?: boolean;
+  error?: "denied" | "invalid" | "no_email" | "link_failed" | "send_failed";
+}
+
+/** Owner: sends an invitation email directly to the person's email address with their setup link. */
+export async function sendInviteEmailAction(_prev: SendInviteState, formData: FormData): Promise<SendInviteState> {
+  const locale = pickLocale(formData.get("locale"));
+  const { isAdmin } = await requireUser(locale);
+  if (!isAdmin) return { error: "denied" };
+  const userId = text(formData, "userId");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) return { error: "invalid" };
+  const result = await sendInviteEmailFor({ userId, locale });
+  if (!result.ok) return { error: (result.error as SendInviteState["error"]) || "send_failed" };
+  return { ok: true };
 }
 
 /** Owner: a fresh one-time link that lets this person sign in and choose a password. */

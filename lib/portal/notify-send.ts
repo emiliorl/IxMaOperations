@@ -5,6 +5,7 @@ import { OUTGOING_URL } from "@/lib/site-url";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { clientEmail, ownerAlertHeaders, ownerAlertMode, ownerSubject, shouldEmailAboutReply, type ClientEmailKind, type OwnerEvent } from "./notify";
 import { notificationPreferencesFrom, parseLanguage, wantsEmail } from "./preferences";
+import { buildBrandedEmailHtml } from "./email-template";
 
 /** Minutes within which several owner replies count as one email to the person. */
 const REPLY_BURST_MINUTES = 10;
@@ -79,17 +80,47 @@ export async function notifyTicketPerson(input: { ticketId: string; kind: Client
     }
 
     const project = Array.isArray(ticket.projects) ? ticket.projects[0] : ticket.projects;
+    const ticketTitle = decryptLoose(ticket.title) ?? "";
+    const projectName = decryptLoose((project as { name?: string } | null)?.name) ?? "";
+    const ticketUrl = `${OUTGOING_URL}/portal/tickets/${ticket.id}`;
+    const userLocale = parseLanguage(person.locale);
+    const isEs = userLocale !== "en";
+
     const { subject, text } = clientEmail(
       input.kind,
       {
         number: ticket.ticket_number,
-        title: decryptLoose(ticket.title) ?? "",
-        project: decryptLoose((project as { name?: string } | null)?.name) ?? "",
-        url: `${OUTGOING_URL}/portal/tickets/${ticket.id}`,
+        title: ticketTitle,
+        project: projectName,
+        url: ticketUrl,
       },
-      parseLanguage(person.locale)
+      userLocale
     );
-    await sendPortalEmail({ to: address, subject, text });
+
+    const ref = `#${ticket.ticket_number} · ${ticketTitle}`;
+    const html = buildBrandedEmailHtml({
+      title: input.kind === "fix_ready"
+        ? (isEs ? "Ticket listo para tu revisión" : "Ticket ready for review")
+        : (isEs ? "Nueva respuesta en tu ticket" : "New reply on your ticket"),
+      badge: `${projectName ? `${projectName} // ` : ""}TICKET #${ticket.ticket_number}`,
+      intro: input.kind === "fix_ready"
+        ? (isEs
+            ? `Marcamos el ticket ${ref} como corregido. Por favor pruébalo en tu entorno: si funciona, puedes cerrarlo; si no, cuéntanos en los comentarios y se reabre de inmediato.`
+            : `We marked ticket ${ref} as fixed. Please test it: if it works, close it; if not, comment with what you see and the ticket reopens.`)
+        : (isEs
+            ? `Hay una nueva respuesta en tu ticket ${ref}. Abre el portal para leer los detalles o adjuntar archivos.`
+            : `There is a new reply on ticket ${ref}. Open the portal to view details or attach files.`),
+      action: {
+        label: isEs ? "Abrir ticket en el portal" : "Open ticket in portal",
+        url: ticketUrl,
+      },
+      notice: isEs
+        ? "Responde desde el portal para mantener todo el hilo centralizado. Puedes cambiar tus preferencias de aviso en Configuración."
+        : "Please reply from the portal to keep all context in one thread. You can change email preferences in Settings.",
+      locale: isEs ? "es" : "en",
+    });
+
+    await sendPortalEmail({ to: address, subject, text, html });
   } catch (error) {
     console.error("[notify] could not notify the ticket's person:", error instanceof Error ? error.message : error);
   }

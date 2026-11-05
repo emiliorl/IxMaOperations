@@ -68,6 +68,7 @@ export interface Milestone {
 export interface TeamMember {
   userId: string;
   name: string;
+  email: string;
   role: "lead" | "member";
   /** Has every folder of the project. */
   allDepartments: boolean;
@@ -303,7 +304,7 @@ export const PROJECT_TICKET_LIMIT = 1000;
 const PROJECT_CORE =
   "id,organization_id,name,slug,description,status,staging_url,production_url,office_label,office_address,show_onsite_presence,organizations(name)," +
   "project_departments(departments(id,name))," +
-  "project_members(user_id,role,all_departments,profiles(display_name),project_member_departments(department_id))," +
+  "project_members(user_id,role,all_departments,profiles(display_name,email),project_member_departments(department_id))," +
   "tickets(id,ticket_number,title,status,priority,category,department_id,milestone_id,created_at,updated_at,created_by,profiles!created_by(display_name))";
 
 /**
@@ -371,13 +372,17 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       delivery: plainOrNull(m.delivery),
       summary: plainOrNull(m.summary),
     })),
-    team: (project.project_members ?? []).map((m) => ({
-      userId: m.user_id,
-      name: plainOrNull(one<{ display_name: string }>(m.profiles as never)?.display_name) ?? "—",
-      role: m.role,
-      allDepartments: m.all_departments,
-      departmentIds: (m.project_member_departments ?? []).map((row) => row.department_id),
-    })),
+    team: (project.project_members ?? []).map((m) => {
+      const profile = one<{ display_name: string; email?: string }>(m.profiles as never);
+      return {
+        userId: m.user_id,
+        name: plainOrNull(profile?.display_name) ?? "—",
+        email: plainOrNull(profile?.email) ?? "",
+        role: m.role,
+        allDepartments: m.all_departments,
+        departmentIds: (m.project_member_departments ?? []).map((row) => row.department_id),
+      };
+    }),
     tickets: (project.tickets ?? []).map((t) => ({
       id: t.id,
       number: t.ticket_number,

@@ -103,4 +103,12 @@ describe("tokenizePromptLine", () => {
       { kind: "text", value: "." },
     ]);
   });
+
+  it("handles severity and status tags as bracketed placeholders", () => {
+    expect(tokenizePromptLine("- [DEFECTO]: Error de cota")).toEqual([
+      { kind: "text", value: "- " },
+      { kind: "placeholder", value: "[DEFECTO]" },
+      { kind: "text", value: ": Error de cota" },
+    ]);
+  });
 });
