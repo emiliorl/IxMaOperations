@@ -161,3 +161,34 @@ ${notice}
 
   return sent ? { ok: true } : { ok: false, error: "send_failed" };
 }
+
+export interface UserLoginStatus {
+  lastSignInAt: string | null;
+  hasLoggedIn: boolean;
+}
+
+/**
+ * Owner-only: lists all auth accounts to determine who has logged in / activated
+ * their password and who is still pending. Returns a map by user ID.
+ */
+export async function getUserLoginStatuses(): Promise<Map<string, UserLoginStatus>> {
+  const map = new Map<string, UserLoginStatus>();
+  try {
+    const admin = supabaseAdmin();
+    const { data, error } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    if (error || !data?.users) {
+      console.error("[people] could not read auth user statuses:", error?.message);
+      return map;
+    }
+    for (const u of data.users) {
+      const hasLoggedIn = Boolean(u.last_sign_in_at) || u.app_metadata?.must_change_password === false;
+      map.set(u.id, {
+        lastSignInAt: u.last_sign_in_at ?? null,
+        hasLoggedIn,
+      });
+    }
+  } catch (error) {
+    console.error("[people] getUserLoginStatuses failed:", error);
+  }
+  return map;
+}

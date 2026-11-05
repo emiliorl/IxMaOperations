@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Copy, Mail, Link as LinkIcon, Loader2 } from "lucide-react";
 import { createInvite, sendInviteEmailAction, type InviteState, type SendInviteState } from "@/app/[locale]/portal/actions";
@@ -11,13 +11,95 @@ import { cn } from "@/lib/utils";
  * Owner-only: options to onboard or invite a person:
  * 1. Send invite email directly to their inbox with a one-time activation link.
  * 2. Generate a one-time link to copy and share manually.
- * No password is ever shown or sent.
+ * Supports compact mode for clean high-density table rows.
  */
-export function InviteLink({ locale, userId }: { locale: string; userId: string }) {
+export function InviteLink({
+  locale,
+  userId,
+  compact = false,
+}: {
+  locale: string;
+  userId: string;
+  compact?: boolean;
+}) {
   const t = useTranslations("Portal");
   const [linkState, createLinkAction, linkPending] = useActionState<InviteState, FormData>(createInvite, {});
   const [emailState, sendEmailAction, emailPending] = useActionState<SendInviteState, FormData>(sendInviteEmailAction, {});
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (linkState.link && compact) {
+      navigator.clipboard.writeText(linkState.link);
+      setCopied(true);
+      const timer = setTimeout(() => setCopied(false), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [linkState.link, compact]);
+
+  if (compact) {
+    return (
+      <div className="inline-flex items-center gap-1.5">
+        {/* Compact Email Button */}
+        <form action={sendEmailAction}>
+          <input type="hidden" name="locale" value={locale} />
+          <input type="hidden" name="userId" value={userId} />
+          <button
+            type="submit"
+            disabled={emailPending || emailState.ok}
+            title={emailState.ok ? t("inviteEmailSent") : t("sendInviteEmail")}
+            className={cn(
+              "inline-flex h-7 w-7 items-center justify-center rounded border transition-colors",
+              emailState.ok
+                ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                : "border-zinc-800 bg-zinc-900/90 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+            )}
+            aria-label={t("sendInviteEmail")}
+          >
+            {emailPending ? (
+              <Loader2 className="h-3 w-3 animate-spin text-zinc-400" />
+            ) : emailState.ok ? (
+              <Check className="h-3 w-3 text-emerald-400" />
+            ) : (
+              <Mail className="h-3 w-3" />
+            )}
+          </button>
+        </form>
+
+        {/* Compact Copy Link Button */}
+        <form action={createLinkAction}>
+          <input type="hidden" name="locale" value={locale} />
+          <input type="hidden" name="userId" value={userId} />
+          <button
+            type="submit"
+            disabled={linkPending}
+            title={copied ? t("copied") : t("inviteLink")}
+            onClick={async () => {
+              if (linkState.link) {
+                await navigator.clipboard.writeText(linkState.link);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }
+            }}
+            className={cn(
+              "inline-flex h-7 w-7 items-center justify-center rounded border transition-colors",
+              copied
+                ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                : "border-zinc-800 bg-zinc-900/90 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+            )}
+            aria-label={t("inviteLink")}
+          >
+            {linkPending ? (
+              <Loader2 className="h-3 w-3 animate-spin text-zinc-400" />
+            ) : copied ? (
+              <Check className="h-3 w-3 text-emerald-400" />
+            ) : (
+              <LinkIcon className="h-3 w-3" />
+            )}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2.5 pt-1">

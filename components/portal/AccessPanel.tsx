@@ -143,8 +143,26 @@ export async function AccessPanel({
               {companyAccess.map((person) => (
                 <li key={person.userId} className="px-4 py-3 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm text-zinc-100">{person.name}</p>
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-zinc-100">{person.name}</p>
+                        {person.hasLoggedIn !== undefined && (
+                          person.hasLoggedIn ? (
+                            <span className="inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                              {t("statusLoggedIn")}
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-300"
+                              title={t("neverLoggedIn")}
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                              {t("statusPendingLogin")}
+                            </span>
+                          )
+                        )}
+                      </div>
                       <p className="text-[11px] text-zinc-500 font-mono">{person.email}</p>
                     </div>
                     <div className="flex items-center gap-2">

@@ -74,6 +74,9 @@ export interface TeamMember {
   allDepartments: boolean;
   /** Folders granted to this person that the viewer is allowed to see. */
   departmentIds: string[];
+  /** Login tracking: whether the person has ever signed in / set their password. */
+  hasLoggedIn?: boolean;
+  lastSignInAt?: string | null;
 }
 
 export interface TicketSummary {
@@ -693,6 +696,9 @@ export interface CompanyAccessEntry {
   level: OrgAccessLevel;
   /** The extra "can see costs" switch (people with level "full" always can). */
   canViewCosts: boolean;
+  /** Login tracking: whether the person has ever signed in / set their password. */
+  hasLoggedIn?: boolean;
+  lastSignInAt?: string | null;
 }
 
 /** Owner view: who has been given the "can see costs" switch on this project. */

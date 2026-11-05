@@ -70,7 +70,20 @@ const components: Components = {
   thead: (props) => <thead className="border-b border-zinc-800 bg-zinc-900/90 text-xs font-semibold text-zinc-200" {...props} />,
   th: (props) => <th className="px-4 py-3 font-semibold" {...props} />,
   td: (props) => <td className="border-t border-zinc-800/70 px-4 py-3 align-top leading-relaxed" {...props} />,
-  img: () => null,
+  img: ({ src, alt, ...props }) => {
+    if (!src) return null;
+    return (
+      <figure className="my-5 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60 shadow-md">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={alt ?? ""} className="w-full h-auto object-cover" {...props} />
+        {alt && (
+          <figcaption className="border-t border-zinc-800/80 bg-zinc-900/60 px-4 py-2 text-center text-xs text-zinc-400">
+            {alt}
+          </figcaption>
+        )}
+      </figure>
+    );
+  },
   a: ({ href, children }) => {
     const safe = safeHttpUrl(href ?? null);
     if (!safe) return <>{children}</>;

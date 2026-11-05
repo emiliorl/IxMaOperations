@@ -57,6 +57,7 @@ import {
   listProjectCostFlags,
   PROJECT_TICKET_LIMIT,
 } from "@/lib/portal/queries";
+import { getUserLoginStatuses, type UserLoginStatus } from "@/lib/portal/people";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
 import { loadOnSiteDays, listUpcomingVisits } from "@/lib/portal/onsite";
 import { listProjectMeetings } from "@/lib/portal/project-meetings";
@@ -91,13 +92,13 @@ export default async function ProjectPage(props: {
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
   // Only the project is needed to start all of these, so they run together.
-  const [t, access, costItemIds, [companyAccess, costUserIds], timeZone, visits, areaInfo, meetings, officeDays, sharedFiles] = await Promise.all([
+  const [t, access, costItemIds, [companyAccess, costUserIds, userLogins], timeZone, visits, areaInfo, meetings, officeDays, sharedFiles] = await Promise.all([
     getTranslations("Portal"),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     listCostMilestoneIds(supabase),
     isAdmin
-      ? Promise.all([listCompanyAccess(supabase, project.organizationId), listProjectCostFlags(supabase, project.id)])
-      : Promise.resolve([[], []] as [Awaited<ReturnType<typeof listCompanyAccess>>, string[]]),
+      ? Promise.all([listCompanyAccess(supabase, project.organizationId), listProjectCostFlags(supabase, project.id), getUserLoginStatuses()])
+      : Promise.resolve([[], [], new Map()] as [Awaited<ReturnType<typeof listCompanyAccess>>, string[], Map<string, UserLoginStatus>]),
     getMyTimeZone(supabase, user.id),
     // The days ahead at this project's office (cheap: the database only; the owner's calendar is read only on the On-site tab).
     listUpcomingVisits(supabase, { id: project.id, showOnsite: project.showOnsite }, isAdmin),
@@ -1016,8 +1017,22 @@ export default async function ProjectPage(props: {
                   projectSlug={slug}
                   organizationId={project.organizationId}
                   departments={project.departments}
-                  team={project.team}
-                  companyAccess={companyAccess}
+                  team={project.team.map((m) => {
+                    const st = userLogins.get(m.userId);
+                    return {
+                      ...m,
+                      hasLoggedIn: st ? st.hasLoggedIn : undefined,
+                      lastSignInAt: st ? st.lastSignInAt : undefined,
+                    };
+                  })}
+                  companyAccess={companyAccess.map((c) => {
+                    const st = userLogins.get(c.userId);
+                    return {
+                      ...c,
+                      hasLoggedIn: st ? st.hasLoggedIn : undefined,
+                      lastSignInAt: st ? st.lastSignInAt : undefined,
+                    };
+                  })}
                   costUserIds={costUserIds}
                   notice={accessNotice === "saved" || accessNotice === "error" ? accessNotice : null}
                 />
