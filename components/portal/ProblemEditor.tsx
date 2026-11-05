@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, PenLine, Columns2 } from "lucide-react";
 import { updateProblem, type FormState } from "@/app/[locale]/portal/actions";
 import { buttonVariants } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
@@ -10,6 +10,7 @@ import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { Field, selectClass } from "./Field";
 import { errorMessageKey } from "./error-messages";
+import { Markdown } from "./Markdown";
 
 export interface ProblemEditorValues {
   title: string;
@@ -21,7 +22,7 @@ export interface ProblemEditorValues {
   links: string;
 }
 
-/** Owner: edit a problem's text in place. The server action is owner-only and the database refuses anyone else. */
+/** Owner: edit a problem's text in place with live markdown preview. */
 export function ProblemEditor({
   locale,
   projectSlug,
@@ -36,6 +37,8 @@ export function ProblemEditor({
   const t = useTranslations("Portal");
   const router = useRouter();
   const [state, formAction, pending] = useActionState<FormState, FormData>(updateProblem, {});
+  const [solutionText, setSolutionText] = useState(initial.solution);
+  const [previewTab, setPreviewTab] = useState<"write" | "preview" | "split">("write");
 
   useEffect(() => {
     if (state.ok) router.refresh();
@@ -71,9 +74,109 @@ export function ProblemEditor({
             </select>
           </Field>
         </div>
-        <Field index="05" label={t("adminFieldPlan")} htmlFor="pe-solution" help={t("adminFieldPlanHelp")}>
-          <Textarea id="pe-solution" name="solution" rows={12} defaultValue={initial.solution} maxLength={100000} className="font-mono text-xs" />
-        </Field>
+
+        {/* Action Plan with Live Preview Toolbar */}
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label htmlFor="pe-solution" className="font-mono text-xs uppercase tracking-wider text-zinc-400">
+              <span className="text-zinc-600 mr-2">05</span>
+              {t("adminFieldPlan")}
+            </label>
+            <div className="inline-flex items-center rounded-md border border-zinc-800 bg-zinc-950 p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setPreviewTab("write")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-medium transition-colors",
+                  previewTab === "write"
+                    ? "bg-zinc-800 text-white"
+                    : "text-zinc-400 hover:text-zinc-200"
+                )}
+              >
+                <PenLine className="h-3 w-3" />
+                {t("previewWrite")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewTab("preview")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-medium transition-colors",
+                  previewTab === "preview"
+                    ? "bg-zinc-800 text-white"
+                    : "text-zinc-400 hover:text-zinc-200"
+                )}
+              >
+                <Eye className="h-3 w-3" />
+                {t("previewTab")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewTab("split")}
+                className={cn(
+                  "hidden lg:inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-medium transition-colors",
+                  previewTab === "split"
+                    ? "bg-zinc-800 text-white"
+                    : "text-zinc-400 hover:text-zinc-200"
+                )}
+              >
+                <Columns2 className="h-3 w-3" />
+                {t("previewSplit")}
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-zinc-500">{t("adminFieldPlanHelp")}</p>
+
+          {/* Write Mode */}
+          {previewTab === "write" && (
+            <Textarea
+              id="pe-solution"
+              name="solution"
+              rows={14}
+              value={solutionText}
+              onChange={(e) => setSolutionText(e.target.value)}
+              maxLength={100000}
+              className="font-mono text-xs"
+            />
+          )}
+
+          {/* Preview Mode */}
+          {previewTab === "preview" && (
+            <>
+              {/* Keep form value submitted */}
+              <input type="hidden" name="solution" value={solutionText} />
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-5 sm:p-7 min-h-[300px] overflow-x-auto">
+                {solutionText.trim() ? (
+                  <Markdown>{solutionText}</Markdown>
+                ) : (
+                  <p className="text-sm italic text-zinc-500">{t("previewEmpty")}</p>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Split Mode (Side by side on lg+) */}
+          {previewTab === "split" && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Textarea
+                id="pe-solution"
+                name="solution"
+                rows={16}
+                value={solutionText}
+                onChange={(e) => setSolutionText(e.target.value)}
+                maxLength={100000}
+                className="font-mono text-xs"
+              />
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-5 max-h-[460px] overflow-y-auto">
+                {solutionText.trim() ? (
+                  <Markdown>{solutionText}</Markdown>
+                ) : (
+                  <p className="text-sm italic text-zinc-500">{t("previewEmpty")}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <Field index="06" label={t("adminFieldLinks")} htmlFor="pe-links" help={t("adminFieldLinksHelp")}>
           <Textarea id="pe-links" name="links" rows={3} defaultValue={initial.links} maxLength={10000} className="font-mono text-xs" />
         </Field>
