@@ -320,14 +320,17 @@ const PROJECT_CORE =
  * embedded table exactly as it would to a separate query.
  */
 export async function getProjectDetail(supabase: SupabaseClient, slug: string): Promise<ProjectDetail | null> {
-  const run = (extended: boolean) =>
-    supabase
+  const run = (extended: boolean, withWaiting = true) => {
+    let milestoneCols = "id,title,description,status,department_id,due_date,sort_order";
+    if (extended) {
+      milestoneCols += ",code,priority,delivery,summary" + (withWaiting ? ",waiting_for" : "");
+    }
+    return supabase
       .from("projects")
       .select(
         PROJECT_CORE +
-          (extended
-            ? ",overview,project_milestones(id,title,description,status,department_id,due_date,sort_order,code,priority,delivery,summary,waiting_for)"
-            : ",project_milestones(id,title,description,status,department_id,due_date,sort_order)")
+          (extended ? ",overview" : "") +
+          `,project_milestones(${milestoneCols})`
       )
       .eq("slug", slug)
       .order("sort_order", { referencedTable: "project_milestones" })
@@ -335,12 +338,17 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       .order("created_at", { referencedTable: "tickets", ascending: false })
       .limit(PROJECT_TICKET_LIMIT, { referencedTable: "tickets" })
       .maybeSingle();
+  };
 
-  let { data, error } = await run(true);
+  let { data, error } = await run(true, true);
+  if (error) {
+    // If waiting_for column hasn't been migrated yet, retry with the existing problem-details columns
+    ({ data, error } = await run(true, false));
+  }
   // Before the problem-details migration the newer columns don't exist: the rest of the page still loads.
   if (error) {
     console.warn(`[portal] plan-item details unavailable: ${error.message}`);
-    ({ data, error } = await run(false));
+    ({ data, error } = await run(false, false));
   }
   if (error) throw new Error(`Failed to load project: ${error.message}`);
   const project = data as unknown as ProjectDetailRow | null;
@@ -779,7 +787,21 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
       .eq("project_id", projectId)
       .maybeSingle(),
     // Own query so a database without the problem-details migration still serves the item.
-    supabase.from("project_milestones").select("code,priority,delivery,summary,solution,resources,waiting_for").eq("id", milestoneId).eq("project_id", projectId).maybeSingle(),
+    (async () => {
+      const full = await supabase
+        .from("project_milestones")
+        .select("code,priority,delivery,summary,solution,resources,waiting_for")
+        .eq("id", milestoneId)
+        .eq("project_id", projectId)
+        .maybeSingle();
+      if (!full.error) return full;
+      return supabase
+        .from("project_milestones")
+        .select("code,priority,delivery,summary,solution,resources")
+        .eq("id", milestoneId)
+        .eq("project_id", projectId)
+        .maybeSingle();
+    })(),
     supabase.from("problem_costs").select("cost_note").eq("milestone_id", milestoneId).maybeSingle(),
     supabase
       .from("tickets")
