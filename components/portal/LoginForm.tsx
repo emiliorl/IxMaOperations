@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { signIn, type FormState } from "@/app/[locale]/portal/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "./PasswordInput";
 import { errorMessageKey } from "./error-messages";
 import { Field } from "./Field";
 
@@ -25,7 +26,14 @@ export function LoginForm({ locale }: { locale: string }) {
           <Input id="login-email" name="email" type="email" autoComplete="username" required />
         </Field>
         <Field index="02" label={t("password")} htmlFor="login-password">
-          <Input id="login-password" name="password" type="password" autoComplete="current-password" required />
+          <PasswordInput
+            id="login-password"
+            name="password"
+            autoComplete="current-password"
+            required
+            showPasswordLabel={t("showPassword")}
+            hidePasswordLabel={t("hidePassword")}
+          />
         </Field>
         {state.error && (
           <p role="alert" className="text-xs text-red-400">

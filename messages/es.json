@@ -757,6 +757,8 @@
     "loginDescription": "El plan, el avance y los tickets de tu proyecto en un solo lugar.",
     "email": "Correo electrónico",
     "password": "Contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "signIn": "Iniciar sesión",
     "signingIn": "Iniciando sesión…",
     "errorInvalid": "Correo o contraseña incorrectos.",

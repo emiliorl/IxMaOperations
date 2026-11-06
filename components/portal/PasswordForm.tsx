@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { setPassword, type PasswordState } from "@/app/[locale]/portal/actions";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "./PasswordInput";
 import { MIN_PASSWORD } from "@/lib/portal/password";
 import { Field } from "./Field";
 
@@ -30,10 +30,26 @@ export function PasswordForm({ locale }: { locale: string }) {
       <div className="p-5 sm:p-6 space-y-5">
         <input type="hidden" name="locale" value={locale} />
         <Field index="01" label={t("newPassword")} help={t("passwordHelp", { n: MIN_PASSWORD })} htmlFor="new-password">
-          <Input id="new-password" name="password" type="password" autoComplete="new-password" required minLength={MIN_PASSWORD} />
+          <PasswordInput
+            id="new-password"
+            name="password"
+            autoComplete="new-password"
+            required
+            minLength={MIN_PASSWORD}
+            showPasswordLabel={t("showPassword")}
+            hidePasswordLabel={t("hidePassword")}
+          />
         </Field>
         <Field index="02" label={t("confirmPassword")} htmlFor="confirm-password">
-          <Input id="confirm-password" name="confirm" type="password" autoComplete="new-password" required minLength={MIN_PASSWORD} />
+          <PasswordInput
+            id="confirm-password"
+            name="confirm"
+            autoComplete="new-password"
+            required
+            minLength={MIN_PASSWORD}
+            showPasswordLabel={t("showPassword")}
+            hidePasswordLabel={t("hidePassword")}
+          />
         </Field>
         {state.error && (
           <p role="alert" className="text-xs text-red-400">
