@@ -27,7 +27,7 @@ const components: Components = {
   h2: (props) => <h3 className="mt-7 mb-2.5 text-lg sm:text-xl font-semibold tracking-tight text-white first:mt-0" {...props} />,
   h3: (props) => <h4 className="mt-6 mb-2 text-base font-semibold text-zinc-100 first:mt-0" {...props} />,
   h4: (props) => <h5 className="mt-4 mb-1.5 text-sm font-semibold text-zinc-200 first:mt-0" {...props} />,
-  p: (props) => <p className="my-2.5 break-words text-sm sm:text-[15px] leading-relaxed text-zinc-300" {...props} />,
+  p: (props) => <p className="my-2.5 break-words text-sm sm:text-[15px] leading-relaxed text-zinc-300 first:mt-0 last:mb-0" {...props} />,
   ul: (props) => <ul className="my-3 list-disc space-y-2 pl-5 text-sm sm:text-[15px] text-zinc-300 marker:text-zinc-500" {...props} />,
   ol: (props) => (
     <ol

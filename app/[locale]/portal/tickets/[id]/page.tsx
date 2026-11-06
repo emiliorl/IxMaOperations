@@ -7,6 +7,7 @@ import { BackLink } from "@/components/portal/BackLink";
 import { CommentForm } from "@/components/portal/CommentForm";
 import { ConfirmFixedForm } from "@/components/portal/ConfirmFixedForm";
 import { Pill } from "@/components/portal/Pills";
+import { Markdown } from "@/components/portal/Markdown";
 import { StatusForm } from "@/components/portal/StatusForm";
 import { StillBrokenForm } from "@/components/portal/StillBrokenForm";
 import { TICKET_STATUSES, safeHttpUrl } from "@/lib/portal/constants";
@@ -163,7 +164,9 @@ export default async function TicketPage(props: {
               </span>
             </div>
             <div className="p-5 sm:p-6 space-y-4">
-              <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
+              <div className="text-sm text-zinc-200 leading-relaxed">
+                <Markdown>{ticket.description}</Markdown>
+              </div>
               <AttachmentList items={ticket.attachments.filter((file) => file.commentId === null)} />
               <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs border-t border-zinc-800 pt-4">
                 {ticket.planItem && (
@@ -248,7 +251,9 @@ export default async function TicketPage(props: {
                         <span className="text-zinc-300">{comment.authorName}</span> · {stamp.format(Date.parse(comment.createdAt))}
                         {comment.internal && <span className="ml-2 uppercase tracking-wider text-zinc-400">· {t("internalTag")}</span>}
                       </p>
-                      <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">{comment.message}</p>
+                      <div className="text-sm text-zinc-200 leading-relaxed">
+                        <Markdown>{comment.message}</Markdown>
+                      </div>
                       <AttachmentList items={ticket.attachments.filter((file) => file.commentId === comment.id)} />
                     </li>
                   ))}
