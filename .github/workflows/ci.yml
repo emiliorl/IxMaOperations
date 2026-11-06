@@ -4,9 +4,12 @@ name: CI
 # which run on an in-process Postgres, so no secrets or database are needed).
 # A change that breaks either shows up here, before it reaches a client.
 
+# Automatically disabled until GitHub billing is resolved:
+# on:
+#   push:
+#   pull_request:
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
