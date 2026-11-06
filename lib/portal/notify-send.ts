@@ -56,7 +56,13 @@ export async function notifyTicketPerson(input: { ticketId: string; kind: Client
 
     // The newer settings come from migrations that may not have been run yet: ask for fewer columns, never guess.
     let person: Record<string, unknown> | null = null;
-    for (const columns of ["email,locale,notify_email,notify_fix_ready,notify_replies", "email,notify_email", "email"]) {
+    for (const columns of [
+      "display_name,email,locale,notify_email,notify_fix_ready,notify_replies",
+      "display_name,email,notify_email",
+      "email,locale,notify_email,notify_fix_ready,notify_replies",
+      "email,notify_email",
+      "email",
+    ]) {
       const result = await db.from("profiles").select(columns).eq("id", ticket.created_by).maybeSingle();
       if (!result.error) {
         person = result.data as unknown as Record<string, unknown> | null;
@@ -98,11 +104,15 @@ export async function notifyTicketPerson(input: { ticketId: string; kind: Client
     );
 
     const ref = `#${ticket.ticket_number} · ${ticketTitle}`;
+    const recipientName = decryptLoose(person?.display_name as string | undefined);
+    const greeting = recipientName ? (isEs ? `Hola ${recipientName},` : `Hi ${recipientName},`) : undefined;
+
     const html = buildBrandedEmailHtml({
       title: input.kind === "fix_ready"
         ? (isEs ? "Ticket listo para tu revisión" : "Ticket ready for review")
         : (isEs ? "Nueva respuesta en tu ticket" : "New reply on your ticket"),
       badge: `${projectName ? `${projectName} // ` : ""}TICKET #${ticket.ticket_number}`,
+      greeting,
       intro: input.kind === "fix_ready"
         ? (isEs
             ? `Marcamos el ticket ${ref} como corregido. Por favor pruébalo en tu entorno: si funciona, puedes cerrarlo; si no, cuéntanos en los comentarios y se reabre de inmediato.`
