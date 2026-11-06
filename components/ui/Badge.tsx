@@ -15,6 +15,8 @@ const badgeVariants = cva(
           "border-emerald-900/60 bg-emerald-950/40 text-emerald-400",
         destructive:
           "border-red-900/60 bg-red-950/40 text-red-400",
+        warning:
+          "border-amber-900/60 bg-amber-950/40 text-amber-400",
         outline:
           "border-zinc-800 text-zinc-400 bg-transparent",
       },

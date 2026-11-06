@@ -33,7 +33,7 @@
  */
 
 export const PRIORITIES = ["high", "medium", "low"];
-export const STATUSES = ["pending", "in_progress", "completed", "blocked"];
+export const STATUSES = ["pending", "in_progress", "waiting", "completed", "blocked"];
 
 export const LIMITS = {
   overview: 100_000,
@@ -44,6 +44,7 @@ export const LIMITS = {
   folder: 120,
   delivery: 120,
   summary: 2_000,
+  waitingFor: 2_000,
   solution: 100_000,
   cost: 10_000,
   linkLabel: 200,
@@ -154,6 +155,7 @@ export function validatePlan(input) {
     const folder = checkText(`${at}.folder`, raw.folder, LIMITS.folder, { money: false });
     const delivery = checkText(`${at}.delivery`, raw.delivery, LIMITS.delivery);
     const summary = checkText(`${at}.summary`, raw.summary, LIMITS.summary);
+    const waitingFor = checkText(`${at}.waitingFor`, raw.waitingFor ?? raw.waiting_for, LIMITS.waitingFor);
     const solution = checkText(`${at}.solution`, raw.solution, LIMITS.solution);
     // `cost` is the one place prices are allowed.
     const hasCost = Object.prototype.hasOwnProperty.call(raw, "cost");
@@ -192,7 +194,7 @@ export function validatePlan(input) {
       }
     }
 
-    return { code, title, folder, priority, status, delivery, summary, solution, links, cost, due, order };
+    return { code, title, folder, priority, status, waitingFor, delivery, summary, solution, links, cost, due, order };
   });
 
   if (errors.length > 0) return { ok: false, errors };

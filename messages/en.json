@@ -793,9 +793,13 @@
     "milestoneStatus": {
       "pending": "Pending",
       "in_progress": "In progress",
+      "waiting": "Waiting",
       "completed": "Completed",
       "blocked": "Blocked"
     },
+    "waitingForLabel": "Waiting on",
+    "waitingForPlaceholder": "What are we waiting for? (e.g. access, template)",
+    "waitingBannerDefault": "Access, template, or confirmation requested and pending.",
     "due": "Due {date}",
     "noTickets": "No tickets here yet.",
     "newTicket": "New ticket",
@@ -997,6 +1001,9 @@
     "adminFieldSummary": "Summary",
     "adminFieldDelivery": "Delivery",
     "adminFieldPriority": "Priority",
+    "adminFieldStatus": "Status",
+    "adminFieldWaitingFor": "Waiting on (what is pending)",
+    "adminFieldWaitingForHelp": "Visible to the team so everyone knows what access, file or template is needed.",
     "adminFieldPlan": "Action plan",
     "adminFieldPlanHelp": "Markdown. Do not put prices here; costs are kept apart.",
     "previewWrite": "Write",

@@ -29,7 +29,7 @@
  *                                                       and sees costs only with --costs. Default full.
  *   unexec <orgSlug> <email>                            revoke company-wide access
  *   milestone <projectSlug> "<Title>" [--dept "<name>"] [--due YYYY-MM-DD]
- *                                     [--status pending|in_progress|completed|blocked] [--order N] [--code FIN-1]
+ *                                     [--status pending|in_progress|waiting|completed|blocked] [--waiting-for "..."] [--order N] [--code FIN-1]
  *                                                       every problem gets an ID (area prefix + number: FIN-1, OPE-2);
  *                                                       one is made for you unless you give --code.
  *   codes <projectSlug> [--dry-run]                     give an ID to every problem that has none (existing IDs never change)
@@ -424,6 +424,7 @@ const commands = {
         title: encryptField(positional[1]),
         ...(code ? { code: encryptField(code) } : {}),
         status,
+        waiting_for: status === "waiting" ? encryptOptional(flags["waiting-for"] ?? null) : null,
         due_date: flags.due ?? null,
         sort_order: Number(flags.order ?? 0),
         completed_at: status === "completed" ? new Date().toISOString() : null,
@@ -551,6 +552,7 @@ const commands = {
         summary: encryptOptional(problem.summary),
         solution: encryptOptional(problem.solution),
         resources: problem.links.length > 0 ? encryptField(JSON.stringify(problem.links)) : null,
+        waiting_for: encryptOptional(problem.waitingFor),
         due_date: problem.due,
         sort_order: problem.order,
       };

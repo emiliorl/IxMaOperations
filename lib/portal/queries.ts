@@ -63,6 +63,8 @@ export interface Milestone {
   delivery: string | null;
   /** One-line proposed solution. */
   summary: string | null;
+  /** What is pending when status is waiting (access, templates, etc.). */
+  waitingFor: string | null;
 }
 
 export interface TeamMember {
@@ -268,6 +270,7 @@ interface ProjectDetailRow {
         priority?: ProblemPriority;
         delivery?: string | null;
         summary?: string | null;
+        waiting_for?: string | null;
       }[]
     | null;
   project_members:
@@ -323,7 +326,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       .select(
         PROJECT_CORE +
           (extended
-            ? ",overview,project_milestones(id,title,description,status,department_id,due_date,sort_order,code,priority,delivery,summary)"
+            ? ",overview,project_milestones(id,title,description,status,department_id,due_date,sort_order,code,priority,delivery,summary,waiting_for)"
             : ",project_milestones(id,title,description,status,department_id,due_date,sort_order)")
       )
       .eq("slug", slug)
@@ -374,6 +377,7 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       priority: m.priority ?? "medium",
       delivery: plainOrNull(m.delivery),
       summary: plainOrNull(m.summary),
+      waitingFor: plainOrNull(m.waiting_for),
     })),
     team: (project.project_members ?? []).map((m) => {
       const profile = one<{ display_name: string; email?: string }>(m.profiles as never);
@@ -751,6 +755,7 @@ export interface ProblemDetail {
   priority: ProblemPriority;
   delivery: string | null;
   summary: string | null;
+  waitingFor: string | null;
   /** The action plan, Markdown. */
   solution: string | null;
   resources: ResourceLink[];
@@ -774,7 +779,7 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
       .eq("project_id", projectId)
       .maybeSingle(),
     // Own query so a database without the problem-details migration still serves the item.
-    supabase.from("project_milestones").select("code,priority,delivery,summary,solution,resources").eq("id", milestoneId).eq("project_id", projectId).maybeSingle(),
+    supabase.from("project_milestones").select("code,priority,delivery,summary,solution,resources,waiting_for").eq("id", milestoneId).eq("project_id", projectId).maybeSingle(),
     supabase.from("problem_costs").select("cost_note").eq("milestone_id", milestoneId).maybeSingle(),
     supabase
       .from("tickets")
@@ -798,6 +803,7 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
     summary: string | null;
     solution: string | null;
     resources: string | null;
+    waiting_for?: string | null;
   } | null;
 
   return {
@@ -811,6 +817,7 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
     priority: extra?.priority ?? "medium",
     delivery: plainOrNull(extra?.delivery),
     summary: plainOrNull(extra?.summary),
+    waitingFor: plainOrNull(extra?.waiting_for),
     solution: plainOrNull(extra?.solution),
     resources: parseResources(plainOrNull(extra?.resources)),
     cost: plainOrNull((cost.data as { cost_note: string } | null)?.cost_note),

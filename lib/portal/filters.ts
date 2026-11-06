@@ -253,7 +253,7 @@ export function nextPlanSort(current: PlanSort, key: PlanSortKey): PlanSort {
   return current.desc ? null : { key, desc: true };
 }
 
-const STATUS_RANK: Record<string, number> = { blocked: 0, in_progress: 1, pending: 2, completed: 3 };
+const STATUS_RANK: Record<string, number> = { blocked: 0, waiting: 1, in_progress: 2, pending: 3, completed: 4 };
 const PROBLEM_PRIORITY_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
 /** A new array in the order the table shows; with no sort it is the plan order it came in. */

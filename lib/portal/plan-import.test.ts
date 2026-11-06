@@ -15,6 +15,19 @@ describe("plan import: validation", () => {
     expect(result.plan.problems[1].order).toBe(20);
   });
 
+  it("accepts waiting status and records waitingFor", async () => {
+    const { validatePlan } = await load();
+    const result = validatePlan({
+      problems: [problem({ status: "waiting", waitingFor: "Access to hubspot API requested" })],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.plan.problems[0]).toMatchObject({
+      status: "waiting",
+      waitingFor: "Access to hubspot API requested",
+    });
+  });
+
   it("rejects things that aren't a plan", async () => {
     const { validatePlan } = await load();
     expect(validatePlan(null).ok).toBe(false);

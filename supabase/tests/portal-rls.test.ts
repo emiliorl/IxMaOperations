@@ -143,6 +143,8 @@ beforeAll(async () => {
   await db.exec(sql("20261029001700_meeting_client.sql"));
   await db.exec(sql("20261029001800_office_days.sql"));
   await db.exec(sql("20261029001900_admin_two_step.sql"));
+  await db.exec(sql("20261029002000_project_files.sql"));
+  await db.exec(sql("20261029002100_waiting_status.sql"));
 
   // Seed as the superuser (bypasses RLS), like the owner's admin script does.
   await db.exec(`
@@ -807,6 +809,22 @@ describe("problem details (action plan, links)", () => {
     await as({ id: U.admin, admin: true });
     expect(await rejection(`update public.project_milestones set priority = 'urgent' where title = 'Kickoff'`)).toMatch(/check constraint/i);
     expect(await rejection(`update public.project_milestones set priority = 'high' where title = 'Kickoff'`)).toBeNull();
+  });
+
+  it("status accepts waiting and allows recording what is being waited for", async () => {
+    await as({ id: U.admin, admin: true });
+    expect(
+      await rejection(
+        `update public.project_milestones set status = 'waiting', waiting_for = 'Access requested from IT' where title = 'Kickoff'`
+      )
+    ).toBeNull();
+    const row = await rows<{ status: string; waiting_for: string }>(
+      `select status, waiting_for from public.project_milestones where title = 'Kickoff'`
+    );
+    expect(row[0]).toEqual({ status: "waiting", waiting_for: "Access requested from IT" });
+    expect(
+      await rejection(`update public.project_milestones set status = 'invalid_status' where title = 'Kickoff'`)
+    ).toMatch(/check constraint/i);
   });
 
   it("the project overview is readable by members and writable only by the owner", async () => {

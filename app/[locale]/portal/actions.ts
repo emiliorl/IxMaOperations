@@ -539,15 +539,22 @@ export async function updateTicketStatus(_prev: FormState, formData: FormData): 
 export async function updateMilestoneStatus(_prev: FormState, formData: FormData): Promise<FormState> {
   const locale = pickLocale(formData.get("locale"));
   const { supabase } = await requireUser(locale);
-  const parsed = milestoneStatusInput.safeParse({ milestoneId: text(formData, "milestoneId"), status: text(formData, "status") });
+  const parsed = milestoneStatusInput.safeParse({
+    milestoneId: text(formData, "milestoneId"),
+    status: text(formData, "status"),
+    waitingFor: text(formData, "waitingFor"),
+  });
   if (!parsed.success) return { error: "invalid" };
+
+  const updateData: Record<string, unknown> = {
+    status: parsed.data.status,
+    completed_at: parsed.data.status === "completed" ? new Date().toISOString() : null,
+    waiting_for: parsed.data.status === "waiting" ? encryptOptional(parsed.data.waitingFor || null) : null,
+  };
 
   const { data, error } = await supabase
     .from("project_milestones")
-    .update({
-      status: parsed.data.status,
-      completed_at: parsed.data.status === "completed" ? new Date().toISOString() : null,
-    })
+    .update(updateData)
     .eq("id", parsed.data.milestoneId)
     .select("id");
   if (error) return { error: classify(error) };
@@ -965,6 +972,8 @@ export async function updateProblem(_prev: FormState, formData: FormData): Promi
     summary: text(formData, "summary"),
     delivery: text(formData, "delivery"),
     priority: text(formData, "priority"),
+    status: text(formData, "status") || undefined,
+    waitingFor: text(formData, "waitingFor") || undefined,
     solution: text(formData, "solution"),
     links: text(formData, "links"),
   });
@@ -985,16 +994,24 @@ export async function updateProblem(_prev: FormState, formData: FormData): Promi
 
   const { data: project } = await supabase.from("projects").select("id").eq("slug", input.projectSlug).maybeSingle();
   if (!project) return { error: "invalid" };
+
+  const updateData: Record<string, unknown> = {
+    title: encryptField(input.title),
+    summary: encryptOptional(input.summary || null),
+    delivery: encryptOptional(input.delivery || null),
+    priority: input.priority,
+    solution: encryptOptional(input.solution.replace(/\r\n/g, "\n").trim() || null),
+    resources: encryptOptional(resources),
+  };
+  if (input.status) {
+    updateData.status = input.status;
+    updateData.completed_at = input.status === "completed" ? new Date().toISOString() : null;
+    updateData.waiting_for = input.status === "waiting" ? encryptOptional(input.waitingFor || null) : null;
+  }
+
   const { data, error } = await supabase
     .from("project_milestones")
-    .update({
-      title: encryptField(input.title),
-      summary: encryptOptional(input.summary || null),
-      delivery: encryptOptional(input.delivery || null),
-      priority: input.priority,
-      solution: encryptOptional(input.solution.replace(/\r\n/g, "\n").trim() || null),
-      resources: encryptOptional(resources),
-    })
+    .update(updateData)
     .eq("id", input.milestoneId)
     .eq("project_id", project.id)
     .select("id");

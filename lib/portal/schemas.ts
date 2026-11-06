@@ -99,6 +99,7 @@ export const ticketStatusInput = z.object({
 export const milestoneStatusInput = z.object({
   milestoneId: z.string().uuid(),
   status: z.enum(MILESTONE_STATUSES),
+  waitingFor: z.string().max(2000).optional().nullable(),
 });
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
@@ -182,6 +183,8 @@ export const problemEditInput = z.object({
   summary: z.string().trim().max(2000),
   delivery: z.string().trim().max(120),
   priority: z.enum(["high", "medium", "low"]),
+  status: z.enum(MILESTONE_STATUSES).optional(),
+  waitingFor: z.string().trim().max(2000).optional(),
   solution: z.string().max(100_000),
   links: z.string().max(10_000),
 });

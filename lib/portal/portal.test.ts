@@ -15,10 +15,11 @@ describe("milestoneProgress", () => {
     const result = milestoneProgress([
       { status: "completed" },
       { status: "in_progress" },
+      { status: "waiting" },
       { status: "blocked" },
       { status: "pending" },
     ]);
-    expect(result).toEqual({ done: 1, total: 4, percent: 25 });
+    expect(result).toEqual({ done: 1, total: 5, percent: 20 });
   });
 
   it("rounds to a whole percent and reaches 100", () => {

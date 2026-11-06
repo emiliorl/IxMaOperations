@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Clock } from "lucide-react";
 import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { Pill, PriorityDot } from "@/components/portal/Pills";
 import { StatusForm } from "@/components/portal/StatusForm";
@@ -11,6 +12,7 @@ export interface PlanCardItem {
   title: string;
   summary: string | null;
   status: string;
+  waitingFor?: string | null;
   priority: string;
   /** Null when the project has a single area (nothing to tell apart). */
   areaLabel: string | null;
@@ -47,6 +49,14 @@ export async function PlanCards({ locale, slug, isAdmin, items }: { locale: stri
                   {m.title}
                 </Link>
                 {m.summary && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">{m.summary}</p>}
+                {m.status === "waiting" && m.waitingFor && (
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded border border-amber-900/60 bg-amber-950/40 px-2 py-0.5 text-xs text-amber-300">
+                    <Clock className="h-3 w-3 shrink-0 text-amber-400" />
+                    <span>
+                      <strong className="font-semibold text-amber-200">{t("waitingForLabel")}:</strong> {m.waitingFor}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -57,6 +67,7 @@ export async function PlanCards({ locale, slug, isAdmin, items }: { locale: stri
                     action={updateMilestoneStatus}
                     hidden={{ locale, milestoneId: m.id }}
                     current={m.status as (typeof MILESTONE_STATUSES)[number]}
+                    currentWaitingFor={m.waitingFor}
                     options={MILESTONE_STATUSES.map((status) => ({ value: status, label: t(`milestoneStatus.${status}`) }))}
                     ariaLabel={t("statusLabel")}
                   />

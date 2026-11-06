@@ -7,6 +7,7 @@ import { updateProblem, type FormState } from "@/app/[locale]/portal/actions";
 import { buttonVariants } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { useRouter } from "@/i18n/navigation";
+import { MILESTONE_STATUSES, type MilestoneStatus } from "@/lib/portal/constants";
 import { cn } from "@/lib/utils";
 import { Field, selectClass } from "./Field";
 import { errorMessageKey } from "./error-messages";
@@ -17,6 +18,8 @@ export interface ProblemEditorValues {
   summary: string;
   delivery: string;
   priority: "high" | "medium" | "low";
+  status: MilestoneStatus;
+  waitingFor?: string;
   solution: string;
   /** One per line: "Label | https://..." */
   links: string;
@@ -37,6 +40,8 @@ export function ProblemEditor({
   const t = useTranslations("Portal");
   const router = useRouter();
   const [state, formAction, pending] = useActionState<FormState, FormData>(updateProblem, {});
+  const [status, setStatus] = useState<MilestoneStatus>(initial.status);
+  const [waitingFor, setWaitingFor] = useState(initial.waitingFor ?? "");
   const [solutionText, setSolutionText] = useState(initial.solution);
   const [previewTab, setPreviewTab] = useState<"write" | "preview" | "split">("write");
 
@@ -60,7 +65,7 @@ export function ProblemEditor({
         <Field index="02" label={t("adminFieldSummary")} htmlFor="pe-summary">
           <Textarea id="pe-summary" name="summary" rows={2} defaultValue={initial.summary} maxLength={2000} />
         </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Field index="03" label={t("adminFieldDelivery")} htmlFor="pe-delivery">
             <Input id="pe-delivery" name="delivery" defaultValue={initial.delivery} maxLength={120} />
           </Field>
@@ -73,13 +78,41 @@ export function ProblemEditor({
               ))}
             </select>
           </Field>
+          <Field index="05" label={t("adminFieldStatus")} htmlFor="pe-status">
+            <select
+              id="pe-status"
+              name="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as MilestoneStatus)}
+              className={selectClass}
+            >
+              {MILESTONE_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {t(`milestoneStatus.${s}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
         </div>
+
+        {status === "waiting" && (
+          <Field index="06" label={t("adminFieldWaitingFor")} htmlFor="pe-waiting" help={t("adminFieldWaitingForHelp")}>
+            <Input
+              id="pe-waiting"
+              name="waitingFor"
+              value={waitingFor}
+              onChange={(e) => setWaitingFor(e.target.value)}
+              placeholder={t("waitingForPlaceholder")}
+              maxLength={500}
+            />
+          </Field>
+        )}
 
         {/* Action Plan with Live Preview Toolbar */}
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <label htmlFor="pe-solution" className="font-mono text-xs uppercase tracking-wider text-zinc-400">
-              <span className="text-zinc-600 mr-2">05</span>
+              <span className="text-zinc-600 mr-2">{status === "waiting" ? "07" : "06"}</span>
               {t("adminFieldPlan")}
             </label>
             <div className="inline-flex items-center rounded-md border border-zinc-800 bg-zinc-950 p-0.5 text-xs">
@@ -177,7 +210,7 @@ export function ProblemEditor({
           )}
         </div>
 
-        <Field index="06" label={t("adminFieldLinks")} htmlFor="pe-links" help={t("adminFieldLinksHelp")}>
+        <Field index={status === "waiting" ? "08" : "07"} label={t("adminFieldLinks")} htmlFor="pe-links" help={t("adminFieldLinksHelp")}>
           <Textarea id="pe-links" name="links" rows={3} defaultValue={initial.links} maxLength={10000} className="font-mono text-xs" />
         </Field>
         <div className="flex items-center gap-3">

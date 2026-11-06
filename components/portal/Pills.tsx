@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/Badge";
 
-type Variant = "default" | "secondary" | "active" | "destructive" | "outline";
+type Variant = "default" | "secondary" | "active" | "destructive" | "warning" | "outline";
 
 const TICKET_STATUS: Record<string, Variant> = {
   open: "default",
@@ -13,6 +13,7 @@ const PRIORITY: Record<string, Variant> = { low: "outline", medium: "secondary",
 const MILESTONE: Record<string, Variant> = {
   pending: "outline",
   in_progress: "default",
+  waiting: "warning",
   completed: "active",
   blocked: "destructive",
 };

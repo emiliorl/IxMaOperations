@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Clock } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { AccessPanel } from "@/components/portal/AccessPanel";
@@ -590,6 +591,7 @@ export default async function ProjectPage(props: {
     title: m.title,
     summary: m.summary ?? m.description,
     status: m.status,
+    waitingFor: m.waitingFor,
     priority: m.priority,
     areaLabel: hasSeveralAreas ? areaLabel(m.departmentId) : null,
     dueLabel: m.dueDate ? dueFmt.format(Date.parse(m.dueDate)) : null,
@@ -807,7 +809,7 @@ export default async function ProjectPage(props: {
                   {breakdown.length > 0 && (
                     <p aria-label={t("breakdownLabel")} className="flex flex-wrap gap-x-3 gap-y-1 pt-1 font-mono text-[11px] text-zinc-500">
                       {breakdown.map(({ status, count }) => (
-                        <span key={status} className={status === "blocked" ? "text-red-400" : undefined}>
+                        <span key={status} className={status === "blocked" ? "text-red-400" : status === "waiting" ? "text-amber-400" : undefined}>
                           {count} {t(`milestoneStatus.${status}`)}
                         </span>
                       ))}
@@ -866,6 +868,14 @@ export default async function ProjectPage(props: {
                                 {(m.summary ?? m.description) && (
                                   <p className="mt-1 line-clamp-2 max-w-xl text-xs leading-relaxed text-zinc-500">{m.summary ?? m.description}</p>
                                 )}
+                                {m.status === "waiting" && m.waitingFor && (
+                                  <div className="mt-1.5 inline-flex items-center gap-1.5 rounded border border-amber-900/60 bg-amber-950/40 px-2 py-0.5 text-xs text-amber-300">
+                                    <Clock className="h-3 w-3 shrink-0 text-amber-400" />
+                                    <span>
+                                      <strong className="font-semibold text-amber-200">{t("waitingForLabel")}:</strong> {m.waitingFor}
+                                    </span>
+                                  </div>
+                                )}
                               </td>
                               {hasSeveralAreas && <td className="px-3 py-3.5 font-mono text-[11px] text-zinc-400">{areaLabel(m.departmentId)}</td>}
                               <td className="px-3 py-3.5">
@@ -874,6 +884,7 @@ export default async function ProjectPage(props: {
                                     action={updateMilestoneStatus}
                                     hidden={{ locale, milestoneId: m.id }}
                                     current={m.status}
+                                    currentWaitingFor={m.waitingFor}
                                     options={MILESTONE_STATUSES.map((status) => ({ value: status, label: t(`milestoneStatus.${status}`) }))}
                                     ariaLabel={t("statusLabel")}
                                   />

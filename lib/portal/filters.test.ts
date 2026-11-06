@@ -366,4 +366,21 @@ describe("plan status breakdown", () => {
     ]);
     expect(milestoneBreakdown([])).toEqual([]);
   });
+
+  it("includes waiting status in breakdown in fixed order", () => {
+    const list = [
+      { status: "waiting" },
+      { status: "completed" },
+      { status: "in_progress" },
+      { status: "blocked" },
+      { status: "pending" },
+    ] as const;
+    expect(milestoneBreakdown(list as never)).toEqual([
+      { status: "completed", count: 1 },
+      { status: "in_progress", count: 1 },
+      { status: "waiting", count: 1 },
+      { status: "blocked", count: 1 },
+      { status: "pending", count: 1 },
+    ]);
+  });
 });

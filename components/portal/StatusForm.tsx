@@ -19,6 +19,7 @@ export function StatusForm({
   action,
   hidden,
   current,
+  currentWaitingFor,
   options,
   ariaLabel,
   className,
@@ -27,6 +28,7 @@ export function StatusForm({
   /** Fixed fields the action needs (locale, ids). */
   hidden: Record<string, string>;
   current: string;
+  currentWaitingFor?: string | null;
   options: { value: string; label: string }[];
   ariaLabel: string;
   className?: string;
@@ -36,11 +38,16 @@ export function StatusForm({
   const [state, formAction, pending] = useActionState<FormState, FormData>(action, {});
   // Controlled, so the browser's "reset the form after an action" can't flip it back to the old value while the page refreshes.
   const [value, setValue] = useState(current);
+  const [waitingFor, setWaitingFor] = useState(currentWaitingFor ?? "");
 
   useEffect(() => setValue(current), [current]);
+  useEffect(() => setWaitingFor(currentWaitingFor ?? ""), [currentWaitingFor]);
   useEffect(() => {
     if (state.ok) router.refresh();
-    if (state.error) setValue(current); // the change didn't happen: show the real status again
+    if (state.error) {
+      setValue(current); // the change didn't happen: show the real status again
+      setWaitingFor(currentWaitingFor ?? "");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- react to each new result, not to `current`
   }, [state]);
 
@@ -63,6 +70,19 @@ export function StatusForm({
           </option>
         ))}
       </select>
+      {value === "waiting" && (
+        <input
+          type="text"
+          name="waitingFor"
+          value={waitingFor}
+          onChange={(event) => setWaitingFor(event.target.value)}
+          placeholder={t("waitingForPlaceholder")}
+          aria-label={t("waitingForLabel")}
+          disabled={pending}
+          maxLength={500}
+          className="h-10 min-w-0 flex-1 rounded-md border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-base text-zinc-100 placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 sm:h-8 sm:w-60 sm:flex-none sm:text-xs"
+        />
+      )}
       <button type="submit" disabled={pending} className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "gap-1.5")}>
         {pending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         {t("save")}

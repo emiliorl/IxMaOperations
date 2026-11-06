@@ -20,7 +20,7 @@ export function milestoneProgress(milestones: ProgressInput[]): { done: number; 
  * empty ones — for the one-line read on project health under the progress bar.
  */
 export function milestoneBreakdown(milestones: ProgressInput[]): { status: MilestoneStatus; count: number }[] {
-  const order: MilestoneStatus[] = ["completed", "in_progress", "blocked", "pending"];
+  const order: MilestoneStatus[] = ["completed", "in_progress", "waiting", "blocked", "pending"];
   return order
     .map((status) => ({ status, count: milestones.filter((m) => m.status === status).length }))
     .filter((entry) => entry.count > 0);

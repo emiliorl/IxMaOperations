@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Clock } from "lucide-react";
+import { updateMilestoneStatus } from "@/app/[locale]/portal/actions";
 import { Link } from "@/i18n/navigation";
 import { BackLink } from "@/components/portal/BackLink";
 import { FilesPanel } from "@/components/portal/FilesPanel";
@@ -7,9 +9,11 @@ import { ProblemEditor } from "@/components/portal/ProblemEditor";
 import { LogList } from "@/components/portal/LogList";
 import { Markdown } from "@/components/portal/Markdown";
 import { Pill } from "@/components/portal/Pills";
+import { StatusForm } from "@/components/portal/StatusForm";
 import { TicketList } from "@/components/portal/TicketList";
 import { buttonVariants } from "@/components/ui/Button";
 import { requireUser } from "@/lib/portal/auth";
+import { MILESTONE_STATUSES } from "@/lib/portal/constants";
 import { sortTickets } from "@/lib/portal/filters";
 import { ticketCountsByProblem } from "@/lib/portal/plan";
 import {
@@ -76,11 +80,31 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
         <header className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             {problem.code && <span className="font-mono text-sm text-zinc-400">{problem.code}</span>}
-            <Pill kind="milestone" value={problem.status} label={t(`milestoneStatus.${problem.status}`)} />
+            {isAdmin ? (
+              <StatusForm
+                action={updateMilestoneStatus}
+                hidden={{ locale, milestoneId: id }}
+                current={problem.status}
+                currentWaitingFor={problem.waitingFor}
+                options={MILESTONE_STATUSES.map((status) => ({ value: status, label: t(`milestoneStatus.${status}`) }))}
+                ariaLabel={t("statusLabel")}
+              />
+            ) : (
+              <Pill kind="milestone" value={problem.status} label={t(`milestoneStatus.${problem.status}`)} />
+            )}
             <Pill kind="priority" value={problem.priority} label={t(`problemPriority.${problem.priority}`)} />
           </div>
           <h1 className="break-words text-2xl sm:text-4xl font-semibold text-white tracking-tight">{problem.title}</h1>
           {problem.summary && <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl">{problem.summary}</p>}
+          {problem.status === "waiting" && (
+            <div className="flex items-start gap-2.5 rounded-lg border border-amber-900/60 bg-amber-950/40 p-3.5 text-xs text-amber-200 sm:text-sm">
+              <Clock className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
+              <div>
+                <strong className="font-semibold text-amber-200">{t("waitingForLabel")}:</strong>{" "}
+                <span className="text-amber-300/90">{problem.waitingFor || t("waitingBannerDefault")}</span>
+              </div>
+            </div>
+          )}
           <p className="text-xs text-zinc-400">
             {folderLabel(problem.departmentId)}
             {problem.delivery && ` · ${t("deliveryLabel")}: ${problem.delivery}`}
@@ -116,6 +140,8 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
               summary: problem.summary ?? "",
               delivery: problem.delivery ?? "",
               priority: problem.priority,
+              status: problem.status,
+              waitingFor: problem.waitingFor ?? "",
               solution: problem.solution ?? "",
               links: problem.resources.map((link) => `${link.label} | ${link.url}`).join("\n"),
             }}

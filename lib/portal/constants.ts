@@ -4,7 +4,7 @@
  * list lets the UI render options and zod reject bad input early.
  */
 export const PROJECT_STATUSES = ["discovery", "in_progress", "review", "completed", "maintenance"] as const;
-export const MILESTONE_STATUSES = ["pending", "in_progress", "completed", "blocked"] as const;
+export const MILESTONE_STATUSES = ["pending", "in_progress", "waiting", "completed", "blocked"] as const;
 export const TICKET_STATUSES = ["open", "in_progress", "needs_review", "resolved", "closed"] as const;
 export const TICKET_CATEGORIES = ["bug", "feature", "scope_change", "question", "access"] as const;
 export const TICKET_PRIORITIES = ["low", "medium", "high", "critical"] as const;

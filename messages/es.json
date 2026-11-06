@@ -793,9 +793,13 @@
     "milestoneStatus": {
       "pending": "Pendiente",
       "in_progress": "En curso",
+      "waiting": "En espera",
       "completed": "Completado",
       "blocked": "Bloqueado"
     },
+    "waitingForLabel": "En espera de",
+    "waitingForPlaceholder": "¿Qué estamos esperando? (ej. accesos, plantilla)",
+    "waitingBannerDefault": "Acceso, plantilla o confirmación solicitada y pendiente.",
     "due": "Fecha límite {date}",
     "noTickets": "Aún no hay tickets aquí.",
     "newTicket": "Nuevo ticket",
@@ -997,6 +1001,9 @@
     "adminFieldSummary": "Resumen",
     "adminFieldDelivery": "Entrega",
     "adminFieldPriority": "Prioridad",
+    "adminFieldStatus": "Estado",
+    "adminFieldWaitingFor": "En espera de (qué está pendiente)",
+    "adminFieldWaitingForHelp": "Visible para el equipo para que todos sepan qué acceso, archivo o plantilla hace falta.",
     "adminFieldPlan": "Plan de acción",
     "adminFieldPlanHelp": "Markdown. No pongas precios aquí; los costos se guardan aparte.",
     "previewWrite": "Editar",
