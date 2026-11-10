@@ -42,3 +42,6 @@ docs/internal/
 
 # Client plan files (real client content) for portal-admin import-plan
 imports/
+
+*.docx
+RH1_PROPUESTA_MONITOREO_LAPTOPS.md

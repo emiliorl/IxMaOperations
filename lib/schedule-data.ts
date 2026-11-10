@@ -1,6 +1,6 @@
 import "server-only";
 import { DEFAULT_AVAILABILITY } from "./availability-config";
-import { getAvailabilityOverrides, getHostBusy } from "./google-calendar";
+import { getAvailabilityOverrides, getHostBusy, getHostLunchEvents, type LunchInterval } from "./google-calendar";
 import { syncMeetingsQuietly } from "./meeting-sync";
 import { listActiveMeetings } from "./meetings";
 import type { DayOverride, ExistingMeeting, Interval } from "./availability";
@@ -32,6 +32,7 @@ export interface ScheduleInputs {
   hostBusy: Interval[];
   overrides: Record<string, DayOverride>;
   meetings: ExistingMeeting[];
+  lunches?: Record<string, Interval>;
 }
 
 /**
@@ -49,7 +50,15 @@ export async function loadScheduleInputs(from: number, to: number, { strict = fa
   // in-person meeting stops counting as an on-site day, a used slot of the week, or busy time.
   // It runs alongside the Google reads; the booking route (strict) always gets a fresh answer.
   const synced = syncMeetingsQuietly({ force: strict });
-  const [hostBusy, overrides, announced] = await Promise.all([getHostBusy(from, to), getAvailabilityOverrides(from, to), announcedVisitDates(from, to)]);
+  const [hostBusy, overrides, announced, lunchEvents] = await Promise.all([
+    getHostBusy(from, to),
+    getAvailabilityOverrides(from, to),
+    announcedVisitDates(from, to),
+    getHostLunchEvents(from, to).catch((error) => {
+      console.warn("[schedule] owner calendar lunch events unavailable:", error instanceof Error ? error.message : error);
+      return [] as LunchInterval[];
+    }),
+  ]);
   await synced;
   const meetings = await listActiveMeetings(from, to).catch((error) => {
     if (strict) throw error;
@@ -57,5 +66,13 @@ export async function loadScheduleInputs(from: number, to: number, { strict = fa
     return [] as ExistingMeeting[];
   });
   for (const date of announced) overrides[date] ??= "IN_PERSON";
-  return { hostBusy, overrides, meetings };
+
+  const tz = DEFAULT_AVAILABILITY.hostTimezone;
+  const lunches: Record<string, Interval> = {};
+  for (const l of lunchEvents) {
+    const d = localDate(l.start, tz);
+    lunches[d] ??= { start: l.start, end: l.end };
+  }
+
+  return { hostBusy, overrides, meetings, lunches };
 }

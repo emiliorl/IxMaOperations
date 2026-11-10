@@ -1,0 +1,1389 @@
+{
+  "departments": [
+    {
+      "id": "025c60d3-4fb6-4626-a402-54fd8239d070",
+      "name": "Admin"
+    },
+    {
+      "id": "e17c8121-c7fd-49df-be7b-62959e3e77e5",
+      "name": "Arquitectura"
+    },
+    {
+      "id": "3ad4acfe-7cd0-4b19-abbd-bb556e2e3885",
+      "name": "BIM"
+    },
+    {
+      "id": "17e569fb-ab1a-48da-ba34-6d0ed67a7f26",
+      "name": "Construccion"
+    },
+    {
+      "id": "3a970482-d817-46ab-add8-817d0580a475",
+      "name": "Domus Works"
+    },
+    {
+      "id": "addf9124-278e-4eb4-8fc1-2c00527e56b6",
+      "name": "Domus Works Clients"
+    },
+    {
+      "id": "3ef4e13e-bd3f-4071-bba5-b0764f99d0b8",
+      "name": "Interiores"
+    },
+    {
+      "id": "fcb1a87f-f11a-48bb-9753-6083a44bf9f0",
+      "name": "PM Domus Works"
+    },
+    {
+      "id": "264e4c96-191b-4f95-bdc0-fdc4860744b5",
+      "name": "RRHH"
+    },
+    {
+      "id": "2fc55672-1df6-48bf-99c5-fc1db28e67bb",
+      "name": "PM Studio Domus"
+    },
+    {
+      "id": "56b2b197-18e7-45af-948f-0945e5b22c63",
+      "name": "Ventas Studio Domus"
+    }
+  ],
+  "departmentOverviews": [
+    {
+      "dept_id": "56b2b197-18e7-45af-948f-0945e5b22c63",
+      "dept_name": "Ventas Studio Domus",
+      "overview": "- **Equipo:** Ventas Ejecutivas (Desarrollo de Negocios Ejecutivo)\n- **Principio no negociable:** una persona siempre en el circuito. Ningún mensaje se envía nunca de forma autónoma: los socios revisan cada expediente, eligen el canal y lo envían ellos mismos.\n\nVE-3 es el **caso 3** de la propuesta (tabla compartida de familias de desarrolladoras, entre Ventas Ejecutivas, Comercial de Agencia y la persona de Domus que conoce a las familias), con una reunión de revisión y un seguimiento a los 30 días.\n\n### Contexto y perfil del equipo\n\n#### Alcance\n\n* **Organización:** Studio Domus / Domus Works; Ventas Comerciales, Desarrollo de Negocios Ejecutivo y Crecimiento Estratégico.\n* **Geografías:** Guatemala, El Salvador, Honduras, Nicaragua, Costa Rica, Panamá, México, República Dominicana y Guyana.\n* **Studio Domus:** diseño arquitectónico, planes maestros, torres residenciales (más de 350 unidades), uso mixto y parques logísticos industriales.\n* **Domus Works:** remodelaciones de oficinas corporativas (500 a más de 3,000 m²) y mercadeo para la comercialización inmobiliaria.\n\n#### Realidades de ventas\n\n* **Ciclos de venta de 12 meses a 6 años**, desde la primera presentación hasta el contrato firmado.\n* **Bajo volumen, alto impacto:** unas 4 obras emblemáticas al año, de una trayectoria de 24 años con más de 73 proyectos insignia.\n* **Conversión en sala de 40% a 50%** una vez que se tiene una reunión exploratoria en persona con un principal.\n* **La barrera del \"0.1% superior\":** quienes toman las decisiones operan en círculos sociales cerrados, rara vez tienen perfiles públicos y no usan LinkedIn para el relacionamiento ejecutivo en Centroamérica.\n\n#### Fracasos históricos y divergencias\n\n* **Desalineación entre socios:** un socio quería automatización de punta a punta del contacto saliente; el otro insiste en el control de relaciones de alto contacto, porque el contacto automatizado daña la reputación de lujo de la firma. **La propuesta toma la segunda posición: nada se envía automáticamente.**\n* **Fracaso del contacto algorítmico:** el sistema automatizado de correos y cartas de una agencia externa prometió prospectos garantizados y fracasó, porque los principales de muy alto patrimonio descartan el contacto en frío genérico.\n* **Detección tardía de mudanzas:** las remodelaciones corporativas (el trabajo de mayor margen de Domus Works) las deciden comités pequeños de la alta gerencia o los arrendadores, y el equipo suele enterarse después de adjudicado el arrendamiento y la licitación de diseño.\n* **CRM dividido:** Monday.com ya tiene licencia, pero un socio lleva los negocios allí y el otro prefiere un seguimiento ligero.\n\n### Prácticas de apoyo\n\n* **Datos de contacto directos** para los dos socios mediante una herramienta de datos de contacto. La herramienta se confirma en la prueba de 2 semanas.\n* **Mensajes redactados con IA, revisados y enviados por el socio** desde su propio WhatsApp o Gmail. Cada borrador hace referencia a un conocido en común real, un proyecto pasado o una compra de terreno reciente, y propone una conversación técnica breve, nunca un discurso de ventas.\n* **Agendamiento:** **páginas de cita nativas de Google Calendar** (incluidas en Workspace) con 2 o 3 opciones concretas insertadas en el texto del mensaje; sin Calendly ni Cal.com.\n\nEjemplo del tono de los borradores:\n\n```text\nEstimado [Nombre/Apellido]:\n\nSi considera oportuno conversar durante 15 minutos sobre la viabilidad\npreliminar de este predio, tengo disponibilidad este jueves a las 10:30 AM\no el viernes a las 3:00 PM. Si prefiere otro momento, puede reservar aquí:\n[Enlace de cita de Google Calendar].\n```\n\n### Herramientas de IA para este equipo\n\n* **Base:** Gemini en Google Workspace (Gmail, Docs, Sheets, Drive, Meet). Si Domus ya paga Business Standard o superior, el costo adicional es casi nulo; si es Business Starter, hay que confirmar el plan.\n* **Suscripciones de pago:** como máximo dos para toda Domus, solo donde la herramienta base no pueda hacer una tarea. No se compra nada antes de una **prueba de 2 semanas** con una licencia mensual por equipo. Las comparaciones anteriores usaban versiones previas de las herramientas, así que la prueba decide.\n* **Descartadas:** las cuentas gratuitas o personales (sin acuerdo de privacidad empresarial ni administración central), porque los datos de los socios incluyen honorarios y nombres de negocios.\n\n#### Calendario sugerido\n\n```\nSemana 1: Sesión con los socios; decidir el CRM único (VE-1); prueba de licencias en paralelo\nSemana 2: Tablero estándar y prompt del resumen semanal (VE-1); prueba del agente de mudanzas si se aprueba (VE-2)\nSemana 3: Reunión de revisión del caso 3; cargar la tabla de familias de desarrolladoras con la persona de contacto de Domus (VE-3)\nSemana 4: Ajustes; primer resumen semanal del embudo revisado por los socios\nSemanas 5-8: Seguimiento a los 30 días del caso 3\n```"
+    },
+    {
+      "dept_id": "264e4c96-191b-4f95-bdc0-fdc4860744b5",
+      "dept_name": "RRHH",
+      "overview": "- **Equipo:** Recursos Humanos y Operaciones de Personal (RR.HH.) · Valeria\n- **Prioridad del mes (según el equipo):** RH-1, marcajes biométricos incompletos (ciclos sin cerrar)\n\n### Contexto y perfil del equipo\n\n- **Interlocutores internos:** operaciones (Charlo, BIM; Arquitectura/Studio Domus) y Contabilidad (Jennifer).\n- **Pila tecnológica:** Google Workspace (Docs, Sheets, Drive, Gmail) y Monday.com (en implementación).\n- **Responsabilidades diarias:**\n  - **Asistencia:** auditoría de marcajes biométricos, validación de intervalos y turnos.\n  - **Incorporación y documentos legales:** contratos de trabajo a partir de machotes.\n  - **Cumplimiento de planilla:** transcribir la planilla mensual de Contabilidad al *Libro de Salarios* del Ministerio de Trabajo.\n  - **Vacaciones y ausencias:** acumulación, boletas físicas con firma y archivo.\n  - **Reclutamiento:** currículos que llegan por correo, ordenamiento de datos y entrevistas.\n\n#### Filosofía\n\n- **Primero lo práctico:** si una fórmula o un script determinista resuelve el problema, **no se fuerza una IA**. El cálculo determinista no inventa cifras y casi no cuesta.\n- **IA como apoyo con revisión humana:** la IA organiza, extrae y redacta; las decisiones cualitativas, evaluativas e interpersonales son 100% de la persona de RR.HH.\n\n### Herramientas de IA para RR.HH.\n\n| Herramienta | Uso en RR.HH. | Estado |\n| :--- | :--- | :--- |\n| Hoja de cálculo o macro (RH-1, RH-3) | Cálculo determinista; sin IA | **Esencial, mes 1** |\n| Combinación de documentos (RH-2) | Contratos desde el machote | **Esencial** |\n| Monday.com / hoja protegida (RH-4, RH-5) | Aprobaciones y tablero de talento | Recomendado |\n| **Gemini en Workspace** | Fórmulas, tablas dinámicas, borradores y extracción de datos factuales de currículos | **Herramienta base** |\n| Cuentas de pago de IA | No se prevén para RR.HH.; se confirma con la prueba de 2 semanas | No necesarias a priori |\n| Julius AI y bots independientes | Costo y funciones redundantes; no confiables para series de tiempo | **Descartados** |\n\n**Privacidad:** los datos de empleados (salarios, DPI, contacto) permanecen en Google Drive de la empresa y no se suben a cuentas gratuitas o personales de ninguna herramienta.\n\n#### Calendario sugerido\n\n```\nSemana 1: Marcajes reales; hoja o macro de emparejamiento; calibrar umbral y etiquetas (RH-1)\nSemana 2: Etiquetar el machote y conectar la hoja de datos (RH-2); pestaña de importación y validaciones (RH-3)\nSemana 3: Libro de saldos y aprobación digital con un clic (RH-4)\nSemana 4: Recomendación de extracción de currículos y prueba con un lote real (RH-5); sesión con jefes sobre KPI solo si lo piden\nSemanas 5-6: Ajustes sin costo\n```"
+    },
+    {
+      "dept_id": "e17c8121-c7fd-49df-be7b-62959e3e77e5",
+      "dept_name": "Arquitectura",
+      "overview": "- **Departamento:** Arquitectura, Estudio de Diseño y Planificación de Factibilidad\n- **Líder:** Hans\n- **Prioridad del mes (según el equipo):** ARQ-1, pre-dimensionamiento y mezcla de apartamentos por prueba y error\n- **Herramientas:** Google Workspace (Sheets, Docs, Drive), Monday.com, Revit/CAD y herramientas de imagen\n\n### Contexto y modos de falla\n\n* **Google Sheets** es el motor del pre-dimensionamiento: coeficiente de ocupación, cobertura del lote, deducciones por circulación y metas de mezcla de unidades en las zonas municipales G0 a G5.\n* **Monday.com** para la planificación semanal, los hitos y la delegación.\n* El líder también usa marcos de personalidad con un asistente conversacional para calibrar la comunicación y delegar.\n\nModos de falla escuchados en el diagnóstico:\n\n1. **Prueba y error en hojas de cálculo:** balancear, por ejemplo, 45% de unidades de 100 m², 15% de unidades de 136 m² y estudios de 35 m² por planta de torre es manual e iterativo; pequeños errores de fórmula se acumulan en errores de volumen.\n2. **Alucinaciones de las imágenes generativas:** geometría distorsionada y errores anatómicos, por lo que la IA se limita a retoques superficiales de render.\n3. **Seguimiento excesivo en Monday.com:** el registro de horas al detalle y los traspasos automáticos rígidos fallaron en un proceso de diseño fluido.\n4. **Análisis normativo sin fuentes:** el personal pega normativa extensa en cuentas personales y corre el riesgo de límites, retiros y cocientes de densidad inventados.\n\n### Herramientas de IA para este equipo\n\n* **Base:** Gemini en Google Workspace, con Drive, Docs y Sheets.\n* **Suscripciones de pago:** como máximo dos para toda Domus. El borrador anterior recomendaba una suscripción de pago para Arquitectura como primera opción; la propuesta final no emite un veredicto por equipo antes de probar. **La prueba de 2 semanas** (una licencia mensual por equipo) decide con tareas reales, en particular ARQ-3 con los PDF reales de la normativa. Las comparaciones anteriores usaban versiones previas de las herramientas.\n* **Descartadas:** las cuentas personales que hoy se usan para pegar normativa: son silos aislados, sin base de conocimiento compartida y con riesgo de privacidad.\n\n#### Calendario sugerido\n\n```\nSemana 1: Sesión con Hans; paso 1 de ARQ-1 en un proyecto real; tablero por fases (ARQ-5)\nSemana 2: Decidir si hace falta el prototipo (ARQ-1 paso 2); base de conocimiento normativa (ARQ-3)\nSemanas 3-4: Plantilla de cálculo de parqueos y bodegas (ARQ-2); prueba de la herramienta de render con la prueba compartida de DW-4 (ARQ-4)\nSemanas 5-6: Ajustes sin costo; validar el prototipo con 2 proyectos terminados si se construyó\n```"
+    },
+    {
+      "dept_id": "3ad4acfe-7cd0-4b19-abbd-bb556e2e3885",
+      "dept_name": "BIM",
+      "overview": "- **Departamento:** BIM / VDC (Modelado de Información de Construcción y Diseño y Construcción Virtual)\n- **Líder:** Carlos\n- **Prioridad #1 del equipo:** BIM-2, el modelo de Revit y la hoja maestra (MET) desincronizados\n- **Entorno:** Autodesk Revit (2023 y 2026 en producción, 2027 en evaluación), Google Workspace, Monday.com, Excel (MET y presupuesto por WBS), Canva (presentaciones entrantes)\n\n### Contexto y modos de falla\n\n#### Responsabilidades\n\n* Compuerta final de calidad técnica y coordinación antes de que los planos lleguen a la obra.\n* Paquetes de ejecución de 15 a 16 colecciones de planos (mampostería, impermeabilización, acabados, barandales, ventanas y puertas).\n* Parametrizar los elementos del modelo, categorizarlos por nivel y tipo, y producir cuadros de materiales y elementos.\n* Extraer cantidades para las hojas de WBS del cliente y las licitaciones.\n\n#### Modos de falla escuchados en el diagnóstico\n\n1. **Transcripción de Canva a MET a Revit:** las especificaciones llegan como láminas visuales, se redigitan en un Excel intermedio (MET) y luego se redigitan en los parámetros de Revit uno por uno.\n2. **Deriva entre el modelo y la hoja:** los cambios hechos directamente en Revit para cumplir plazos dejan la MET desactualizada, lo que causa discrepancias de costos y ofertas desalineadas.\n3. **Colapso de los LLM generales con compendios:** las pruebas con varios asistentes funcionaron en hojas sueltas, pero fallaron con juegos de 20 a 100 hojas (límites de contexto, reducción de resolución de imágenes, revisiones superficiales).\n4. **Saturación de etiquetas y cotas:** el etiquetado automático nativo de Revit se apila y choca con la geometría, lo que cuesta cientos de horas de reubicación manual.\n5. **Carga de duplicar colecciones:** duplicar vistas, asignar plantillas de vista y colocar vistas, cuadros y rótulos por nivel.\n6. **Reingreso manual de cantidades** en el WBS del cliente.\n\n### Revit 2027 e IA conectada (esperar y probar)\n\n* **Dónde está:** Revit 2027 salió en la primavera de 2026 y su actualización 2027.2 es de julio. **Su asistente de IA sigue en vista previa técnica.** Una prueba independiente encontró que a veces ignora o ejecuta mal las instrucciones, y **la conexión que permite a Claude o ChatGPT usar el modelo es de solo lectura**. También trae mejoras que no son de IA y tocan los problemas de BIM; forman parte de la prueba.\n* **Dónde está Domus:** producción en Revit 2023 y 2026, con 2027 en evaluación.\n* **No esperar sin hacer nada:** BIM-2 y BIM-5 no dependen de la IA.\n* **La prueba de 2 semanas**, en una máquina con Revit 2027 y **cinco tareas reales**:\n  1. Crear las hojas de un nivel (BIM-5).\n  2. Etiquetar puertas y ambientes en una planta densa (BIM-4).\n  3. Crear una tabla de cantidades por código de WBS (BIM-6).\n  4. Consultar el modelo por parámetros faltantes con Claude conectado (parte de BIM-3).\n  5. Renumerar ambientes con las nuevas reglas.\n* **Continuar si al menos 4 de las 5 salen correctas sin retoque manual.** Si no, repetir con la siguiente actualización.\n\nFuentes que consultó la propuesta el 21 de octubre de 2026: Architosh, Autodesk, las notas de la versión 2027.2, Autodesk Community, Imaginit y goto.archi.\n\n### Herramientas de IA para este equipo\n\n* **Base:** Gemini en Google Workspace (Drive, Docs, Sheets), útil para documentos normativos y el trabajo con la hoja maestra.\n* **Suscripciones de pago:** como máximo dos para toda Domus. BIM es candidato a una suscripción de pago para programación de scripts, extracción estructurada y la prueba de Revit 2027, pero la propuesta final no la asigna de antemano: la **prueba de 2 semanas** (una licencia mensual por equipo) decide con tareas reales, porque las comparaciones anteriores usaban versiones previas de las herramientas.\n* **Descartadas:** los niveles gratuitos o públicos. Los archivos de arquitectura contienen propiedad intelectual de clientes, y esos niveles no tienen acuerdo de privacidad empresarial y fallan con compendios de planos.\n\n#### Calendario sugerido\n\n```\nSemana 1: Sesión con Carlos; mapear parámetros y llaves (BIM-2); prueba de licencias en paralelo\nSemana 2: Sincronización configurada y validada en un nivel (BIM-2); matriz de generación de hojas (BIM-5)\nSemana 3: Reunión de revisión del caso 1 (hoja maestra) y del caso 2 (código de WBS); inicia la prueba del complemento de anotaciones (BIM-4)\nSemana 4: Lista de chequeo del caso 5; decidir sobre el complemento de BIM-4; preparar la máquina de prueba con Revit 2027\nSemanas 5-8: Seguimientos a los 30 días de los casos 1, 2 y 5; prueba de 2 semanas de Revit 2027\n```"
+    },
+    {
+      "dept_id": "17e569fb-ab1a-48da-ba34-6d0ed67a7f26",
+      "dept_name": "Construccion",
+      "overview": "- **Equipo:** Gerencia de Proyectos de Construcción y Operaciones de Obra (Construcción y Operaciones)\n- **Prioridades del equipo para el mes:** CON-1 (manual de calidad y garantías) y CON-2 (sobrecostos del presupuesto), ambas de prioridad alta\n- **Principio:** la IA hace la lectura pesada y el formato, pero **nada se envía nunca de forma automática**. Una persona revisa y aprueba cada orden de compra y cada manual.\n\n### Contexto y perfil del equipo\n\n* **Trabajo diario:** recibir cotizaciones de subcontratistas y crear órdenes de compra para proveedores y finanzas; seguimiento del presupuesto por renglón (tablayeso, acabados, pintura, pisos); supervisión de campo en turnos de día, noche y fin de semana impredecibles; seguimiento del cronograma en Microsoft Project; informes al cliente y resolución de disputas; compilar el manual de entrega al final de cada proyecto.\n* **Entorno:** Google Workspace, Monday.com (en implementación) y Microsoft Project.\n* **Uso actual de IA:** ChatGPT sin orden (dos suscripciones de pago, el resto con cuentas gratuitas) solo para suavizar correos tensos con clientes y como una verificación rápida de lo que dicen los proveedores.\n\nModos de falla escuchados en el diagnóstico:\n\n1. **Compras desconectadas y sobrecostos silenciosos:** las cotizaciones se redigitan en Docs y Sheets, los presupuestos viven en archivos separados y una orden de compra puede exceder su renglón sin ninguna advertencia.\n2. **Desgaste administrativo del manual de entrega:** 3 a 4 semanas por proyecto ubicando decenas de PDF heterogéneos de proveedores y extrayendo contactos, garantías y recomendaciones de cuidado.\n3. **Las órdenes de compra son la tarea diaria más frecuente**, y se hacen enteramente a mano.\n4. **Sin medición del tiempo:** tareas estimadas en 15 minutos se estiran a una hora, sin línea base.\n5. **IA subutilizada:** el equipo asumía que la IA no podía manejar sus documentos ni los compromisos de obra.\n\n### Herramientas de IA para este equipo\n\n* **Base:** Gemini en Google Workspace con Drive, Docs y Gmail, junto con **NotebookLM** para los cuadernos por obra.\n* **Suscripciones de pago:** como máximo dos para toda Domus. Una suscripción de pago para Construcción se decide en la **prueba de 2 semanas** (una licencia mensual por equipo), probándola con un conjunto real de PDF de proveedores y con cotizaciones reales. Las comparaciones anteriores usaban versiones previas de las herramientas.\n* **Descartadas:** las cuentas gratuitas o personales. No tienen acuerdo de privacidad empresarial ni administración central, y este equipo maneja presupuestos, negociaciones de precios y documentos de clientes.\n\n#### Calendario sugerido\n\n```\nSemana 1: Sesión con el líder del equipo; presupuesto maestro y alerta de sobrecosto (CON-2); código de rubro común con BIM (caso 2)\nSemana 2: Plantilla del manual y cuaderno por obra; prueba con los PDF de un proyecto terminado (CON-1)\nSemana 3: Prompt de borradores de órdenes de compra y tablero (CON-3); columnas de registro de tiempo (CON-4)\nSemana 4: Revisión con el líder del equipo; primer manual u orden en vivo con el nuevo flujo\nSemanas 5-6: Ajustes sin costo; comparar contra la medida de éxito\n```"
+    },
+    {
+      "dept_id": "3a970482-d817-46ab-add8-817d0580a475",
+      "dept_name": "Domus Works",
+      "overview": "- **Equipo:** Domus Works: Célula Digital y Célula de Diseño\n- **Prioridad #1 del equipo:** DW-4, imágenes con aspecto de IA genérica y geometría alterada\n- **Principio rector:** la IA multiplica la creatividad humana. Nunca reemplaza el pensamiento estratégico y no debe sumar carga administrativa.\n\n### Perfil del equipo y contexto\n\n* **Célula Digital:** traduce la estrategia comercial, arma la matriz mensual de copy, programa las publicaciones en redes y gestiona la pauta en Meta y LinkedIn.\n* **Célula de Diseño:** identidad visual, estilizado de renders exteriores e interiores, posproducción de imágenes estáticas, animación de estilo de vida y video promocional.\n* **Ciclo mensual:** estrategia comercial, luego la Célula Digital redacta la matriz de contenido, aprobación del cliente, y la Célula de Diseño produce gráficos, renders y reels con un mes de anticipación a la publicación.\n* **Herramientas de IA actuales:**\n  * **ChatGPT Team (maduro):** espacio de trabajo por proyecto para cada cuenta de desarrolladora, conectado a Google Drive. **No migrar a este equipo sin una prueba que demuestre un mejor ajuste**; forzar un cambio rompería la organización de sus carpetas y sus hábitos.\n  * **Midjourney (reemplazable):** suscripción compartida que se usa para mejorar renders 3D base y generar clips de 5 segundos. El equipo está abierto a herramientas especializadas si resuelven la deriva de geometría, la piel plástica y la continuidad de los personajes.\n* **Lo que Domus ya paga:** ChatGPT (Domus Works), Midjourney, Adobe y Read AI.\n\n### Integración con Google Workspace y Monday.com\n\n* **Estructura de Drive por proyecto:** `01_Briefs_y_Decks`, `02_Renders_Base_CAD`, `03_Fichas_de_Personas`, `04_Entregables_Finales`.\n* **Monday.com:** un tablero de calendario mensual de contenido (fecha, plataforma, persona, texto, enlace al activo, estado de aprobación, enlace de publicación) y los elementos de alerta de pauta de DW-1.\n\n### Herramientas de IA para este equipo\n\n* **Base:** Gemini en Google Workspace. Lee los archivos de Drive directamente y es la base de todos los equipos.\n* **Suscripciones de pago:** como máximo dos para toda Domus, solo donde la herramienta base no resuelva una tarea. El espacio de trabajo actual de ChatGPT del equipo es un fuerte candidato a conservarse; la **prueba de 2 semanas** (una licencia mensual por equipo) decide con tareas reales, porque las comparaciones anteriores usaban versiones previas de las herramientas.\n* **Claude Team** se marcó como \"descalificado\" en el borrador anterior por no generar imágenes. En la propuesta final no hay descalificación por equipo: la prueba decide, y la generación de imágenes se resuelve con las herramientas de imagen de arriba.\n\n#### Calendario sugerido\n\n```\nSemana 1: Reglas en la plataforma de anuncios y tablero de alertas (DW-1); higiene de sesión y política de modo relajado (DW-3); preparar la prueba de herramientas de imagen\nSemana 2: Asistentes por proyecto con diccionarios negativos (DW-2); biblioteca de estilo por cliente (DW-3); taller de acompañamiento\nSemana 3: Prueba de preservación de geometría con 3 renders reales (DW-4); prueba de consistencia de personajes y video (DW-5)\nSemana 4: Revisión de calidad con el líder del equipo; decidir herramientas; mapear entregables y alertas en Monday.com\nSemanas 5-6: Ajustes sin costo\n```"
+    },
+    {
+      "dept_id": "addf9124-278e-4eb4-8fc1-2c00527e56b6",
+      "dept_name": "Domus Works Clients",
+      "overview": "- **Equipo:** Comercial de Agencia (Comercial y Desarrollo de Negocios, rama de agencia creativa y de mercadeo)\n- **Problema cubierto:** COM-1\n- **Principio no negociable:** la IA es una herramienta, no un reemplazo. Nunca envía mensajes y nunca reemplaza la construcción de relaciones humanas. Su mandato se limita a recopilar datos, monitorear el mercado, detectar señales y preparar el embudo. El ejecutivo controla cada correo, mensaje de WhatsApp y llamada.\n\nCOM-1 **no forma parte de los 38 problemas del paquete base**. Es un agente opcional que se contrata por separado.\n\n### Contexto y perfil del equipo\n\n#### Modelo operativo\n\n* **Persona objetivo:** líderes de nivel medio (directores de mercadeo, directores comerciales, gerentes de marca) de desarrolladoras inmobiliarias. Manejan presupuestos, gestionan relaciones con agencias o pueden impulsar una referencia interna.\n* **Cadencia de cinco toques** para asegurar una reunión de descubrimiento y presentación de credenciales en persona en la oficina de Domus Works: (1) correo en frío, (2) correo de seguimiento, (3) WhatsApp directo, (4) llamada, (5) reunión de descubrimiento.\n* **Ciclos de venta:** 3 a 4 meses para trabajo de agencia; más de 12 meses para arquitectura. Mezcla de proyectos medianos frecuentes (*ballenitas*) y grandes cuentas anuales (*ballena blanca*).\n* **Meta mensual:** unas 10 reuniones de descubrimiento, que den al menos 1 conversión rápida.\n\n#### Herramientas actuales y fuentes de inteligencia\n\n* Google Workspace (Gmail, Sheets, Docs, Drive) y Monday.com como CRM central (propuestas enviadas, cartera de clientes, estado de los negocios).\n* SalesQL (nivel gratuito) para correos corporativos y cruce con LinkedIn.\n* **Fuentes de señales:** hilos de SkyscraperCity Guatemala (excavaciones, permisos, huellas de terrenos, atribuciones a desarrolladoras), auditorías de calle de vallas y rótulos de licencias, ferias del sector como ExpoCasa y Meta Ads (menor intención).\n\n#### Modos de falla escuchados en el diagnóstico\n\n1. **Bases de contactos desactualizadas y rebotes:** el nivel gratuito de prospección depende de datos estáticos, y los puestos de mercadeo de nivel medio rotan rápido (por ejemplo, una gerente de mercadeo que dejó una desarrolladora), así que los correos rebotan y dañan la entregabilidad del dominio.\n2. **Cruce manual de proyecto con desarrolladora:** horas navegando foros y cruzando nombres de empresas contra LinkedIn, sitios web de desarrolladoras y llamadas telefónicas.\n3. **Reacción tardía a las señales:** los proyectos tardan más de 3 años de la excavación al corte de cinta, y perder la ventana temprana significa perder el contrato de mercadeo antes de que se elija agencia.\n\n### Cómo sería una versión a la medida (no recomendada todavía)\n\nSolo se evalúa si el agente disponible no alcanza la calidad que necesita el equipo **y** parece viable. El esfuerzo de referencia es de **35 a 50 horas**. Es una referencia, no una cotización, y no está incluido en el paquete base.\n\n* **Qué construiría:** para cada proyecto detectado, un agente que prepara el registro de contacto (desarrolladora, director de mercadeo o comercial actual, verificación de entregabilidad) en Monday.com para revisión. No envía nada.\n* **Por qué esperar:** el borrador anterior describía un rastreador diario con detección de cambios y un agente completo de enriquecimiento con varias APIs. La propuesta final no recomienda construir ninguno hasta haber probado el agente disponible. Si COM-1 o VE-2 terminan necesitando una solución a la medida, lo mejor es construirla junto con VE-3 sobre la misma plataforma.\n* **Los contactos desactualizados siguen siendo un riesgo mientras tanto.** La propuesta no incluye una herramienta de verificación de correos para este equipo. Si los rebotes continúan, agregar verificación (pago por consulta) sería una cotización nueva.\n\n### Prácticas de apoyo (fuera de los 47 problemas diagnosticados)\n\nSurgieron en el diagnóstico, pero **no son problemas codificados ni forman parte del paquete base**. Se pueden hacer en una sesión de seguimiento o cotizar como una solicitud nueva:\n\n* **Captura de prospectos en ferias:** fotografiar folletos en ExpoCasa y hacer que un asistente multimodal devuelva campos fijos (empresa, proyecto, contacto, cargo, WhatsApp, correo, fuente); el ejecutivo revisa antes de guardar.\n* **Cadencia de cinco toques en Monday.com:** una columna de estado por toque, una fecha de \"próxima acción\" y recordatorios nativos, con la integración de Gmail registrando los correos enviados en el elemento.\n\n### Herramientas de IA para este equipo\n\n* **Base:** Gemini en Google Workspace, sin costo adicional si Domus ya paga Business Standard o superior.\n* **Suscripción de pago:** como máximo dos para toda Domus, decididas en la **prueba de 2 semanas** (una licencia mensual por equipo). No se compra nada de antemano.\n* **Descartadas:** las cuentas gratuitas o personales para cualquier cosa que involucre datos de clientes o de precios.\n\n#### Calendario sugerido\n\n```\nSemanas 2-3: Configurar el agente disponible con las fuentes reales; primeras alertas revisadas por el ejecutivo\nSemanas 4-5: Pruebas con datos reales; comparar con los hallazgos manuales del ejecutivo\nSemana 6:    Revisión con el líder del equipo; decidir si la calidad alcanza o si una versión a la medida merece una cotización\n```"
+    },
+    {
+      "dept_id": "3ef4e13e-bd3f-4071-bba5-b0764f99d0b8",
+      "dept_name": "Interiores",
+      "overview": "- **Equipo:** Diseño de Interiores (*Interiores Domus*)\n- **Prioridad del mes (según el equipo):** INT-1, ediciones de render que deforman el espacio y acceso limitado a las herramientas de imagen\n\n### Perfil del equipo\n\n- **Enfoque:** amenidades de torres multifamiliares, oficinas corporativas completas, cuadros de acabados y espacios residenciales privados.\n- **Fases de trabajo:**\n  1. *Concepto, storytelling y naming:* narrativa de diseño, metáforas espaciales, matrices de nombres y eslóganes.\n  2. *Look & feel y moodboards:* referencias, paletas, presentaciones en Canva y videos conceptuales de fondo.\n  3. *Postproducción de renders:* probar cambios de acabados, tapicería, iluminación y distribución sobre renders base sin remodelar.\n  4. *Adquisición de modelos 3D:* pasar imágenes 2D de mobiliario o esculturas a geometría para Revit.\n  5. *Especificaciones técnicas y entrega a BIM:* cuadros de acabados, listados de materiales y notas de cielos y pisos.\n\n### Herramientas de IA\n\n- **Base para todo el personal:** Gemini en Google Workspace.\n- **Suscripciones de pago:** como máximo dos para toda Domus y solo donde la herramienta base no resuelve la tarea. Si Interiores usa un asistente de texto de pago, se decide con la **prueba de 2 semanas** (una licencia mensual por equipo), con tareas reales del equipo.\n- **Se descartan** las cuentas personales o compartidas por falta de administración central.\n\n#### Calendario sugerido\n\n```\nSemana 1: Sesión con la jefa del área; reglas de acceso (INT-1); prueba de licencias en paralelo\nSemana 2: Asistente de concepto y plantillas (INT-2); taller de edición por región\nSemana 3: Prueba con un proyecto vivo en fase de concepto (INT-3); medir semanas\nSemana 4: Reunión de revisión del caso 1 (hoja maestra); definir esquema de la hoja con BIM\nSemanas 5-6: Ajustes sin costo; seguimiento a los 30 días del caso 1 entre las semanas 5 y 8\n```"
+    },
+    {
+      "dept_id": "fcb1a87f-f11a-48bb-9753-6083a44bf9f0",
+      "dept_name": "PM Domus Works",
+      "overview": "- **Equipo:** Gestión Digital y Contenido\n- **Principio:** la IA es un amplificador creativo y asistente operativo, nunca un reemplazo del criterio, la intuición estratégica ni la empatía de quien redacta.\n\n```\n┌────────────────────────────────────────────────────────┐\n│               FLUJO HUMANO + IA                        │\n├──────────────────┬─────────────────┬───────────────────┤\n│   LA PERSONA     │   LA IA ACELERA │   LA PERSONA      │\n│   DIRIGE         │                 │   ENTREGA         │\n│  Estrategia/tono │ Ganchos/ángulos │ Voz, alma y QA    │\n└──────────────────┴─────────────────┴───────────────────┘\n```\n\n### Prioridad del equipo: la redacción como pilar\n\n> *\"El diseño no hace nada si no hay una redacción primero... de la redacción depende si alguien contacta, compra un apartamento o se interesa.\"*\n\n#### Realidades operativas\n\n- **Cuello de botella:** con unos 85 posts al mes, la fatiga creativa vuelve el copy repetitivo, formulaico y «sin alma».\n- **Fricción de contexto:** once personas en una sola cuenta mezclan los historiales; el contexto se degrada y obliga a re-pegar las guías de marca.\n- **Entrega:** redacción arma el «esqueleto» de la matriz (captions, texto de arte, CTA y referencias visuales) antes de pasarlo a diseño.\n\n### Flujo operativo con la persona al centro\n\n```\n[Paso 1: Dirección humana]\n  Redactores definen metas del mes, fechas clave y temas de campaña.\n       │\n       ▼\n[Paso 2: Divergencia con IA]\n  El asistente propone 3 ángulos con ganchos y borradores.\n       │\n       ▼\n[Paso 3: Oficio y alma humanos]\n  Redactores curan, reescriben, ajustan el tono y eliminan clichés.\n       │\n       ▼\n[Paso 4: Revisión de calidad]\n  Gerencia de proyectos revisa el esqueleto para ver el encaje estratégico.\n       │\n       ▼\n[Paso 5: Entrega a diseño]\n  El esqueleto final pasa al equipo de diseño para la maquetación.\n```\n\n#### Plan de arranque\n\n| Fase | Plazo | Actividad | Resultado esperado |\n| :--- | :--- | :--- | :--- |\n| 1 | Días 1 a 2 | Cuentas individuales bajo administración central (GD-1) y 2 asistentes piloto por cliente | Manifiestos y guías guardados y aislados |\n| 2 | Días 3 a 4 | Capacitar a redactores en el marco de 3 ángulos y la salida en tabla (GD-2, GD-3) | Borradores variados y sin clichés repetidos |\n| 3 | Día 5 | Un lote semanal completo (unos 20 posts) con la nueva rutina | Entrega más rápida, menos fatiga y mejor copy |"
+    },
+    {
+      "dept_id": "2fc55672-1df6-48bf-99c5-fc1db28e67bb",
+      "dept_name": "PM Studio Domus",
+      "overview": "- **Equipo:** Gerencia de Proyectos · Pablo\n\n### Visión general y filosofía: IA centrada en las personas (HCAI)\n\nEsta propuesta responde a lo que el gerente de proyectos señaló como **prioridad número uno del mes**:\n\n1. **Aprovechar al máximo la capacitación y la automatización de Monday.com** para coordinar y programar tareas del equipo sin duplicar trabajo manual (GP-4, prioridad crítica).\n2. **Resolver de forma ágil las minutas y agendas de reuniones**, virtuales y presenciales, sin perder tiempo limpiando textos ni redactando desde cero (GP-1 y GP-2).\n\n#### Principio fundamental: la IA asiste, la persona decide\n\n* **Sin reemplazo del criterio profesional:** la IA no toma decisiones técnicas, no aprueba entregables ante el cliente ni valida normativas de construcción por su cuenta.\n* **Herramienta de amplificación:** estructura datos dispersos, resume borradores y sugiere tareas. El gerente de proyecto revisa y envía; **nada se envía solo**.\n* **Cero sobrecarga técnica:** si una función nativa o una herramienta ya contratada resuelve el problema, esa es la ruta. Lo que no tiene solución directa se deja en espera y se cotiza aparte solo si la calidad no alcanza.\n\n### Comparativa: enfoque práctico frente a soluciones complejas\n\n| Aspecto | Solución sobrediseñada (evitada) | Enfoque práctico propuesto |\n| :--- | :--- | :--- |\n| **Integraciones** | Webhooks y APIs en servidores propios | Automatizaciones nativas de Monday.com y enlaces de Google |\n| **Minutas** | Entrenar un modelo propio | Un asistente configurado con plantilla y glosario local |\n| **Reuniones presenciales** | Hardware costoso o micrófonos fijos | Celular y herramientas que Domus ya paga; equipo solo si falla la calidad |\n| **Prefactibilidad** | Portal a la medida desde el inicio | Corregir la plantilla primero; portal en espera |\n| **Rol del gerente** | Supervisar código y fallos de automatización | Coordinar equipos, usando la IA solo para redactar y ordenar |\n\n#### Plan de implementación (referencia)\n\n* **Día 1: minutas claras.** Crear el asistente de minutas DOMUS con la plantilla y el glosario guatemalteco (GP-1).\n* **Día 2: captura presencial.** Habilitar la captura con el celular y hacer la primera prueba de audio presencial (GP-2).\n* **Día 3: agendas sin fricción.** Configurar los enlaces de citas en firmas y WhatsApp (GP-3).\n* **Días 4 y 5: acompañamiento en Monday.com.** Alinear el tablero con las automatizaciones nativas para que las acciones aprobadas de las minutas se asignen con un clic (GP-4).\n* **Semanas siguientes:** corrección de la plantilla de prefactibilidad y reunión de revisión del caso 4 (GP-5)."
+    },
+    {
+      "dept_id": "025c60d3-4fb6-4626-a402-54fd8239d070",
+      "dept_name": "Admin",
+      "overview": "- **Equipo:** Contabilidad y Administración (Administración Domus)\n- **Prioridad del mes (según el equipo):** CT-1, facturas FEL y recibos digitados a mano en Excel y Aspel\n- **Principio rector:** máxima simplicidad. Sin desarrollos a la medida, sin integración directa con Aspel (se trabaja con archivos de importación) y con una persona que revisa todos los totales.\n\n### Qué hace hoy el equipo (contexto del diagnóstico)\n\nCada viernes y en cada cierre mensual, el personal toma PDF descargados, impresiones de facturas y recibos digitales, y vuelve a digitar en el *Libro de Compras y Ventas*, en tablas de facturación mensual y en el cruce de comprobantes:\n\n* Fecha\n* Serie / Número de factura\n* NIT emisor / receptor\n* Concepto / clasificación (Compra, Servicio, Obra)\n* Monto exento / neto / IVA\n* Total (GTQ o USD)\n* Empresa asignada (entre 3 y 4 entidades legales)\n\n### Calendario del paquete base para este equipo\n\n| Fase | Qué ocurre | Duración |\n| :--- | :--- | :--- |\n| Día 1 | Entrego el informe con las recomendaciones ya revisadas (incluye CT-4 y la política de uso) | Inmediato |\n| Semana 1 | Sesión con la jefa del área; confirmar plan de Workspace y tabla de entidades (CT-3); recibir exportaciones de SAT y formato de Aspel | Semana 1 |\n| Semanas 1 a 2 | Construir la hoja de conversión SAT a Aspel (CT-1, flujo A) y la pestaña de tipos de cambio (CT-2); instalar el prompt del flujo B | 2 semanas |\n| Semanas 2 a 4 | Piloto con un lote de 10 documentos variados (proveedor local en GTQ, SaaS del exterior en USD, comprobante de contratista); el equipo valida totales | 2 semanas |\n| Semanas 5 a 6 | Ajustes sin costo y comparación contra la medida de éxito | 2 semanas |\n\n> La prueba de licencias de IA (2 semanas, en paralelo) mostrará si Contabilidad necesita una herramienta de pago o si Gemini basta."
+    }
+  ],
+  "milestones": [
+    {
+      "id": "96e9891d-4e66-4581-b958-f5956122065c",
+      "code": "CT-3",
+      "title": "Confusión de NIT entre 3 a 4 entidades legales",
+      "dept_id": "025c60d3-4fb6-4626-a402-54fd8239d070",
+      "dept_name": "Admin",
+      "status": "in_progress",
+      "priority": "medium",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "* **Camino:** Configuración.\n* **Diseño:** una tabla maestra de entidades (razón social, NIT, alias y estado) y una columna calculada `Empresa_Receptora` que se resuelve por el NIT del receptor. Si el NIT no existe en la tabla, la fila se marca en rojo para revisión; no se asigna entidad por defecto.\n* **Uso en CT-1:** esta validación se aplica a ambos flujos, de modo que ningún documento entra al archivo de importación sin entidad asignada.",
+      "summary": "Tabla maestra de entidades con validación automática de la entidad receptora"
+    },
+    {
+      "id": "fdc50813-e51b-46e4-af2d-d0066ffab9ca",
+      "code": "GD-1",
+      "title": "Once personas comparten una sola cuenta de ChatGPT",
+      "dept_id": "fcb1a87f-f11a-48bb-9753-6083a44bf9f0",
+      "dept_name": "PM Domus Works",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "- **Camino:** Recomendación (seguimiento sin cargo).\n- **Recomendación:**\n  1. Pasar de una cuenta compartida a **cuentas individuales** con administración central (un solo administrador, usuarios por persona).\n  2. Resolverlo con la herramienta base de la empresa (Gemini en Workspace) y, solo si la prueba de 2 semanas lo justifica, con una de las dos suscripciones de pago máximo para toda Domus. Hoy Domus Works ya paga ChatGPT Team; antes de comprar otra cuenta se revisa qué ya existe.\n  3. Mantener separada la información de cada cliente, para que el contexto de uno no contamine el de otro.\n- **Por qué importa:** la cuenta compartida mezcla contextos y expone datos de clientes; la administración central también resuelve el acceso de quien entra o sale del equipo.",
+      "summary": "Cuentas individuales bajo una administración central"
+    },
+    {
+      "id": "1bc819ba-c43e-435f-851c-d6873128ee43",
+      "code": "INT-4",
+      "title": "Cuadro de acabados hecho en Canva y vuelto a dibujar en Revit",
+      "dept_id": "3ef4e13e-bd3f-4071-bba5-b0764f99d0b8",
+      "dept_name": "Interiores",
+      "status": "pending",
+      "priority": "medium",
+      "delivery": "Herramienta primero",
+      "waiting_for": null,
+      "solution": "- **Camino:** Herramienta primero (caso 1 de la sección 3 de la propuesta: *Hoja maestra de especificaciones y acabados*, entre Arquitectura, Interiores y BIM).\n- **Cambio de proceso:** los diseñadores entregan especificaciones y acabados en **una hoja maestra** (código de acabado, dimensiones, material, fabricante, notas), no en Canva. Canva toma los datos de esa hoja y BIM los sincroniza con Revit (sincronización de BIM-2).\n- **Sincronización Canva y Google Sheets:** se planea utilizar la sincronización entre Canva y Google Sheets. Nota en revisión: se está revisando qué opciones existen con respecto a las imágenes, ya que la función de sincronización no parece admitir imágenes directamente.\n- **Revisión con los jefes** (una reunión, sin cobro adicional) y **seguimiento a los 30 días**: *¿cuántas especificaciones siguen llegando solo en PDF o en Canva?*",
+      "summary": "La misma hoja maestra de BIM-1, sincronizada con Revit"
+    },
+    {
+      "id": "36f57fed-30ec-43b1-9930-a458e411bee4",
+      "code": "DW-2",
+      "title": "Copy mensual repetitivo",
+      "dept_id": "3a970482-d817-46ab-add8-817d0580a475",
+      "dept_name": "Domus Works",
+      "status": "in_progress",
+      "priority": "medium",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "* **Causa:** los hilos largos y continuos contaminan el contexto, y el modelo repite clichés (\"luxury redefined\", \"urban oasis\", \"nestled in\").\n* **Solución (Prompts):** **un asistente por proyecto** en el espacio de trabajo del equipo con:\n  1. Una base de conocimiento estática: presentación de marca, plan maestro, amenidades y personas compradoras.\n  2. Un **diccionario negativo** de palabras y frases prohibidas.\n  3. Un **lente de persona compradora** obligatorio en cada solicitud (inversionista: rendimientos y ubicación; familia: seguridad, áreas verdes, escuelas; joven profesional: conectividad, estilo de vida).\n  4. **Higiene de sesión:** nunca escribir un mes nuevo en el hilo del mes anterior; abrir una conversación nueva que apunte al asistente.\n* **Dónde vive:** el espacio de trabajo actual de ChatGPT del equipo si lo conserva; de lo contrario, en la herramienta que Domus apruebe tras la prueba. El método es el mismo.",
+      "summary": "Un asistente por proyecto con las reglas de marca de cada cliente"
+    },
+    {
+      "id": "c4b439cf-fa9a-41c8-9450-af45f8b887c0",
+      "code": "BIM-1",
+      "title": "Especificaciones digitadas tres veces: Canva, Excel (MET) y Revit",
+      "dept_id": "3ad4acfe-7cd0-4b19-abbd-bb556e2e3885",
+      "dept_name": "BIM",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Herramienta primero",
+      "waiting_for": null,
+      "solution": "* **Causa:** los diseñadores crean láminas visuales en Canva sin una base de datos estructurada, así que los dibujantes tratan las láminas como la fuente de datos.\n* **Solución (Herramienta primero):** invertir el orden. Los diseñadores entregan las especificaciones y los acabados **una sola vez** en una **hoja maestra** (código de acabado, dimensiones, material, fabricante, notas) en lugar de en Canva. **Canva y BIM toman sus datos de esa hoja**, con las funciones de conexión de datos o creación masiva de Canva, y la misma hoja es la entrada limpia para Revit.\n* **Es un acuerdo entre equipos** (Arquitectura, Interiores y BIM): la tabla única solo sirve si los diseñadores la usan de verdad. Por eso tiene una **reunión de revisión con los jefes de área y un seguimiento a los 30 días**.\n* **Pregunta del seguimiento a los 30 días:** *¿cuántas especificaciones siguen llegando solo en PDF o en Canva?*\n* **Herramientas:** nada adicional a las licencias que Domus ya paga (Google Workspace, Canva). La misma hoja sirve para INT-4.",
+      "summary": "Una hoja maestra que alimenta Canva, Excel y Revit, acordada entre los equipos (caso 1)"
+    },
+    {
+      "id": "c94c2c21-338f-47da-9d44-bd279cd3b9ca",
+      "code": "CON-1",
+      "title": "Manual de calidad y garantías de ~100 páginas (3 a 4 semanas por proyecto)",
+      "dept_id": "17e569fb-ab1a-48da-ba34-6d0ed67a7f26",
+      "dept_name": "Construccion",
+      "status": "waiting",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": "Gestión de accesos",
+      "solution": "* **Causa:** la estructura del manual es fija de un proyecto a otro; lo que cambia es el contenido (materiales, colores, contactos de proveedores, términos de garantía y pautas de cuidado). El trabajo consiste en leer PDF heterogéneos de proveedores y redigitarlos.\n* **Solución (Configuración, con verificación humana):**\n  1. **Plantilla con campos fijos** en Google Docs: `{{PROVEEDOR_NOMBRE}}`, `{{CONTACTO}}`, `{{RUBRO_ACABADO}}`, `{{TERMINOS_GARANTIA}}`, `{{INSTRUCCIONES_MANTENIMIENTO}}` y `{{FLAGS_DATOS_FALTANTES}}`.\n  2. **Un cuaderno por obra** (un cuaderno de Google NotebookLM o una carpeta de trabajo de Gemini) con todos los PDF de proveedores de ese proyecto, para que la IA tome datos solo de esas fuentes.\n  3. **Prompt estándar:** la IA arma cada sección a partir de las fuentes y **señala lo que falta** en lugar de llenar los vacíos.\n  4. **Una persona verifica** los puntos señalados y revisa al azar el resto, y luego exporta el PDF de 100 páginas.\n* **Recomendación previa:** pedir a cada proveedor que entregue un **formulario de garantía** cuando se emite la orden de compra, para que los datos lleguen estructurados y el manual tenga menos vacíos que señalar.\n\nPrompt (a probar con archivos reales y ajustar):\n\n```text\nActúa como ingeniero/a de entrega de Construcción Domus. Tienes los PDF de\ngarantías de los proveedores del Proyecto [X]. Arma el Manual de Calidad y\nGarantías con nuestra estructura. Para cada rubro:\n1) proveedor, contacto y dirección; 2) materiales y colores instalados;\n3) duración y cláusulas de garantía; 4) recomendaciones de mantenimiento.\nUsa solo lo que consta en los documentos. Si falta algo, escribe:\n\"[ALERTA: Proveedor no incluyó manual de mantenimiento - Requiere verificación]\".\n```\n\n* **Efecto esperado:** por medir. El borrador anterior prometía \"de 3 a 4 semanas a 1 día\"; la propuesta final no hace esa promesa. La medida de éxito son las horas por manual hoy frente a las horas después del primer proyecto real.",
+      "summary": "Plantilla de manual con campos fijos y un cuaderno por obra con los PDF de los proveedores; la IA arma el borrador y señala lo que falta; una persona verifica. También se recomienda que el proveedor entregue un formulario de garantía al emitirse la orden"
+    },
+    {
+      "id": "ef10ac87-6d32-4935-ad76-d729465d165b",
+      "code": "ARQ-5",
+      "title": "Fricción en Monday.com",
+      "dept_id": "e17c8121-c7fd-49df-be7b-62959e3e77e5",
+      "dept_name": "Arquitectura",
+      "status": "pending",
+      "priority": "medium",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "* **Causa:** el registro de tiempo detallado y los traspasos rígidos chocaron con el trabajo de diseño iterativo.\n* **Solución (Configuración):** un tablero organizado por **fases del proyecto**, **sin registro de horas**:\n  1. Factibilidad del sitio y pre-dimensionamiento.\n  2. Diseño conceptual y anteproyecto municipal.\n  3. Trámites y licencias municipales.\n  4. Documentos de construcción.\n* **Capacidad:** usar la vista de carga de trabajo nativa con asignaciones semanales por diseñador, no horas de marcaje diarias.",
+      "summary": "Un tablero organizado por fases del proyecto, sin registro de horas"
+    },
+    {
+      "id": "fb23cbba-a340-4c42-8cba-f34e56424adc",
+      "code": "ARQ-1",
+      "title": "Pre-dimensionamiento y mezcla de apartamentos por prueba y error",
+      "dept_id": "e17c8121-c7fd-49df-be7b-62959e3e77e5",
+      "dept_name": "Arquitectura",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Prueba de concepto",
+      "waiting_for": null,
+      "solution": "### El problema\n\nBalancear varios tipos de unidad en las plantas dentro de los límites de altura, una eficiencia bruto-neto (descontando 12 a 18% por circulación y ductos) y las metas de mezcla del cliente (con un margen de ±5%) es un problema de optimización con restricciones. Una hoja de cálculo no resuelve combinaciones discretas de forma nativa, así que los arquitectos adivinan durante horas. **No se usa IA generativa para el cálculo:** inventa cifras, así que se resuelve con fórmulas, macros o scripts.\n\n### Dos pasos, con una regla de parada\n\n1. **Paso 1 (1 día): las herramientas que el equipo ya tiene.** Probar las herramientas de cálculo disponibles en las hojas del equipo (por ejemplo, un complemento de optimización o fórmulas con restricciones) con **un proyecto real**. Si la mezcla queda dentro de ±5% y Hans confirma que elimina el ciclo de prueba y error, se termina aquí y no se construye un prototipo.\n2. **Paso 2 (1 a 2 semanas): un prototipo simple**, solo si el paso 1 no alcanza. Un script que devuelve la distribución por nivel dentro de ±5%, ejecutado desde un botón en Google Sheets o desde una vista web mínima, y **validado con 2 proyectos terminados**.\n\n### Criterio de éxito (propuesta a ajustar con el líder)\n\nLa herramienta encuentra la mezcla dentro del margen de ±5% **y** Hans confirma que elimina el ciclo de prueba y error. Si no, se ajusta o se detiene, y no se invierte más.\n\n### Qué se necesita de Hans\n\n1. Restricciones de zonificación G0 a G5 (tamaño del lote, niveles máximos, permeabilidad, coeficiente de ocupación).\n2. Deducciones por planta (ascensores, escaleras, ductos).\n3. El catálogo de unidades (por ejemplo, estudio de 35 m², una habitación de 60 m², dos habitaciones de 100 m², tres habitaciones de 136 m²).\n4. Metas de mezcla del cliente con tolerancia (por ejemplo, 45% de dos habitaciones ±5%).\n5. **Dos proyectos terminados** como referencia, y una sesión de 45 minutos para revisar su hoja maestra.",
+      "summary": "Probar primero las herramientas de cálculo que el equipo ya tiene; si no alcanzan, un prototipo simple validado con proyectos terminados"
+    },
+    {
+      "id": "9c696f36-3d8a-40dc-a020-74941138d985",
+      "code": "GD-2",
+      "title": "Copys cansados y repetitivos (unos 85 posts al mes)",
+      "dept_id": "fcb1a87f-f11a-48bb-9753-6083a44bf9f0",
+      "dept_name": "PM Domus Works",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "### Asistente por cliente\n\nUn **proyecto o asistente guardado por cada cliente activo**, configurado con la **Cápsula de ADN de Marca (ver GD-4)** y archivos permanentes:\n\n1. Manifiesto de marca, fricción central, persona objetivo y pilares de comunicación.\n2. **Vocabulario prohibido** (clichés como *«en el mundo de hoy»*, *«empodera tu camino»*, tropos genéricos, regionalismos no aprobados).\n3. De 5 a 10 posts históricos de buen desempeño que capturen la voz real de la marca.\n\n**Efecto esperado:** nadie vuelve a gastar unos 15 minutos por sesión re-explicando la marca, y el contexto de cada cliente queda aislado y consistente entre redactores.\n\n### Marco de los 3 ángulos\n\nEn lugar de pedir un solo caption, la persona pide variedad estructural:\n\n```prompt\nRol: redactor/a senior de redes para [Marca].\nContexto: planeamos el calendario de contenido de [Mes].\nPilar de comunicación: [Estilo de vida / Inversión / Comunidad]\nTema: [Tema o promoción específica]\n\nTarea: genera 3 ángulos creativos distintos para este post:\n1. Gancho de historia/empatía (experiencias cotidianas).\n2. Gancho contrario/curiosidad (cuestiona una suposición común).\n3. Gancho de beneficio directo (propuesta de valor clara).\n\nRestricciones:\n- Respeta estrictamente la voz de marca de los archivos del asistente.\n- Evita los clichés del vocabulario prohibido.\n- Para cada ángulo entrega: gancho de apertura, texto de arte (corto), caption, CTA.\n```\n\n**Rol de la persona:** revisa los tres ángulos, elige el más prometedor y refina tono, vocabulario y frases hasta que suene a la marca.\n\n**Higiene de sesión:** cada mes se abre una conversación nueva que apunta al asistente; no se escribe el copy de un mes en el hilo del anterior.",
+      "summary": "Un asistente por cliente con su manifiesto de marca y ejemplos, más un marco creativo para variar los ángulos"
+    },
+    {
+      "id": "0b310365-f643-4b94-84a9-fc9f55d55df4",
+      "code": "DW-3",
+      "title": "Prueba y error en Midjourney y compra de horas extra",
+      "dept_id": "3a970482-d817-46ab-add8-817d0580a475",
+      "dept_name": "Domus Works",
+      "status": "in_progress",
+      "priority": "medium",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "* **Causa:** no hay una sintaxis estándar en la Célula de Diseño, así que las personas repiten generaciones en modo rápido y consumen la asignación mensual.\n* **Solución (Prompts):**\n  * **Política de exploración:** composiciones e iluminación se exploran en modo relajado; el modo rápido se reserva para los aumentos de resolución finales para el cliente.\n  * **Ancla de estilo por cliente** compartida en una **biblioteca de estilo** (una hoja de Google) para que dos diseñadores produzcan el mismo aspecto.\n  * **Hoja de prompts modular:** `[Sujeto y acción] + [Materiales y acabados] + [Iluminación y hora del día] + [Especificaciones de cámara] + [Parámetros]`.\n  * **Verificar los parámetros contra la versión actual** antes de estandarizarlos.",
+      "summary": "Método estándar de prompts y uso de créditos, con una biblioteca de estilo compartida por cliente"
+    },
+    {
+      "id": "f5e69556-2944-47ea-a740-ca47ab1cfecd",
+      "code": "CON-2",
+      "title": "Sobrecostos del presupuesto detectados después de comprar",
+      "dept_id": "17e569fb-ab1a-48da-ba34-6d0ed67a7f26",
+      "dept_name": "Construccion",
+      "status": "waiting",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": "Gestión de accesos",
+      "solution": "* **Causa:** las órdenes de compra y el presupuesto maestro viven en archivos desconectados, así que el sobregiro se detecta después de que finanzas recibe la orden.\n* **Solución (Configuración, sin IA):**\n  * **Código de rubro común (caso 2 de la propuesta).** El mismo código identifica cada renglón en Revit, en el presupuesto y en las órdenes de compra, lo que además permite pasar las cantidades al formato del cliente sin redigitar. CON-2 y CON-3 se apoyan en BIM-6.\n  * **Versión en Google Sheets:** pestaña `Presupuesto_Maestro` (`Rubro_ID`, categoría, presupuesto aprobado, gasto comprometido con `SUMIFS`, saldo disponible) y pestaña `Registro_OC` (número de OC, rubro con lista desplegable, monto, estado), con validación de datos que marca cualquier orden mayor que el saldo disponible y formato condicional rojo antes de finalizar la orden.\n  * **Versión en Monday.com:** un tablero para el presupuesto maestro y otro para las órdenes de compra conectados por una columna, con un espejo del saldo restante y un estado \"PRESUPUESTO EXCEDIDO\" cuando el monto es mayor que el saldo.\n* **Decisión:** cuál de las dos versiones es la fuente de verdad se acuerda con el líder del equipo en la sesión; no deben vivir dos copias en paralelo.",
+      "summary": "Presupuesto maestro conectado a las órdenes de compra, con una alerta antes de emitir la orden, y el código de rubro común (caso 2)"
+    },
+    {
+      "id": "550588a9-5cd2-4666-8ccf-5720183615fe",
+      "code": "GP-4",
+      "title": "Acuerdos de reunión digitados a mano en Monday.com",
+      "dept_id": "2fc55672-1df6-48bf-99c5-fc1db28e67bb",
+      "dept_name": "PM Studio Domus",
+      "status": "waiting",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": "Formato para Monday.com",
+      "solution": "### El reto\n\nEl equipo está en plena capacitación de Monday.com. Existe el riesgo de que la herramienta sea una carga más si cada tarea, fecha y asignación se transcribe a mano después de cada reunión semanal de coordinación.\n\n### Solución (Configuración, con revisión humana)\n\n1. **Tablero estándar** para el flujo semanal del equipo (Diseño, BIM, Ingenierías Externas, Cliente), que armo yo y valida el equipo.\n2. **Monday AI (función nativa)** para desglosar actividades complejas en subtareas a partir de una descripción breve. **Monday AI propone; la persona confirma**, ajusta fechas y asigna formalmente al responsable.\n3. **Automatizaciones nativas, sin código:**\n   * *Seguimiento:* alertas los viernes con los pendientes críticos de la semana para la reunión del lunes.\n   * *Dependencias visibles:* aviso al equipo de Arquitectura cuando una ingeniería externa cargue su revisión, para evitar llamadas y correos.\n4. **Conexión con las minutas:** los acuerdos aprobados de la minuta (GP-1) se asignan en el tablero con un clic.\n\n> Límite: no se define aquí indicadores de desempeño por equipo en Monday.com; se cotizan aparte si el equipo lo pide.",
+      "summary": "Tablero estándar y automatizaciones nativas de Monday.com; Monday AI propone y la persona confirma"
+    },
+    {
+      "id": "91ba7ff3-c16b-4a07-8003-abcc4371bb4c",
+      "code": "ARQ-4",
+      "title": "Renders conceptuales con geometría deformada",
+      "dept_id": "e17c8121-c7fd-49df-be7b-62959e3e77e5",
+      "dept_name": "Arquitectura",
+      "status": "pending",
+      "priority": "low",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "* **Causa:** los modelos de imagen generales no toman como referencia la volumetría 3D, así que inventan perspectivas y producen errores anatómicos.\n* **Recomendación:** una **herramienta de render fiel al modelo**, **la misma que se recomienda para DW-4 e INT-1**, para que Domus compre una herramienta y no tres. Debe bloquear la geometría de la vista 3D y dejar que la IA solo cambie materiales, iluminación y entorno. Candidatas a probar: EvolveLab Veras (dentro de Revit, Rhino o SketchUp) y Krea AI.\n* **Decisión:** la herramienta se decide después de la prueba.\n* **Prioridad:** baja-media, porque los entregables técnicos finales usan el flujo de render estándar.",
+      "summary": "Una herramienta de render fiel al modelo, la misma que se recomienda para DW-4 e INT-1"
+    },
+    {
+      "id": "c58ecc11-4a9a-40d9-83bf-3e17dcd76864",
+      "code": "BIM-5",
+      "title": "Armar 15 a 16 colecciones de planos por nivel",
+      "dept_id": "3ad4acfe-7cd0-4b19-abbd-bb556e2e3885",
+      "dept_name": "BIM",
+      "status": "pending",
+      "priority": "medium",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "* **Causa:** por cada nivel, las vistas se duplican, se asignan plantillas de vista y se colocan a mano las vistas, los cuadros y los rótulos.\n* **Solución (Configuración):** **generación masiva de hojas** a partir de una matriz de configuración que armo con el equipo (nombres de colecciones, nombres de niveles, IDs de plantillas de vista y posiciones del rótulo), con la función de generación de hojas de la misma suite de complementos. Las plantillas propias del equipo son la fuente.\n* **Validación:** generar un nivel y compararlo con el nivel que el equipo armó a mano.",
+      "summary": "Generación masiva de hojas a partir de las plantillas del equipo"
+    },
+    {
+      "id": "68db8535-66b4-4d24-9e2b-413cd248abda",
+      "code": "INT-1",
+      "title": "Ediciones de render que deforman el espacio y acceso limitado a las herramientas de imagen",
+      "dept_id": "3ef4e13e-bd3f-4071-bba5-b0764f99d0b8",
+      "dept_name": "Interiores",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "### Diagnóstico\n\n* Los diseñadores se frenan por acceso limitado: una sola cuenta compartida de ChatGPT Plus y Midjourney prestado de Domus Works.\n* Necesitan iterar sin miedo a gastar créditos, agotar límites o quedarse sin acceso.\n* Los generadores de chat resintetizan la escena completa, deforman la perspectiva espacial y alteran objetos o mobiliario vecino.\n\n---\n\n### Ecosistema de Herramientas para Interiores (Fidelidad Espacial)\n\nPara evitar tres compras distintas en la empresa, Interiores comparte la misma suite especializada evaluada en **DW-4** y **ARQ-4**, estructurada en tres niveles técnicos:\n\n#### 1. Renders Fieles al Modelo 3D (Preservación Geométrica)\nBloquean la geometría (muros, cielo falso, vanos y carpinterías fijas) mientras reestilizan acabados, tapicería, iluminación y texturas:\n* **Veras (EvolveLAB):** Se integra directamente a Revit y SketchUp. Permite cambiar materiales de piso, muros o plafones en el render interior manteniendo la perspectiva y proporciones exactas del modelo.\n* **LookX AI:** Motor especializado en arquitectura e interiores con control estricto de geometría mediante mapas de bordes y segmentación de superficies.\n* **MyArchitectAI:** Transforma vistas preliminares o modelos básicos de interiores en renders hiperrealistas en segundos con alta precisión geométrica.\n* **xFigura AI:** Motor de composición para interiores residenciales y corporativos, ideal para consistencia de luz y mobiliario.\n\n#### 2. Edición Avanzada por Nodos y Microtextura\n* **ComfyUI:** Control paramétrico por nodos (ControlNet/DepthMap) para congelar la estructura del espacio y modificar únicamente elementos específicos sin resintetizar el cuarto.\n* **Krea AI (Krea Nodes):** Interfaz visual por nodos para composición de materiales y reiluminación en tiempo real.\n* **Magnific AI:** Referencia para reescalado (*upscaling*) y microtextura fotorrealista (vetas de madera, tramas de tela, reflejos de mármol) con creatividad en nivel mínimo para no inventar volumen.\n\n#### 3. Escala y Personajes Humanos: Adobe Firefly\n* **Adobe Firefly (Human Generator):** Opción inmediata con las licencias activas de Adobe de Domus. Permite integrar personas fotorrealistas en oficinas o amenidades residenciales mediante Photoshop (Generative Fill / Firefly), evitando la piel plástica o rostros deformes.\n\n---\n\n### Recomendación Escalonada (De lo que ya tienen a lo que se agrega)\n\n1. **Edición por región con herramientas que Domus ya paga:** Relleno generativo de Photoshop (Firefly) con pincel de selección para cambiar la tela de un sillón, un tapiz o un vidrio esmerilado sin alterar la geometría alrededor.\n2. **Reglas claras de acceso:** Cada diseñador con su propio acceso individual y un acuerdo formal para el uso de herramientas de imagen, de modo que nadie dependa de pedir favores a otros equipos.\n3. **Flujo para la prueba de 2 semanas:** Evaluar **Veras**, **LookX AI** o **MyArchitectAI** junto con **ComfyUI/Krea Nodes** y **Magnific AI**. El presupuesto contempla 2 usuarios de Interiores compartiendo estas herramientas con DW y Arquitectura.\n\n---\n\n### Protocolo de Uso (Imagen Libre, Video Deliberado)\n\n* **Imagen:** Exploración sin restricciones para moodboards, cambios de material y color, y variaciones de acabado.\n* **Video:** Paso deliberado. Se genera solo después de que la imagen estática está aprobada por la jefa del equipo (usando **Kling AI** o **Runway** de **DW-5** para fondos de presentación o videos conceptuales).\n\n### Criterio de Éxito\n\nUn cambio de acabado sobre un render base mantiene la geometría y la perspectiva sin repetir el render desde cero. La prueba se realiza con 3 renders reales del equipo de Interiores.",
+      "summary": "Edición por región con las herramientas que ya tienen; si no alcanza, una herramienta de render fiel al modelo (la misma de DW-4 y ARQ-4); reglas claras de acceso para cada diseñador"
+    },
+    {
+      "id": "4e7c2b60-e1f3-4318-b09e-2d3f3c2f72bb",
+      "code": "GP-2",
+      "title": "Reuniones presenciales y en obra sin registro",
+      "dept_id": "2fc55672-1df6-48bf-99c5-fc1db28e67bb",
+      "dept_name": "PM Studio Domus",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "### El reto\n\n* **Falta de trazabilidad en campo:** En recorridos de obra y reuniones presenciales con clientes o contratistas, los acuerdos técnicos, instrucciones y compromisos de entrega se comunican verbalmente o quedan dispersos en anotaciones manuales y chats de WhatsApp.\n* **Limitación de bots virtuales tradicionales:** Las herramientas automáticas de videollamada no se integran de forma natural en el entorno físico de obra sin un flujo estructurado de captura móvil.\n* **Carga administrativa y riesgo de discrepancias:** El gerente de proyecto debe reconstruir las minutas de memoria o a partir de notas fragmentadas, provocando demoras y posibles desalineaciones contractuales.\n\n### Estrategia de captura presencial en 3 niveles (Recomendación)\n\n1. **Nivel 1: Aprovechamiento de herramientas actuales (sin costo adicional):**\n   * Grabar directamente desde el **dispositivo móvil** del gerente o residente de obra.\n   * Utilizar las herramientas de transcripción ya licenciadas en Domus, como la aplicación móvil de **Read AI** (si el plan contratado admite captura de audio local) o las funciones nativas de grabación y transcripción en **Google Workspace / Gemini móvil**.\n   * El texto transcrito se canaliza al asistente de minutas (**GP-1**) para generar el acta ejecutiva con el glosario técnico guatemalteco.\n\n2. **Nivel 2: Alternativa especializada recomendada (si Read AI no satisface la necesidad en obra):**\n   * Si la interfaz móvil de Read AI resulta poco práctica en campo, o si la separación de múltiples voces y la precisión del español técnico en ambientes abiertos no alcanza el estándar requerido, se recomienda habilitar **[Otter.ai](https://otter.ai/)**.\n   * **Ventajas de Otter.ai:** Aplicación móvil nativa de alto rendimiento (iOS y Android), transcripción y diarización (identificación de interlocutores) en tiempo real con o sin conexión inmediata, sincronización automática a la nube y generación instantánea de notas clave y tareas accionables.\n\n3. **Nivel 3: Hardware complementario (únicamente por excepción):**\n   * Incorporar micrófonos inalámbricos de solapa (lapel/lavalier) o micrófonos direccionales para smartphone **únicamente si una prueba piloto en obra** demuestra que el ruido ambiental (maquinaria, viento, tráfico) degrada significativamente la inteligibilidad del audio.",
+      "summary": "Captura móvil con herramientas vigentes (Read AI / Workspace) y Otter.ai como alternativa especializada si se requiere mayor precisión en obra; equipo adicional solo si la acústica lo exige."
+    },
+    {
+      "id": "3ddc1420-c720-4860-ac2c-11441fda80d6",
+      "code": "VE-1",
+      "title": "Reportes del embudo armados a mano entre dos CRM",
+      "dept_id": "56b2b197-18e7-45af-948f-0945e5b22c63",
+      "dept_name": "Ventas Studio Domus",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "* **Causa:** el seguimiento de los negocios está dividido entre Monday.com y notas manuales, así que la gerencia copia y pega registros de negocios en cuentas de LLM de consumo para las actualizaciones semanales.\n* **Solución (Configuración):**\n  1. **Elegir un CRM como fuente única del embudo.** Monday.com ya tiene licencia (sin puestos nuevos), así que es el candidato por defecto. **Es una decisión de los dos socios:** si uno no lo va a usar, la alternativa es un seguimiento compartido en Google Sheets como fuente, nunca dos fuentes que se concilien a mano.\n  2. Un tablero estándar con etapas del negocio, monto, probabilidad, próxima acción y la persona de Domus que tiene la relación.\n  3. Un **resumen semanal** (conversión, ganados y perdidos, pronóstico ponderado) armado con apoyo de IA a partir de la exportación del CRM. Los socios lo revisan antes de enviarlo a cualquier parte.\n* **Herramientas:** la herramienta base de todos es Gemini en Google Workspace; no se asume ningún puesto de pago adicional.\n* **Nota:** el borrador anterior proponía una sincronización en dos sentidos entre Monday.com y Sheets mediante Make.com. La propuesta final la descarta: dos CRM con sincronización es justo el problema que hay que eliminar.",
+      "summary": "Un CRM como fuente única del embudo, más un resumen semanal armado con apoyo de IA"
+    },
+    {
+      "id": "94b28af1-e13a-48a7-8de9-f4ee5ebbed0d",
+      "code": "DW-1",
+      "title": "Pauta digital revisada solo 3 días a la semana; picos en el costo por lead",
+      "dept_id": "3a970482-d817-46ab-add8-817d0580a475",
+      "dept_name": "Domus Works",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "### 1. El Problema Operativo\n* **Ventanas ciegas de fin de semana:** La pauta digital se revisa manualmente los lunes, miércoles y viernes. Si un anuncio se dispara en costo durante un fin de semana, el presupuesto se quema antes de que alguien pueda detectarlo el lunes.\n* **Solución sin costo adicional:** Utilizar el motor nativo de **Reglas Automáticas de Meta Ads**, configurando un centinela que monitoree la cuenta continuamente las 24 horas y alerte al equipo en el instante exacto en que un costo sobrepase el límite.\n\n---\n\n### 2. Guía Paso a Paso: Cómo Crear la Regla en Meta Ads Manager\n\nPara que el equipo de pauta configure la regla por su cuenta directamente en su Business Manager:\n\n1. **Ingresa a la sección de reglas:** Abre el [Administrador de Reglas Automáticas de Meta](https://adsmanager.facebook.com/ads/manager/rules/management/).\n2. Haz clic en el botón verde superior **«+ Crear regla»** y selecciona **«Crear una regla personalizada»**.\n3. Configura exactamente los valores que se muestran en la siguiente captura:\n\n![Configuración exacta de la regla personalizada en Meta Ads Manager](/images/dw1-meta-regla-configurada.jpg)\n\n### ▸ A. Checklist de Campos a Seleccionar en la Pantalla\n\nSigue punto por punto los campos del formulario según la imagen:\n\n* **Nombre de la regla:**\n  * Escribe un identificador claro, por ejemplo: `Alerta CPL Alto (> Q100) - Revisión Urgente` o `[Campaña] Alerta CPL Límite`.\n* **Aplicar regla a:**\n  * Selecciona del menú: **«Todos los anuncios activos»** (o conjuntos específicos según la campaña que se esté supervisando).\n* **Acción:**\n  * Selecciona: **«Solo enviar notificaciones»**.\n  * *(Nota: Esta opción es 100% segura; no apaga anuncios ni modifica presupuestos, únicamente envía la alerta para que un humano tome la decisión).*\n* **Condiciones (Los 2 filtros indispensables):**\n  * **1. Impresiones totales:** Agrega la condición *«Impresiones totales: > 8000»*.\n    * *¿Por qué 8,000 impresiones?* Evita falsos positivos. Si un anuncio nuevo tiene 10 impresiones y 1 clic caro, el costo promedio temporal se verá inflado artificialmente. Al exigir un piso de 8,000 impresiones, nos aseguramos de que el anuncio ya tuvo suficiente muestra estadística.\n  * **2. Costo por resultado:** Agrega la condición *«Costo por resultado: > Q100,00»* (o el umbral meta acordado en Quetzales o Dólares para ese proyecto).\n* **Período:**\n  * Despliega el menú y selecciona: **«Últimos 2 días, sin contar el día en curso»**.\n  * *¿Por qué sin contar el día en curso?* Porque los datos del día de hoy tardan horas en atribuirse en Meta. Tomar los 2 días cerrados anteriores proporciona una lectura sólida de la tendencia real del fin de semana.\n* **Programación:**\n  * Marca la casilla: **«Continua»**.\n  * *(Meta ejecutará la comprobación automáticamente cada 30 a 60 minutos, los 7 días de la semana).*\n* **Finalizar:**\n  * Haz clic en el botón azul **«Crear»** (esquina inferior derecha).\n\n---\n\n### 3. Qué Hacer Cuando Llegue la Alerta\n1. **Notificación en buzón y centro de alertas:** Meta enviará un aviso indicando qué anuncio específico cruzó el umbral de los Q100.\n2. **Revisión en Monday.com:** El media buyer responsable abre el anuncio y decide si:\n   * **Rotar el creativo:** Si la frecuencia ya es alta y el público se agotó.\n   * **Ajustar segmentación:** Si la audiencia objetivo se saturó.\n   * **Mantener:** Si fue una fluctuación puntual antes de un evento de lanzamiento.\n\n---\n\n### 4. Lo que NO se debe activar\n* **Reglas de aumento automático de presupuesto:** Meta sugiere reglas para subir presupuesto diario en 10% o 20% automáticamente. **No recomendamos activarlas**, ya que cualquier incremento de presupuesto debe ser validado por el comprador de medios y aprobado con el cliente.",
+      "summary": "Guía paso a paso con captura de pantalla para que el equipo configure la regla centinela en Meta Ads"
+    },
+    {
+      "id": "e5861f6d-7679-4539-86f8-18d7c8ad712f",
+      "code": "COM-1",
+      "title": "Búsqueda manual de proyectos en foros y listados",
+      "dept_id": "addf9124-278e-4eb4-8fc1-2c00527e56b6",
+      "dept_name": "Domus Works Clients",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Herramienta primero",
+      "waiting_for": null,
+      "solution": "### Qué hace el agente\n\nUn agente de IA ya disponible (configurado por mí, con la aprobación del equipo) que:\n\n1. Vigila las fuentes públicas que el equipo usa hoy (hilos y listados de SkyscraperCity Guatemala).\n2. Detecta publicaciones que mencionan un proyecto nuevo, una excavación, un permiso o una desarrolladora.\n3. **Alerta al equipo** con un registro corto: nombre del proyecto, zona o dirección, desarrolladora o entidad mencionada y un resumen de dos frases. Si la publicación no trata de un proyecto inmobiliario, se queda en silencio.\n4. Entrega la alerta al Gmail del ejecutivo o a un tablero de entrada en Monday.com. El ejecutivo verifica la información y decide qué hacer.\n\nPrompt de extracción para cada actualización (una persona lee el resultado; el agente nunca contacta a nadie):\n\n```markdown\nAnaliza esta actualización del foro SkyscraperCity Guatemala.\nExtrae:\n- Nombre del proyecto:\n- Zona / dirección exacta:\n- Desarrolladora / entidad mencionada:\n- Resumen de la novedad (máximo 2 frases):\nSi no se discute un proyecto inmobiliario, responde \"SIN_SEÑAL\".\nNo inventes datos: si algo no aparece en el texto, escribe \"NO CONSTA\".\n```\n\n### Salvaguardas\n\n* **Solo lectura:** sin capacidad de enviar correos, iniciar sesiones de WhatsApp ni programar eventos.\n* **Cada alerta es verificable:** enlaza a la publicación que la activó.\n* **El ejecutivo decide** si aprueba el contacto o descarta el prospecto.\n\n### Medida de éxito (a acordar con el líder del equipo antes de empezar)\n\nLas horas por día que el ejecutivo pasa hoy navegando foros y listados, comparadas al final, y cuántos proyectos descubrió el agente que el ejecutivo no había visto.\n\n### Términos\n\n* Incluye el agente corriendo en las cuentas de Domus, un diagrama y manual de operación, pruebas con datos reales aprobadas por el líder del equipo y una sesión de 60 minutos con las personas que lo usarán.\n* **30 días de correcciones** después de la entrega, sin costo.",
+      "summary": "Un agente de IA ya disponible que vigila foros y listados y alerta al equipo de proyectos nuevos"
+    },
+    {
+      "id": "c794ef8b-ef84-41d9-aa09-09ad6e40dd98",
+      "code": "DW-5",
+      "title": "Personajes que cambian entre tomas de video",
+      "dept_id": "3a970482-d817-46ab-add8-817d0580a475",
+      "dept_name": "Domus Works",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "### Causa del Problema\n\nLa animación en Midjourney genera clips muy cortos con movimiento sutil, sin control de trayectoria de cámara ni fotogramas clave entre escenas, y aleatoriza los rostros y el vestuario en cada generación.\n\n---\n\n### Herramientas Ganadoras para Calidad de Video\n\nPara animación de estilo de vida inmobiliario y recorrido cinematográfico, dos herramientas son las ganadoras claras de la industria:\n\n* **Kling AI (kling.ai):** Sobresale por su adherencia física, realismo en movimientos de personas y continuidad de personajes entre tomas continuas.\n* **Runway (runway.com / Gen-3 Alpha):** Referencia en control cinematográfico: permite fijar fotogramas iniciales y finales (*first & last frame*), definir trayectorias de cámara dirigidas (*camera motion control*) y usar pincel de movimiento (*motion brush*) para mover únicamente agua, árboles o personas mientras la fachada del edificio permanece 100% estática.\n\n---\n\n### Método de Consistencia Recomendado (Con seguimiento de calidad)\n\n1. **Turnaround Sheet (Hoja de giro):** Crear vistas frontal, tres cuartos y lateral de cada persona compradora objetivo (ejecutivo joven, familia en crecimiento, pareja madura).\n2. **Composición fija previa:** Montar a la persona aprobada en la escena en Photoshop (usando **Adobe Firefly** de **DW-4**).\n3. **Animación dirigida:** Exportar a **Kling AI** o **Runway** usando fotogramas clave inicial y final, activando el pincel de movimiento para aislar follaje, piscina o tráfico y congelar la estructura arquitectónica.\n\n---\n\n### Alternativa Más Simple con Midjourney\n\n* Usar el parámetro de consistencia de personaje (`--cref`) para anclar rostro y vestuario en 6 a 8 escenas fijas.\n* Animar únicamente movimientos leves de cámara o ambiente.\n* **Montaje en Premiere:** Unir las tomas en el software de edición con ritmo, música y tipografía. Evita el *morphing* indeseado, aunque no ofrece la continuidad fluida de un video generado con Kling o Runway.\n\n> **Regla de oro:** El video es un paso deliberado. Solo se genera video después de que la imagen estática fue formalmente aprobada; la exploración se mantiene en imágenes fijas.",
+      "summary": "Recomendación de un método para mantener la consistencia de los personajes entre tomas, con seguimiento de calidad; con Midjourney, una alternativa más simple"
+    },
+    {
+      "id": "c0c1089f-8c0b-4ce3-a616-e120784f84c3",
+      "code": "CON-4",
+      "title": "Nadie mide cuánto tardan las tareas",
+      "dept_id": "17e569fb-ab1a-48da-ba34-6d0ed67a7f26",
+      "dept_name": "Construccion",
+      "status": "waiting",
+      "priority": "low",
+      "delivery": "Configuración",
+      "waiting_for": "Clasificación de Tiempo / Dedicación",
+      "solution": "* **Causa:** no hay horarios fijos ni medición, así que nadie sabe por qué una tarea de 15 minutos toma una hora.\n* **Solución (Configuración):** una **columna nativa de registro de tiempo en Monday.com**, **solo para las tareas repetitivas** (creación de OC, revisión de cotizaciones, extracción de garantías, visitas de supervisión de obra), con una **línea base de 30 días** y un informe de duración estimada frente a la real. Es ligero a propósito: medir todas las tareas repetiría la fricción que ya tuvo otro equipo.",
+      "summary": "Registro de tiempo ligero en Monday.com solo para tareas repetitivas, con una línea base de 30 días"
+    },
+    {
+      "id": "0b733559-2251-4a66-ba2d-87711eea16df",
+      "code": "DW-4",
+      "title": "Imágenes con aspecto de IA genérica y geometría alterada",
+      "dept_id": "3a970482-d817-46ab-add8-817d0580a475",
+      "dept_name": "Domus Works",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "### 1. Diagnóstico: Lo que Identificó el Equipo\n\n> *\"El cliente viene y dice: 'ah, esto se ve muy de IA'... al final todas mis cuentas se están viendo exactamente iguales.\"*\n\nCuando los activos de baja resolución o los renders 3D volumétricos del cliente pasan por modelos de difusión sin condicionamiento estricto, se generan tres fricciones principales:\n\n1. **Deriva geométrica:** El motor reinterpreta vanos, desplaza barandales, modifica perfiles de fachada y altera proporciones arquitectónicas aprobadas.\n2. **Look plástico en personas:** Anatomías forzadas y texturas hiper-suavizadas que revelan inmediatamente el uso de filtros sintéticos.\n3. **Pérdida de identidad de marca:** Todos los proyectos terminan compartiendo la misma colorimetría saturada y la misma iluminación dramática por defecto.\n\n---\n\n### 2. Ecosistema de Herramientas Recomendadas para la Prueba\n\nPara resolver la deriva geométrica y el aspecto genérico de manera definitiva, estructuramos las opciones técnicas en tres categorías:\n\n#### A. Herramientas Especializadas en Geometría Arquitectónica\nBloquean la geometría (muros, vanos, alturas y carpinterías) mientras reestilizan materiales, iluminación, paisajismo y cielo:\n* [**Veras (EvolveLAB)**](https://www.evolvelab.io/veras): Motor integrado directamente a Revit, Rhino y SketchUp. Respeta la volumetría del modelo 3D y genera variaciones fotorrealistas sin deformar barandales o carpinterías.\n* [**LookX AI**](https://www.lookx.ai/): Plataforma de renderizado arquitectónico entrenada en proyectos reales. Permite control estricto de geometría mediante referencias de líneas y segmentación de materiales.\n* [**MyArchitectAI**](https://www.myarchitectai.com/): Diseñada para transformar vistas básicas de CAD/BIM en renders realistas en segundos manteniendo estricta fidelidad espacial.\n* [**xFigura AI**](https://xfigura.com/): Motor especializado en composición arquitectónica y consistencia espacial para proyectos comerciales y residenciales.\n\n#### B. Edición Avanzada por Nodos (Control Paramétrico de Pipeline)\nPara la Célula de Diseño que requiere control fino de capas, mapas de profundidad (*DepthMap*) y extracción de bordes (*ControlNet Canny/LineArt*):\n* **ComfyUI:** El entorno por nodos más potente y flexible. Congela la geometría exacta mediante condicionamiento de bordes y controla cada paso de difusión sin alucinaciones.\n* **Krea AI (Krea Nodes):** Interfaz visual intuitiva por nodos con previsualización en tiempo real y reiluminación controlada.\n* [**Magnific AI**](https://magnific.ai/): La referencia de la industria para aumento de resolución ([Upscaling](https://docs.midjourney.com/hc/en-us/articles/32804058614669-Upscalers)) extremo y transferencia de textura fotorrealista manteniendo la creatividad en nivel mínimo (`0` o `1`) para no inventar volumen.\n\n#### C. Escala y Personajes Humanos: Adobe Firefly\n* **Adobe Firefly / Photoshop Generative Fill:** Solución nativa cubierta bajo las licencias activas de Adobe en Domus. En lugar de pedirle a un motor de difusión que genere personas y arquitectura a la vez, se componen figuras fotorrealistas directamente como recortes sobre el render terminado, eliminando el aspecto plástico y errores anatómicos.\n\n---\n\n### 3. Recomendación Operativa (Dos Caminos de Implementación)\n\n#### Opción A: Pipeline con Preservación de Geometría y Nodos (Recomendada a Mediano Plazo)\n1. Bloquear estructura base en **Veras**, **LookX AI** o **MyArchitectAI** (o vía nodos en **ComfyUI / Krea Nodes**).\n2. Refinar texturas y microdetalles en **Magnific AI** con creatividad en nivel mínimo.\n3. Incrustar y adaptar escala humana real con **Adobe Firefly** dentro de Photoshop.\n\n#### Opción B: Optimización Rigurosa en Midjourney (Si el Equipo Permanece Temporalmente en la Herramienta)\nPara eliminar el look genérico de IA en Midjourney sin adquirir software adicional, el equipo debe estandarizar el uso de parámetros técnicos obligatorios y sustituir adjetivos subjetivos por tokens de óptica física:\n\n##### 1. Flags y Parámetros Técnicos Clave\n* [**`--style raw`**](https://docs.midjourney.com/hc/en-us/articles/32634113811853-Raw): **Indispensable.** Desactiva el procesado estético automático de Midjourney (el cual tiende a inyectar saturación excesiva, reflejos artificiales y texturas sintéticas).\n* [**`--stylize 50` a `--s 120`**](https://docs.midjourney.com/hc/en-us/articles/32196176868109-Stylize): Mantiene la estilización moderada. Valores altos (`--s 750+`) provocan alucinaciones y deformación en fachadas y carpinterías.\n* [**`--iw 2.0`**](https://docs.midjourney.com/hc/en-us/articles/32040250122381-Image-Prompts): Máximo peso de imagen (*Image Weight*). Recomendado al usar como referencia la URL de un render 3D o foto de fachada del cliente para anclar la composición y volumen.\n* [**`--ar 16:9` / `--ar 4:5`**](https://docs.midjourney.com/hc/en-us/articles/31894244298125-Aspect-Ratio): Define la relación de aspecto comercial de entrada, evitando reencuadres que alteren la perspectiva arquitectónica.\n* [**`--p [código]`**](https://docs.midjourney.com/hc/en-us/articles/32433330574221-Personalization): Aplica el código de personalización exclusivo de la cuenta o proyecto (ver Sección 4).\n* Consulte la lista completa de parámetros en la [Documentación Oficial de Parámetros de Midjourney](https://docs.midjourney.com/hc/en-us/articles/32859204029709-Parameter-List).\n\n##### 2. Edición Regional en el Canvas Web (Vary Region)\n* Migrar del canal de Discord al [Midjourney Web Alpha Editor](https://midjourney.com/imagine).\n* Utilizar la herramienta de pincel **Vary (Region)**: bloquear la fachada completa del edificio y pintar *únicamente* cielo, pavimento, iluminación de fondo y vegetación perimetral. Esto garantiza **cero deriva geométrica** en la arquitectura original.\n\n##### 3. Sustitución de Términos: De Modificadores Genéricos a Tokens Técnicos\n\n| Términos Desaconsejados (Generan estética genérica de IA) | Tokens Técnicos Recomendados (Fuerzan fidelidad óptica) |\n| :--- | :--- |\n| `photorealistic`, `hyperrealistic`, `ultra-realistic` | `architectural editorial photograph`, `Architectural Digest style` |\n| `8k`, `4k resolution`, `masterpiece`, `trending on artstation` | `shot on Hasselblad H6D-100c`, `medium format capture` |\n| `beautiful cinematic lighting`, `unreal engine 5` | `natural morning overcast daylight`, `diffused soft sidelight` |\n| `perfect building`, `luxury materials` | `honed travertine texture`, `matte concrete finish`, `fluted oak details` |\n| Ángulos sin definir (la IA inventa fugas extrañas) | `24mm tilt-shift lens`, `eye-level one-point perspective` |\n| Colores hipersaturados por defecto | `neutral color grade`, `subtle photographic film grain` |\n\n##### 4. Fórmula Modular Estándar (Plantilla de Prompting)\n```text\n[Espacio arquitectónico + Función], [2-3 Materiales físicos tangibles con su acabado], architectural editorial photograph, Architectural Digest style, shot on Hasselblad H6D-100c, 24mm tilt-shift lens, eye-level one-point perspective, natural morning overcast daylight, neutral color grade, subtle film grain --ar 16:9 --style raw --s 100 --iw 2.0 --v 6.1\n```\n\n---\n\n### 4. Prueba Comparativa A/B (Para Validar en el Equipo)\n\nPara evaluar en la práctica cómo influyen estos modificadores sobre una misma escena arquitectónica residencial contemporánea, se ejecutó una prueba comparativa **generando ambas imágenes directamente en ChatGPT**:\n\n> **Nota técnica:** Ambas imágenes de muestra fueron generadas utilizando **ChatGPT** (mismo modelo base de difusión) para evidenciar cómo la sustitución de adjetivos genéricos por parámetros y tokens de fotografía arquitectónica transforma por completo el acabado, la luz y la fidelidad de las líneas.\n\n#### Test A — Con Términos Genéricos Habituales (Estética de IA por defecto)\n> `Modern luxury residential building facade with swimming pool, large glass windows, fluted oak siding, photorealistic, hyperrealistic, ultra-realistic, 8k resolution, trending on artstation, masterpiece, unreal engine 5, beautiful cinematic lighting, perfect architecture, luxury materials --ar 16:9 --v 6.1`\n\n* **Resultado:** Iluminación teatral de atardecer dorado, reflejos especulares exagerados en el agua y cristales, saturación alta y acabado suave tipo motor de videojuegos.\n\n![Test A: Generada en ChatGPT con términos genéricos habituales e iluminación artificial de atardecer](/images/dw4-test-a-generico.jpg)\n\n#### Test B — Con Tokens Técnicos y Parámetros Recomendados (Criterio Fotográfico)\n> `Modern residential facade with matte concrete panels and fluted oak siding, reflection pool in foreground, architectural editorial photograph, Architectural Digest style, shot on Hasselblad H6D-100c, 24mm tilt-shift lens, eye-level one-point perspective, natural morning overcast daylight, neutral color grade, subtle photographic film grain --ar 16:9 --style raw --s 100 --v 6.1`\n\n* **Resultado:** Líneas verticales rectas (sin distorsión cónica de lente), iluminación ambiental suave y difusa, texturas de concreto y madera mates y tangibles, y una paleta de color neutral y publicable.\n\n![Test B: Generada en ChatGPT con tokens fotográficos técnicos y preservación geométrica](/images/dw4-test-b-parametros.jpg)\n\n---\n\n### 5. Firma Visual Distinta por Cliente (Identidad de Cuenta)\n\nPara erradicar la monotonía en la que todos los desarrolladores lucen idénticos:\n1. Cada cuenta de desarrollador cuenta con su propio **ancla de estilo** en la biblioteca compartida (**DW-3**).\n2. Se compilan 10 a 20 imágenes aprobadas del desarrollador (fotografía de acabados reales, iluminación de marca y paleta cromática) para generar un **perfil de personalización** ([`--p`](https://docs.midjourney.com/hc/en-us/articles/32433330574221-Personalization)) o moodboard independiente.\n3. El diseñador concatena el código `--p [código_proyecto]` al final de la fórmula, asegurando que un render de *Cañadas* nunca comparta la atmósfera lumínica de un proyecto de playa o corporativo.\n\n---\n\n### 6. Protocolo de Validación y Seguimiento de Calidad\n\nAntes de adoptar nuevas suscripciones o modificar los acuerdos de entrega con clientes:\n* **Prueba piloto:** 2 diseñadores líderes ejecutan pruebas comparativas sobre **3 renders reales de clientes** durante 2 semanas.\n* **Criterios de éxito evaluados:**\n  1. **Fidelidad geométrica:** Cero alteración en cancelerías, modulación de balcones y alturas respecto al archivo CAD.\n  2. **Calidad de figuras humanas:** Ausencia de piel plástica o deformidades (aprobadas mediante fotomontaje en Adobe Firefly).\n  3. **Diferenciación de marca:** Capacidad de distinguir el estilo visual de dos desarrolladores distintos en una prueba a ciegas.",
+      "summary": "Recomendación de un flujo de imagen que conserve la geometría del edificio, con seguimiento de calidad; si el equipo se queda en Midjourney, optimizar cómo se usa hoy"
+    },
+    {
+      "id": "6aba2c38-8cc4-4bc1-92ab-fd2cd3990ffb",
+      "code": "CON-3",
+      "title": "Órdenes de compra hechas a mano",
+      "dept_id": "17e569fb-ab1a-48da-ba34-6d0ed67a7f26",
+      "dept_name": "Construccion",
+      "status": "pending",
+      "priority": "medium",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "* **Causa:** las cotizaciones llegan como PDF o correos sin estructura; el personal redigita renglones, cantidades, precios y condiciones, guarda los PDF y envía correos a finanzas y al proveedor.\n* **Solución (Configuración):** la IA **prepara el borrador** a partir de la cotización y una persona revisa y aprueba. Dos formas, ambas con un punto de decisión humano:\n  * **Flujo A (asistente de la herramienta base):** arrastrar la cotización al asistente con un prompt fijo que devuelve una tabla (proveedor, NIT, dirección de entrega, renglones, cantidades, precios unitarios, subtotal, impuestos, total, condiciones de pago), y luego pegarla en la plantilla de OC.\n  * **Flujo B (Monday.com):** adjuntar la cotización a un elemento; un borrador llena las columnas de la OC y pone el estado \"Borrador, pendiente de revisión del PM\". El PM revisa las cifras y el cumplimiento del presupuesto (CON-2) y solo entonces hace clic en \"Aprobar y despachar\".\n* **No incluido:** ningún paso que envíe un correo a un proveedor o a finanzas sin que una persona haga clic.",
+      "summary": "La IA prepara el borrador de la orden a partir de la cotización; una persona revisa y aprueba. Nada se envía automáticamente"
+    },
+    {
+      "id": "dd7289f9-bbd4-424d-b90a-b32612ed059c",
+      "code": "GD-4",
+      "title": "Estrategia de marca sin apoyo de IA al inicio",
+      "dept_id": "fcb1a87f-f11a-48bb-9753-6083a44bf9f0",
+      "dept_name": "PM Domus Works",
+      "status": "in_progress",
+      "priority": "low",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "- **Camino:** Prompts. La estrategia la decide el equipo; el asistente estructura el arranque de cada cuenta o campaña sin caer en los lugares comunes de la IA (*«empodera tu camino»*, *«conecta de forma fluida»*, *«eleva tu potencial»*).\n- **Principio clave:** en lugar de pedir «más creatividad», se imponen **límites negativos estrictos** (lo que la marca jamás diría) y **marcos de pensamiento lateral**.\n\n### Flujo rápido de trabajo (4 pasos)\n\n1. **Extraer ADN (opcional en Gemini):** sube el manual de marca o brief en PDF completo para extraer valores innegociables y fricciones.\n2. **Anclar contexto:** pega la **Cápsula de ADN de Marca** en el proyecto de ChatGPT antes de tirar la primera línea.\n3. **Divergir en ChatGPT:** aplica una de las 3 dinámicas de ideación (*Colisión Forzada*, *Método Inverso* o *Tensiones Reales*) y el *Moodboard Multisensorial*.\n4. **Auditar (opcional en Gemini):** pasa las 3 ideas finalistas por una revisión crítica de viabilidad operativa antes de presentar al cliente.\n\n---\n\n## 1. Base obligatoria: Cápsula de ADN del Cliente\n\nPega esta plantilla al iniciar el chat o guárdala en las instrucciones del proyecto del equipo (también alimenta el asistente mensual de **GD-2**). Las restricciones negativas eliminan hasta el 80% de las respuestas genéricas antes de empezar a pelotear.\n\n```plantilla\n[CÁPSULA DE ADN DE MARCA]\n- Marca y Categoría: \n- La Fricción Central / El \"Enemigo\": (¿Qué vicio de la industria, cliché o creencia común combate abiertamente la marca?)\n- Espectro de Tono: (Ej: Irónico pero cercano; técnico y elegante; cero pretencioso; callejero pero pulido. Jamás condescendiente; jamás corporativo acartonado.)\n- Firma Visual y Sensorial: (Tipo de iluminación, texturas clave, paleta cromática, encuadres típicos)\n- Léxico Prohibido: (Palabras que la marca NUNCA usa: ej. \"revolucionario\", \"sin fricción\", \"elevar\", \"empoderar\", \"único\")\n- Clichés Vetados: (Fórmulas que usa toda la competencia en este nicho y que esta marca rechaza por completo)\n```\n\n---\n\n## 2. Dinámicas de Ideación y Moodboards (clic para abrir y copiar)\n\nElige el marco según el reto del brief. Cada tarjeta despliega el prompt listo para copiar en un clic:\n\n### ▸ A. Técnica de Colisión Forzada — Cruza el reto con las reglas y estética de otra industria\nObliga a ChatGPT a resolver el brief usando la lógica, el vocabulario y la estética de una disciplina o subcultura completamente ajena.\n\n```prompt\nActúa como un Director Creativo Ejecutivo. Revisa la Cápsula de ADN adjunta. Necesitamos 4 conceptos de campaña disruptivos para el próximo lanzamiento. Quiero que forces una colisión conceptual con las mecánicas, estética y jerga de [Elige uno: arquitectura brutalista / carreras vintage de resistencia / relojería mecánica de alta gama / la cultura de fanzines subterráneos].\n\nProhibido dar eslóganes genéricos. Para cada concepto define:\n1. El gancho central (hook).\n2. La activación física o punto de contacto tangible.\n3. Por qué rompe el ruido frente a lo que hace el resto de la categoría.\n```\n\n### ▸ B. El Método Inverso (\"La Propuesta Más Aburrida\") — Usa los clichés como espacio negativo\nHaz que el modelo expulse primero lo más predecible y obligue a construir sobre el territorio opuesto.\n\n```prompt\n¿Cuál sería la propuesta más predecible, segura y aburrida que una agencia tradicional presentaría para este brief? Dame los 3 conceptos más cliché que el 90% de las marcas en este sector siempre hacen.\n\nLuego, usando esos 3 conceptos como territorio estrictamente prohibido, propón 3 contra-propuestas radicales que deliberadamente inviertan cada una de las premisas de esos clichés.\n```\n\n### ▸ C. Brainstorming Basado en Tensiones Reales — Posturas claras sobre contradicciones de la audiencia\nLas campañas memorables no se sostienen sobre beneficios funcionales, sino sobre tensiones culturales o dudas no resueltas del público.\n\n```prompt\nA partir de la Cápsula de ADN del cliente, identifica 3 tensiones culturales, emocionales o de comportamiento que la audiencia experimenta respecto a [categoría del producto / problema].\n\nPara cada tensión, plantea un concepto de campaña donde la marca tome una postura clara y sin rodeos.\n\nCalifica cada idea del 1 al 5 en \"Nivel de Provocación\" y \"Memorabilidad\".\n```\n\n### ▸ D. Moodboarding Multisensorial — Cine, materialidad, color HEX, sonido y prompts de imagen\nEn vez de pedir \"ideas para un moodboard\", desglosa el universo físico, cinematográfico y sensorial de la campaña en 4 cuadrantes.\n\n```prompt\nActúa como director de arte. Con base en la Cápsula de ADN, arma un moodboard conceptual en 4 cuadrantes para esta campaña. Cero palabras de relleno o adjetivos vacíos. Para cada cuadrante entrega:\n\n1. Referencia Cinematográfica e Iluminación: Director o película de referencia, encuadre de cámara, hora del día y temperatura de color.\n2. Texturas y Materialidad: 4 materiales físicos tangibles (ej. aluminio cepillado mate, asfalto mojado, lino crudo).\n3. Historia de Color: 4 tonos exactos con nombres descriptivos y códigos HEX, explicando la tensión emocional que proyectan.\n4. Atmósfera y Sonido: Perfil auditivo ambiental, tipo de espacio físico y ritmo.\n5. Prompts para Generación de Imágenes: 2 prompts listos para Midjourney / generadores de imagen, especificando tipo de lente, distancia focal, iluminación y emulsión/grano (ej. 35mm, Kodak Portra 400).\n```\n\n---\n\n## 3. ¿Cómo combinar ChatGPT con Gemini en el equipo?\n\nChatGPT sigue siendo el motor diario del equipo; Gemini complementa el flujo en tres momentos donde su ventana de contexto o lectura visual dan ventaja:\n\n| Caso de uso | Ventaja de Gemini | Prompt rápido para Gemini |\n| :--- | :--- | :--- |\n| **1. Lectura de Brand Books pesados** | Procesa PDFs largos enteros sin recortar contexto. | Sube el PDF completo del cliente: *«Extrae los 5 valores innegociables y genera la Cápsula de ADN siguiendo este formato.»* |\n| **2. Revisión de realidad (*Red Teaming*)** | Contrastar dos modelos evita puntos ciegos. | Pega las 3 ideas de ChatGPT: *«Audita estas 3 ideas contra la realidad operativa del cliente. ¿Dónde se caen y cómo las aterrizamos sin quitarles filo?»* |\n| **3. Auditoría de referencias visuales** | Lectura nativa precisa de lotes de imágenes. | Sube capturas del cliente o competidores: *«Analiza el lenguaje visual y dime qué patrones cromáticos y de composición se sienten ya desgastados.»* |",
+      "summary": "Asistente de estrategia, cápsula de ADN de marca y playbook de ideación y moodboards"
+    },
+    {
+      "id": "fcf588fc-2eff-46b3-9eaa-3334318149da",
+      "code": "VE-2",
+      "title": "Se enteran tarde de las mudanzas de oficinas corporativas",
+      "dept_id": "56b2b197-18e7-45af-948f-0945e5b22c63",
+      "dept_name": "Ventas Studio Domus",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Herramienta primero",
+      "waiting_for": null,
+      "solution": "* **Camino:** Herramienta primero. La primera versión usa un **agente de IA ya disponible** (no una solución a la medida), y esa primera versión es la prueba.\n* **Qué hace:** vigila señales de mudanza (prensa corporativa regional, crecimiento de personal en puestos administrativos, nombramientos ejecutivos con mandato sobre el lugar de trabajo, vencimientos de arrendamientos en edificios Clase A) y **alerta a los socios**. Ellos deciden si contactan.\n* **Salvaguardas:** lee y alerta; no envía nada. No califica ni contacta a ejecutivos.\n* **Agente opcional, contratado por separado:** 20 a 25 horas de trabajo, con 30 días de correcciones después de la entrega.\n* **Si el agente disponible no alcanza la calidad que necesitan los socios y una versión a la medida parece viable**, se cotiza por separado, y conviene construirla junto con VE-3 sobre la misma plataforma.",
+      "summary": "Un agente de IA ya disponible que vigila señales de mudanza y alerta a los socios"
+    },
+    {
+      "id": "16bfb6fa-8f16-4712-9976-3e1a25b3707a",
+      "code": "CT-1",
+      "title": "Facturas FEL y recibos digitados a mano en Excel y Aspel",
+      "dept_id": "025c60d3-4fb6-4626-a402-54fd8239d070",
+      "dept_name": "Admin",
+      "status": "waiting",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": "Plantilla de tabulación",
+      "solution": "### Decisión central: no usar IA donde ya existe el dato estructurado\n\nPara las facturas FEL guatemaltecas, el portal de SAT ya ofrece descargas estructuradas (`.xlsx` o `.xml`). Hacer que una IA lea el PDF de esas facturas es más lento, más caro y menos exacto que convertir el archivo de SAT. Por eso la solución se divide en dos flujos:\n\n| Flujo | Documentos | Método | Quién lo arma |\n| :--- | :--- | :--- | :--- |\n| **A. Estructurado (sin IA)** | Facturas FEL con descarga de SAT | Conversión determinista de la descarga de SAT al formato de importación de Aspel (hoja con fórmulas o macro) | Yo (Configuración); el equipo valida con datos reales |\n| **B. Asistido por IA** | Facturas del exterior en USD (AWS, Google, SaaS), recibos escaneados y comprobantes de contratistas, donde no hay descarga estructurada | Extracción asistida con el prompt de la sección 5, a una tabla con las mismas columnas del flujo A | Yo escribo el prompt y la plantilla; el equipo los usa |\n\nEn ambos casos una persona revisa los totales antes de importar a Aspel. **No hay integración directa con Aspel**: se genera un archivo de importación.\n\n### Flujo B en la práctica\n\n1. El equipo crea una carpeta de entrada en Drive (`Contabilidad/Buzon_Facturas_Semana/`) o en el equipo local (`Facturas_Semana/`).\n2. Deja solo los documentos que no vienen de SAT en formato estructurado.\n3. Ejecuta el prompt guardado (sección 5) en la herramienta de IA aprobada y recibe una tabla con las columnas fijas.\n4. Revisa la tabla: cuenta de filas contra cuenta de documentos y suma de totales contra el lote.\n5. Pega los datos verificados en la hoja de conversión, que produce el archivo de importación para Aspel y alimenta el *Libro de Compras y Ventas*.\n\n### Herramienta\n\n* **Base: Gemini en Google Workspace** (panel lateral de Sheets y referencia a archivos de Drive). Es la herramienta base para todos los equipos y, si Domus ya paga Business Standard o superior, el costo adicional es casi cero. Si el plan actual es Business Starter, hay que confirmar el plan.\n* **Escritorio de Claude o ChatGPT** (carga de una carpeta de PDF): solo si la prueba de 2 semanas muestra que una de las dos suscripciones de pago resuelve mejor esta tarea para Contabilidad. Hasta entonces, no se asume.\n* **Se descartan** las cuentas gratuitas o personales de cualquier herramienta: no tienen acuerdo de privacidad empresarial ni administración central, y esto es justo el temor de CT-4.\n\n### Reglas para controlar consumo y errores (válidas para cualquier herramienta)\n\n* **Lotes de 10 a 15 documentos.** No cargar 100 facturas en una sola consulta: aumenta el riesgo de truncamiento y de filas omitidas.\n* **Solo la página de la factura.** Excluir anexos, términos y condiciones, y hojas publicitarias.\n* **Contar siempre las filas** devueltas contra los documentos cargados.\n* **Los límites de uso y el costo por lote dependen del plan y del modelo vigente.** Las cifras del borrador anterior Se medirán en la prueba de 2 semanas antes de usarse para decidir.\n\n### Prompt de extracción para el Flujo B (listo para usar)\n\n```text\nActúa como un auditor contable especialista en facturación de Guatemala.\n\nRevisa cada PDF o imagen de factura o recibo de este lote (máximo 15).\nDevuelve una tabla con una fila por documento y estas columnas:\n\n1. Nombre_Archivo: nombre exacto del archivo\n2. Fecha_Emision: YYYY-MM-DD\n3. NIT_Receptor: NIT del receptor tal como aparece en el documento\n4. NIT_Emisor\n5. Nombre_Proveedor: razón social del emisor\n6. Serie_Factura: serie o número de autorización\n7. Numero_Factura: número correlativo o fiscal\n8. Moneda: GTQ o USD\n9. Monto_Neto_Sin_IVA: decimal con dos posiciones\n10. IVA: monto exacto de IVA desglosado\n11. Monto_Total\n12. Tipo_Gasto_Sugerido: Servicios Digitales, Obra/Materiales, Honorarios o Administrativo\n13. Observaciones: retenciones, exenciones o cualquier dato dudoso\n\nReglas estrictas:\n- No inventes ni aproximes números. Si un dato no existe o no es legible, escribe \"NO DETECTADO\".\n- Verifica que Monto_Neto_Sin_IVA + IVA = Monto_Total; si no cuadra, escribe \"NO CUADRA\" en Observaciones.\n- No asignes la empresa receptora: esa columna la resuelve la tabla maestra de entidades.\n- Al final indica: documentos recibidos, filas devueltas y suma de Monto_Total por moneda.\n```\n\n> Cambio respecto al borrador anterior: la asignación de `Empresa_Receptora` ya no la decide la IA; la resuelve la tabla maestra de CT-3, que es determinista.",
+      "summary": "Conversión de la descarga de SAT al formato de importación de Aspel, más extracción asistida para documentos del exterior y escaneados, con revisión de totales por una persona"
+    },
+    {
+      "id": "4a12924b-f66f-4396-b7da-6d340431dcc9",
+      "code": "GP-1",
+      "title": "Actas con transcripciones largas y errores de jerga técnica",
+      "dept_id": "2fc55672-1df6-48bf-99c5-fc1db28e67bb",
+      "dept_name": "PM Studio Domus",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "### El reto\n\n* **Sobrecarga de información:** Read AI genera transcripciones literales y extensas que saturan al cliente y al equipo directivo en lugar de comunicar acuerdos puntuales y accionables.\n* **Falta de contexto técnico local:** Las herramientas genéricas transcriben con errores la terminología técnica y normativa constructiva de Guatemala (ej. POT, OPR, FHA, tipos de suelo, renglones de obra).\n* **Fricción operativa:** Se invierte tiempo excesivo en depurar y formatear manualmente fragmentos de texto en herramientas de IA genéricas para obtener un formato presentable.\n\n### Asistente de minutas (Prompts)\n\nUn **asistente guardado, compartido** (por ejemplo, un Gem de Gemini en Workspace; si Domus aprueba una suscripción de pago tras la prueba, un proyecto en esa herramienta) configurado una sola vez con:\n\n1. **Plantilla oficial de minuta DOMUS:**\n   * Resumen ejecutivo (3 a 5 líneas)\n   * Acuerdos tomados\n   * Tabla de tareas y compromisos (Acción | Responsable | Fecha)\n   * Próxima agenda sugerida\n2. **Glosario de construcción de Guatemala** con los términos que la IA suele confundir: POT, G1 a G5, OPR, cono de aproximación, cisterna, ductos, FHA.\n   * *Optimización en la captura:* Cargar este mismo glosario en el [vocabulario personalizado de Read AI](https://support.read.ai/hc/es/articles/25508259301395-C%C3%B3mo-mejorar-la-precisi%C3%B3n-de-las-transcripciones-con-un-vocabulario-personalizado) para evitar confusiones fonéticas en tiempo real durante la reunión.\n\n### Flujo operativo en 3 pasos\n\n```\n   [Transcripción virtual o presencial (con vocabulario Read AI)]\n                   │\n                   ▼\n   [Pegar o cargar el archivo en el asistente de minutas DOMUS]\n                   │\n                   ▼  (IA estructura con la plantilla y el glosario)\n   [Borrador de minuta ejecutiva]\n                   │\n                   ▼\n   [REVISIÓN Y APROBACIÓN HUMANA: el gerente de proyecto valida y envía]\n```",
+      "summary": "Asistente guardado con la plantilla de acta y el glosario guatemalteco; el gerente de proyecto revisa y envía"
+    },
+    {
+      "id": "97d431f7-b98f-4ce4-aee7-f1143ebd5c6d",
+      "code": "RH-1",
+      "title": "Marcajes biométricos incompletos (ciclos sin cerrar)",
+      "dept_id": "264e4c96-191b-4f95-bdc0-fdc4860744b5",
+      "dept_name": "RRHH",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "### Causa técnica\n\nDos lectores independientes (entrada y salida) registran los rostros. Puertas abiertas, empleados conversando junto al lector o entrando detrás de un colega generan marcajes huérfanos, duplicados o «fantasma» que no cierran el ciclo de entrada y salida. Las IA generales fallan porque reconstruir intervalos de tiempo exige un emparejamiento estricto por estados, no predicción de texto.\n\n### Solución (Configuración, sin IA)\n\nUna hoja de cálculo o macro, armada por mí, que recibe la exportación (CSV o Excel) del biométrico y:\n\n1. **Depura duplicados:** agrupa por `ID_Empleado` y descarta lecturas repetidas del mismo lector dentro de un umbral (propuesto: 60 segundos; se calibra con datos reales).\n2. **Empareja entradas y salidas:** cada entrada con la siguiente salida cronológica.\n3. **Marca excepciones, no adivina:**\n   - `ERR_SIN_SALIDA`: marcó entrada a las 8:00 y no hay salida.\n   - `ERR_SIN_ENTRADA`: primer marcaje a la 1:00 p. m. en el lector de salida.\n   - `ERR_CICLO_DUPLICADO`: entradas consecutivas sin salida.\n4. **Entrega un reporte de excepciones** con colores, de modo que RR.HH. revise solo las 5 a 10 filas marcadas y no cientos de filas normales.\n\n### Validación (la hace RR.HH.)\n\nSe prueba con un mes real de marcajes y la persona de RR.HH. confirma que las excepciones marcadas coinciden con las que ella detecta a mano, y que no se pierde ninguna.\n\n### Duración del trabajo y KPI\n\nEl equipo quiere saber cuánto tiempo trabaja la gente en realidad. Medirlo solo con marcajes de puerta no es exacto. **Acción para el mes 2:** sesiones con jefes de área (empezando por Charlo en BIM/Operaciones) para definir indicadores de negocio. **La definición de indicadores de desempeño por equipo en Monday.com no está incluida en esta propuesta; se cotiza aparte si la piden.**",
+      "summary": "Un método sin IA, armado por mí como hoja de cálculo o macro, que limpia los marcajes y deja solo las excepciones para revisión; RR.HH. lo valida con datos reales"
+    },
+    {
+      "id": "994213f4-bae3-439b-bf93-302bb9a37026",
+      "code": "CT-5",
+      "title": "La IA inventa artículos de leyes guatemaltecas",
+      "dept_id": "025c60d3-4fb6-4626-a402-54fd8239d070",
+      "dept_name": "Admin",
+      "status": "in_progress",
+      "priority": "low",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "* **Camino:** Prompts.\n* **Método:** consultas ancladas a las fuentes legales oficiales cargadas por el equipo (Ley del IVA, Ley del ISR y sus reglamentos, normas de SAT vigentes) en un espacio de trabajo con fuentes (por ejemplo, un cuaderno de NotebookLM o un proyecto de la herramienta aprobada).\n* **Instrucciones fijas del asistente:**\n  * Citar siempre el artículo y el párrafo, con el texto de la fuente cargada.\n  * Si la respuesta no está en las fuentes cargadas, responder \"No consta en las fuentes cargadas\" y no completar de memoria.\n  * Toda respuesta que afecte una declaración la revisa una persona.\n* **Alcance honesto:** un sistema de consulta propio sobre las leyes guatemaltecas (40 a 60 horas de desarrollo) solo se evalúa si el volumen de consultas lo justifica; no está incluido.",
+      "summary": "Consultas ancladas a las fuentes legales oficiales"
+    },
+    {
+      "id": "7f93a7cb-bde6-4be1-9f91-6cf247b3661a",
+      "code": "GP-3",
+      "title": "Agendar con clientes y consultores externos",
+      "dept_id": "2fc55672-1df6-48bf-99c5-fc1db28e67bb",
+      "dept_name": "PM Studio Domus",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "### El reto\n\n* **Fricción en la coordinación:** El intercambio de múltiples correos y mensajes de WhatsApp para acordar un horario libre consume tiempo valioso de los gerentes y consultores externos.\n* **Riesgo de cruce de agendas:** Al no visualizar la disponibilidad en tiempo real, se producen citas dobles o reuniones agendadas durante tiempos de traslado y supervisión en obra.\n* **Costo innecesario de software de terceros:** La empresa no requiere contratar suscripciones adicionales de agendamiento (ej. Calendly) al contar ya con licencias de Google Workspace.\n\n### Solución: Agendas de citas en Google Calendar\n\nAprovechar la función nativa de **Agendas de citas (Appointment Schedules)** de Google Calendar incluida en Workspace, documentada en la [guía oficial de Google Calendar](https://support.google.com/calendar/answer/10729749?hl=es-419):\n\n* **Página de reserva pública personalizada:** Cualquier persona (tenga o no cuenta de Google) puede consultar los espacios disponibles y reservar una cita en segundos.\n* **Detección inteligente de disponibilidad multi-calendario:** La agenda de citas verifica automáticamente los eventos de los calendarios seleccionados del gerente para no ofrecer horarios ya ocupados.\n* **Generación automática de Google Meet:** Cada cita confirmada crea de inmediato una videoconferencia única con su enlace adjunto tanto para el anfitrión como para el invitado.\n* **Confirmaciones y recordatorios por correo:** Envío automático de invitaciones de calendario con detalles y recordatorios previos configurables para reducir el ausentismo (*no-shows*).\n\n### Configuración operativa recomendada para Domus\n\n1. **Duración y ventana de reserva:**\n   * Bloques estándar de 30 o 45 minutos.\n   * Convocatoria anticipada mínima (ej. 4 a 12 horas) y máxima (ej. 14 a 30 días) para evitar citas sorpresa de última hora.\n2. **Protección de traslados y foco:**\n   * **Tiempo de amortiguación:** 15 a 30 minutos de descanso o viaje entre citas consecutivas.\n   * **Límite diario:** Máximo de 3 o 4 citas externas al día para no comprometer las horas de supervisión en obra y trabajo técnico.\n3. **Verificación de asistentes:**\n   * Validación del correo del participante para evitar reservas no deseadas.\n   * Campos breves obligatorios: Nombre, Correo, Teléfono y *Proyecto / Motivo de la reunión*.\n\n### Canales de difusión del enlace de citas\n\n* **Firma de correo corporativo:** Botón o enlace discreto *\"Agendar reunión conmigo\"* en la firma de cada gerente de proyecto.\n* **Acceso rápido en WhatsApp:** Mensaje guardado en el celular o WhatsApp Business del gerente para compartir el enlace al primer contacto con un consultor o contratista.\n* **Convocatoria en portal:** Compartido como enlace de referencia dentro del proyecto para fácil acceso del equipo.",
+      "summary": "Agendas de citas nativas en Google Calendar (Workspace): página de reserva, Meet automático y prevención de conflictos"
+    },
+    {
+      "id": "201e0457-a1e7-4933-ae82-7698354ce409",
+      "code": "CT-2",
+      "title": "Retenciones SAT desfasadas por el tipo de cambio",
+      "dept_id": "025c60d3-4fb6-4626-a402-54fd8239d070",
+      "dept_name": "Admin",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "* **Problema:** las retenciones se calculan con un tipo de cambio que no corresponde a la fecha del documento, y el desfase genera diferencias al cierre.\n* **Camino:** Configuración (sin IA).\n* **Diseño propuesto:**\n  1. Una pestaña `Tipos_de_Cambio` en la hoja maestra, con una fila por día: fecha, tasa y fuente.\n  2. Un script programado diario que **agrega** la tasa del día y no la modifica después (valor congelado).\n  3. Las hojas de CT-1 buscan la tasa por la **fecha de emisión** del documento, no por la fecha de captura.\n  4. La fuente oficial de la tasa (por ejemplo, la tasa de referencia publicada por el Banco de Guatemala) se confirma con Jennifer antes de construir.\n* **Validación:** el equipo compara 10 documentos en USD de un mes cerrado contra los montos que declaró en su momento.",
+      "summary": "Tipo de cambio automático y congelado por día"
+    },
+    {
+      "id": "62a3a941-a9e1-4711-ab33-4f12e8495c73",
+      "code": "RH-3",
+      "title": "Libro de Salarios digitado dos veces",
+      "dept_id": "264e4c96-191b-4f95-bdc0-fdc4860744b5",
+      "dept_name": "RRHH",
+      "status": "pending",
+      "priority": "medium",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "- **Causa:** Contabilidad entrega los montos mensuales (salario base, IGSS, retenciones de ISR, aguinaldo, bono 14) en su formato interno, y RR.HH. los digita en el formato oficial del Ministerio de Trabajo.\n- **Solución (Configuración):** una pestaña `Importar_Contabilidad` en la hoja del Libro de Salarios, con fórmulas de búsqueda por ID o DPI del empleado que traen los montos con formato fijo, y **validaciones** que marcan en rojo las diferencias (por ejemplo, que el IGSS calculado coincida con el reportado).\n- **Dependencia:** necesita el formato de salida que entrega Contabilidad; se coordina con Jennifer.",
+      "summary": "Cálculo automático desde la planilla de Contabilidad, con formato fijo y validaciones"
+    },
+    {
+      "id": "5a298152-a00f-4c00-b222-61f1afb11771",
+      "code": "VE-3",
+      "title": "Detectar desarrolladoras en Etapa 0 y la ruta de contacto más cercana",
+      "dept_id": "56b2b197-18e7-45af-948f-0945e5b22c63",
+      "dept_name": "Ventas Studio Domus",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Herramienta primero",
+      "waiting_for": null,
+      "solution": "### Por qué la Etapa 0\n\nCuando se presenta un estudio ambiental (MARN) o un permiso municipal, una firma de arquitectura ya fue contratada 6 a 12 meses antes. Domus debe encontrar las oportunidades mientras se reúne el terreno y se estructura la entidad.\n\n```\nETAPA 0: Reunión de terrenos y constitución de la entidad (meses 0 a 6)  ← Domus debe estar aquí\nETAPA 1: Volumetría conceptual y factibilidad (meses 6 a 12)             ← los costos de cambio ya son altos\nETAPA 2: Trámites del MARN y municipales (meses 12 a 18)                 ← demasiado tarde\nETAPA 3: Lanzamiento comercial y preventas (meses 18 a 24)               ← demasiado tarde\n```\n\n### Solución (Herramienta primero, caso 3)\n\nUna **tabla única de familias de desarrolladoras**, con la **persona de Domus que conoce a cada familia** y tiene la ruta de contacto más cercana, que todos consultan y actualizan en el mismo lugar (Ventas Ejecutivas, Comercial de Agencia y esa persona).\n\n* **Campos:** familia o grupo, entidades tenedoras y sociedades anónimas conocidas, personas clave, persona de contacto en Domus, historial de proyectos juntos, último contacto, notas.\n* **Uso:** cuando se detecta una compra de terreno o una entidad nueva, los socios revisan primero la tabla y piden la presentación a la persona de Domus. La IA puede ayudar a resumir y cruzar lo que ya está en la tabla; no inventa rutas.\n* **Pregunta del seguimiento a los 30 días:** *¿cuántas desarrolladoras en Etapa 0 se detectaron usando la tabla?*\n\n### Lo que queda en espera\n\nLa **recolección automatizada de la Etapa 0** (rastreadores programados de los registros municipales de demolición y del registro mercantil) **no se recomienda por ahora**: 60 a 80 horas de referencia, no incluidas en el paquete base y no son una cotización. La tabla debe demostrar primero su valor. La idea de la base de datos de grafos Neo4j del borrador anterior se descarta definitivamente: con menos de 500 organizaciones y unas 1,000 personas, una tabla basta.",
+      "summary": "Una tabla de familias de desarrolladoras con la persona de Domus que las conoce; el desarrollo queda en espera"
+    },
+    {
+      "id": "7517f58a-5265-43af-b768-68ab274c595c",
+      "code": "BIM-3",
+      "title": "Control de calidad y auditoría de planos ejecutivos asistida por IA",
+      "dept_id": "3ad4acfe-7cd0-4b19-abbd-bb556e2e3885",
+      "dept_name": "BIM",
+      "status": "waiting",
+      "priority": "high",
+      "delivery": "Flujo de revisión + Herramientas especializadas",
+      "waiting_for": "Selección de IA",
+      "solution": "### Guía de Edición y Personalización Técnica de Prompts\n\nEl equipo BIM/VDC cuenta con el criterio técnico para detectar incongruencias constructivas. A continuación se desglosa la **anatomía de cada prompt**, cómo modificar sus parámetros según la disciplina (acabados, albañilería, carpinterías, instalaciones) y las dos opciones de ejecución disponibles en la sección de **Archivos**.\n\n---\n\n## Comparativa de Arquitectura de Auditoría\n\n| Característica | Opción A: Directa (Sin Servidor) | Opción B: Automatizada (Con Servidor BlueprintQA MCP) |\n| :--- | :--- | :--- |\n| **Entorno de ejecución** | ChatGPT Plus/Team, Claude Pro o Gemini Advanced web. | Antigravity / Claude Desktop con servidor local MCP. |\n| **Requisitos técnicos** | Cero instalación. Solo arrastrar el PDF/PNG al chat. | Requiere instalar paquete local (ZIP en Windows o tar.gz en macOS). |\n| **Manejo de resolución** | El modelo comprime imágenes grandes (>2000px), lo que puede dificultar leer cotas milimétricas. | **Cero pérdida:** corta el plano en mosaicos (*tiles*) de alta resolución y usa OCR determinista para textos. |\n| **Medición de cotas/tramas** | Visual/estimada por el modelo de visión. | Algorítmica con herramientas dedicadas (`measure_hatch_pitch`, `scan_baseboards`). |\n| **Salida final** | Tabla de hallazgos en texto/Markdown en el chat. | Redlines vectoriales estampados directamente sobre el PDF (`stamp_pdf_redlines`). |\n\n---\n\n## 1. Opción Directa (Sin Servidor): Anatomía del Prompt\n\nUsa este prompt en **ChatGPT, Claude o Gemini** adjuntando el plano exportado en PDF o imagen de alta resolución (300 DPI). Está disponible para descarga directa en **Archivos** (`Prompt_Auditoria_Planos_BIM.txt`).\n\n### ▸ A. Anatomía y Parámetros Editables — Cómo ajustar el prompt a tu lámina\n\nEl prompt está dividido en 5 bloques modulares. Modifícalos según la entrega:\n\n1. **Variables de Encabezado (Lo que editas en cada plano):**\n   * `Disciplina`: Cambia de *«Acabados de piso y zócalos»* a *«Albañilería y tabiques»*, *«Instalaciones hidrosanitarias»* o *«Carpinterías y ventanería»*.\n   * `Enfoque especial`: Úsalo para forzar atención en puntos críticos de la entrega (ej. *«Verificar alturas de dinteles contra vanos»* o *«Revisar modulación de porcelanato desde el acceso»*).\n2. **Rol y Estándar de Severidad:**\n   * Obliga al modelo a actuar como auditor senior, forzando evidencia comprobable y prohibiendo alucinaciones o comentarios genéricos.\n3. **Escaneo Metódico por Bloques (Evita que el LLM salte contenido):**\n   * Desglosa la lámina en: (1) Cajetín y rótulo, (2) Cuadro de acabados/schedules, (3) Notas generales, (4) Aritmética de cotas, y (5) Planta dividida por cuadrantes (NO, NE, SO, SE).\n4. **Matriz de Puntos de Control (Checklist Técnico):**\n   * **Cajetín:** Código de lámina vs. correlativo de revisiones, escala declarada vs. gráfica, norte.\n   * **Tablas de acabados:** Celdas vacías, unidades de medida (`m²` para superficies, `m` lineales para zócalos, `pza` para piezas sanitarias).\n   * **Aritmética de cotas:** Suma estricta de parciales contra cota total acumulada.\n   * **Correspondencia cruzada biunívoca:** Todo código en planta debe estar en leyenda, y todo código en leyenda debe existir en planta.\n5. **Criterios de Salida Tripartita:**\n   * `[DEFECTO]`: Error técnico objetivo (cota que no suma, celda vacía, código huérfano).\n   * `[VERIFICAR]`: Decisión de diseño o coordinación interdisciplinar.\n   * `[INFO]`: Recomendación cosmética o de formato.\n\n```prompt\nDATOS DE LA REVISIÓN (edita antes de enviar si aplica):\n- Disciplina: [Acabados de piso y zócalos / Albañilería / Carpintería / Instalaciones]\n- Enfoque especial: [Ninguno / Verificar alturas de dintel / Modulación desde acceso]\n- Archivo: Plano adjunto\n\nActúa como un revisor senior de control de calidad BIM/CAD (auditor de láminas ejecutivas). Tu objetivo es realizar una auditoría rigurosa y exhaustiva del plano adjunto, encontrando todo lo que un revisor humano marcaría en rojo (\"redline\") antes de su emisión formal, sin omitir inconsistencias y sin generar falsos positivos.\n\nIdioma: Todo el reporte debe estar en ESPAÑOL (excepto nombres de códigos técnicos o marcas tal como aparecen en el plano).\n\n### METODOLOGÍA DE REVISIÓN SISTEMÁTICA\nAnaliza el documento adjunto dividiendo tu inspección en los siguientes bloques:\n1. Cajetín, rótulo y datos generales\n2. Cuadros de acabados, leyendas y tablas técnicas\n3. Notas generales y especificaciones\n4. Cotas y cadenas de dimensionamiento (aritmética)\n5. Planta general (escaneo por cuadrantes/ejes: NO, NE, SO, SE e interior)\n\n### PUNTOS DE CONTROL OBLIGATORIOS\nA. Cajetín y Revisiones:\n- Coincidencia entre código/título de lámina y tabla de revisiones.\n- Fechas consistentes, campos en blanco, firmas/marcos vacíos.\n- Escala declarada vs. escala gráfica vs. escala en viewport.\n\nB. Tablas y Cuadros de Acabados:\n- Celdas vacías o campos incompletos (revisa fila por fila: código, descripción, formato/espesor, proveedor, color).\n- Unidades de medida correctas según el elemento: superficie (m²), longitud (m), piezas/unidades (pza/und).\n- Saltos de correlatividad o códigos duplicados.\n\nC. Cotas y Cadenas de Medida:\n- Aritmética de cadenas: suma las cotas parciales y verifica si coinciden exactamente con la cota total.\n- Cotas superpuestas, textos ilegibles o cortados por líneas.\n\nD. Etiquetas y Simbología en Planta:\n- Todo ambiente con trama/hatch debe tener su código identificable.\n- Correspondencia biunívoca: cada código en planta debe estar en leyenda y viceversa.\n- Continuidad lógica de remates lineales (zócalos sin cruzar vanos libres).\n\n### CRITERIOS DE CLASIFICACIÓN\n- [DEFECTO]: Error objetivo y comprobable en el dibujo (cota errónea, celda vacía, código inexistente).\n- [VERIFICAR]: Requiere validación de diseño o coordinación con otra especialidad.\n- [INFO]: Detalle cosmético o sugerencia menor de redacción.\n\n### FORMATO DEL REPORTE DE SALIDA\n1. Resumen Ejecutivo (Estado general de la lámina, conteo de hallazgos por severidad).\n2. Tabla Priorizada de Hallazgos (ordenada: DEFECTO > VERIFICAR > INFO):\n   | # | Severidad | Elemento / Clase | Ubicación exacta (Ejes / Cuadrante / Celda) | Evidencia leída en plano | Corrección requerida |\n3. Comprobaciones que Pasaron (Cadenas de cotas auditadas con suma OK, leyenda verificada).\n4. Límites de Visibilidad (Indica si algún sector no fue 100% legible por resolución).\n```\n\n---\n\n## 2. Opción con Servidor Local (BlueprintQA MCP): Auditoría de Alta Precisión\n\nPara planos ejecutivos densos donde la compresión de imágenes de los chats web pierde textos pequeños, se utiliza el servidor local **BlueprintQA** (descargable en **Archivos** como `BlueprintQA-ProductionV1-windows.zip` y `BlueprintQA-ProductionV1-macos.tar.gz`).\n\n### ▸ B. Cómo opera el servidor y cómo indicarle tareas específicas\n\nEl servidor MCP expone herramientas deterministas al asistente inteligente:\n* `get_sheet_info` y `plan_tiles`: Lee los metadatos del PDF vectorial y divide la lámina en cuadrículas de alta resolución sin degradar calidad.\n* `extract_blueprint_text` y `find_text_issues`: Extrae textos vectoriales vía OCR/PDF parsing y detecta tipografías provisionales (*«XXX»*, *«PENDIENTE»*, *«TBD»*).\n* `measure_hatch_pitch` y `scan_baseboards`: Mide densidad de tramas y verifica trazos de zócalos algorítmicamente.\n* `stamp_pdf_redlines`: Escribe directamente las nubes y notas de revisión sobre el archivo PDF para abrirlas en Bluebeam o Adobe Acrobat.\n\n### ▸ C. Prompt de Instrucción para el Asistente con Servidor MCP\n\nCopia este prompt en tu entorno conectado al servidor MCP para iniciar una auditoría automática:\n\n```prompt\nAudita la lámina ejecutiva ubicada en [Ruta del archivo PDF / ej: C:/Planos/A-102_Acabados.pdf].\n\nInstrucciones para el servidor BlueprintQA:\n1. Ejecuta \"audit_prep\" y \"get_sheet_info\" para extraer las dimensiones y zonas de la lámina.\n2. Aplica \"plan_tiles\" para segmentar la planta en cuadrantes de inspección en alta resolución.\n3. Extrae y audita los textos con \"find_text_issues\" enfocándote en celdas vacías del cajetín y notas de acabados.\n4. Ejecuta \"measure_hatch_pitch_batch\" sobre las áreas con trama de piso para verificar consistencia de escala.\n5. Emite el reporte consolidado de hallazgos y genera el PDF marcado con \"stamp_pdf_redlines\".\n```\n\n---\n\n## 3. Consejos para que el Equipo BIM Adapte los Prompts\n\n* **Para planos de Albañilería/Mampostería:** Elimina el bloque de zócalos y agrega reglas de verificación de cotas de vanos de puertas/ventanas contra espesores de mochetas y tabla de vanos.\n* **Para planos de Instalaciones (MEP):** Cambia la tabla de acabados por lista de equipos/artefactos, y solicita verificar la numeración de circuitos o pendientes de tuberías sanitarias.\n* **Para Control de Revisiones (Delta):** En el prompt directo, sube el PDF de la revisión anterior (`Rev A`) y el actual (`Rev B`) pidiendo: *«Compara ambas láminas e identifica qué cotas, notas o muros fueron modificados y si la nube de revisión los cubre todos.»*",
+      "summary": "Estructura y personalización de prompts para auditoría de planos: flujo directo con LLM multimodal vs. flujo automatizado con BlueprintQA MCP."
+    },
+    {
+      "id": "13e99eb6-0157-458f-8b2d-c2ad20c09b74",
+      "code": "BIM-2",
+      "title": "Modelo de Revit y hoja maestra (MET) desincronizados",
+      "dept_id": "3ad4acfe-7cd0-4b19-abbd-bb556e2e3885",
+      "dept_name": "BIM",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "* **Causa:** los parámetros de Revit viven aparte de la hoja de seguimiento. Cuando los plazos obligan a cambiar el modelo, la MET queda desactualizada y los planos y las estimaciones de costo no coinciden.\n* **Solución (Configuración):** una sincronización entre el modelo y la hoja maestra con un **complemento existente** (la suite DiRoots, SheetLink y ParaManager), que funciona en Revit 2023 y 2026.\n* **Gobernanza (lo que yo configuro):**\n  * `Type Mark` (o un ID único de elemento) es la llave inmutable entre el modelo y la hoja.\n  * Los **datos geométricos** (dimensiones, conteos, áreas) fluyen **de Revit a la hoja y son de solo lectura** allí.\n  * Los **datos no geométricos** (materiales, descripciones de acabados, códigos de proveedor) se pueden editar en la hoja e importar a las familias de Revit.\n* **Validación:** el equipo revisa un nivel contra el modelo antes de usar el proceso en un proyecto en curso.",
+      "summary": "Sincronización entre el modelo y la hoja maestra con una herramienta que ya existe"
+    },
+    {
+      "id": "f9cb8f1a-1526-445f-8d29-705ad2263212",
+      "code": "ARQ-2",
+      "title": "Sótanos, parqueos y bodegas",
+      "dept_id": "e17c8121-c7fd-49df-be7b-62959e3e77e5",
+      "dept_name": "Arquitectura",
+      "status": "pending",
+      "priority": "medium",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "* **Causa:** el trazado de parqueos, bodegas y rutas de evacuación en CAD o BIM es manual, una vez aprobada la volumetría; la meta de eficiencia ronda los 32 m² brutos por parqueo.\n* **Solución (Configuración):** automatizar la **numeración y el cálculo de parqueos y bodegas** con parámetros tomados de las normas aplicables: numeración secuencial de parqueos a lo largo de las rutas de circulación, códigos de bodega ligados a los números de unidad y una cifra de eficiencia en vivo (área total del sótano dividida entre los parqueos). Las familias paramétricas estándar de parqueo (incluidos los parqueos accesibles según la norma aplicable y las bahías estándar) forman parte de la plantilla.\n* **Herramientas:** el Revit del equipo y su programación visual; no se asume ninguna licencia nueva.",
+      "summary": "Automatizar la numeración y el cálculo de parqueos y bodegas con parámetros de las normas aplicables"
+    },
+    {
+      "id": "1a615543-b80f-4bd4-880c-a1fac461a258",
+      "code": "INT-2",
+      "title": "Chats largos que pierden el hilo",
+      "dept_id": "3ef4e13e-bd3f-4071-bba5-b0764f99d0b8",
+      "dept_name": "Interiores",
+      "status": "in_progress",
+      "priority": "high",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "- **Camino:** Prompts.\n- **Causa:** en una sola conversación larga se acumula ruido; el modelo olvida instrucciones tempranas o repite sugerencias.\n- **Solución:** un **asistente propio de concepto y storytelling** (proyecto o asistente guardado en la herramienta aprobada) cargado con la **taxonomía de la firma** y proyectos pasados. Regla de higiene: una conversación por tema.\n\nPlantilla base del asistente:\n\n```markdown\n[TIPO DE PROYECTO]: Oficina corporativa / Torre residencial\n[TEMA / CONCEPTO]: ej. lujo, brutalismo, luz natural filtrada, acentos biofílicos\n[ENTREGABLES]:\n  1. 3 pilares conceptuales y una historia metafórica (2 a 3 párrafos)\n  2. 5 nombres de proyecto + criterios de votación\n  3. Eslóganes\n  4. Paleta de colores en hex + palabras clave de materiales para generación de imágenes\n```",
+      "summary": "Asistente propio de concepto y storytelling con la taxonomía de la firma"
+    },
+    {
+      "id": "d245d3db-b463-47fc-88b2-6424681c9bf9",
+      "code": "RH-2",
+      "title": "Contratos con errores al usar IA sobre el machote",
+      "dept_id": "264e4c96-191b-4f95-bdc0-fdc4860744b5",
+      "dept_name": "RRHH",
+      "status": "pending",
+      "priority": "medium",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "- **Causa:** al pegar datos y el machote en un chat, la IA altera cláusulas, pierde formato o cambia la sintaxis, y obliga a releer línea por línea.\n- **Solución (Configuración):** generación con **campos fijos**, sin IA sobre el texto del machote. Los datos del candidato viven en una fila de Google Sheets; al cambiar una columna de estado a `Generar`, se llenan las etiquetas del machote en Google Docs (`<<Nombre>>`, `<<DPI>>`, `<<Puesto>>`, `<<Salario>>`) y se exporta un PDF idéntico a la plantilla. Se puede hacer con un complemento de combinación de documentos de Workspace o con un script corto de Apps Script.\n- **IA solo para cláusulas especiales:** si un puesto requiere una cláusula no estándar, se puede usar Gemini en Docs para redactar esa cláusula; el resto del machote no se regenera.\n- **Riesgo de alucinación en el texto del machote:** 0, porque el texto no pasa por la IA.",
+      "summary": "Generación de contratos con campos fijos, sin IA sobre el texto del machote; IA solo para cláusulas especiales"
+    },
+    {
+      "id": "7fdee9f8-5516-4db0-9179-12de07702bdd",
+      "code": "INT-3",
+      "title": "Storytelling, naming y moodboards toman 2 a 3 semanas",
+      "dept_id": "3ef4e13e-bd3f-4071-bba5-b0764f99d0b8",
+      "dept_name": "Interiores",
+      "status": "in_progress",
+      "priority": "medium",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "- **Camino:** Prompts y herramientas multimedia.\n- **Método de descubrimiento creativo por pasos:** Cada uno en su propia conversación del asistente de **INT-2** (alineado con la *Cápsula de ADN de Marca* y el *Playbook de Moodboards* de **GD-4**):\n  1. *Brief y restricciones:* Metáfora del espacio, tipo de usuario y pilares.\n  2. *Pilares conceptuales y storytelling:* Narrativa y valores innegociables.\n  3. *Naming y votación:* Matriz de nombres conceptuales y criterios de filtro.\n  4. *Paleta y materiales:* Colores exactos en HEX, materialidad física y texturas tangibles.\n  5. *Referencias para moodboard y video conceptual:* Prompts cinematográficos de iluminación y atmósfera. Para videos de fondo de presentación de concepto, se recomiendan **Kling AI** o **Runway** (ver **DW-5**) para animar sutilmente luz natural y elementos ambientales a partir del render fijo aprobado.\n\n- **Meta:** Pasar la fase de concepto de 3 semanas a 1 semana, medido sobre un proyecto vivo.\n- **Medida de éxito:** Semanas que toma hoy la fase de concepto, acordadas con la jefa del equipo antes de comenzar.",
+      "summary": "Método de descubrimiento creativo por pasos; meta: de 3 semanas a 1"
+    },
+    {
+      "id": "d86ac932-4a2d-4848-a25a-81257a5feac9",
+      "code": "RH-4",
+      "title": "Vacaciones aprobadas en papel",
+      "dept_id": "264e4c96-191b-4f95-bdc0-fdc4860744b5",
+      "dept_name": "RRHH",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Configuración",
+      "waiting_for": null,
+      "solution": "- **Causa:** hoy se imprime la boleta, se recaba la firma del jefe, se escanea, se envía por correo y los saldos se llevan a mano; el empleado no ve sus días acumulados.\n- **Solución (Configuración):**\n  1. **Libro maestro de saldos** en una hoja con la acumulación automática (15 días por año con fórmulas de fechas).\n  2. **Solicitud digital** (fechas y colega que cubre) con **aprobación del jefe con un clic**: el saldo se descuenta solo, el empleado recibe confirmación y RR.HH. recibe el registro, sin imprimir ni escanear.\n  3. **Cada empleado ve solo su saldo**, con un tablero restringido en Monday.com o una vista protegida de la hoja.\n- **Nota:** el borrador anterior proponía opciones tipo AppSheet o sitio interno; la propuesta final se queda con lo que ya existe (Sheets y Monday.com) para no sumar herramientas.",
+      "summary": "Registro de saldos y aprobación digital con un clic del jefe; cada empleado ve solo su saldo"
+    },
+    {
+      "id": "698e2254-c530-48b8-a654-946439d2b92d",
+      "code": "CT-4",
+      "title": "Temor a subir datos financieros a herramientas públicas",
+      "dept_id": "025c60d3-4fb6-4626-a402-54fd8239d070",
+      "dept_name": "Admin",
+      "status": "in_progress",
+      "priority": "medium",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "* **Camino:** Recomendación (sin cargo adicional por el seguimiento).\n* **Recomendación:**\n  1. Usar **solo cuentas empresariales** con administración central y **retención de datos desactivada**, nunca cuentas gratuitas o personales.\n  2. Publicar una **política de una página** con tres columnas: *se puede subir* (facturas de proveedores, descargas de SAT sin datos de planilla), *se sube anonimizado* y *no se sube* (planillas con DPI, estados bancarios, contratos con montos confidenciales).\n  3. Confirmar el plan de Workspace y la configuración de privacidad antes de la primera semana (acceso de administrador, sección 7 de la propuesta).",
+      "summary": "Cuenta empresarial con retención de datos desactivada y una política clara de qué se puede subir"
+    },
+    {
+      "id": "3e8730e8-724c-4b92-8ee3-61a0df7a3495",
+      "code": "ARQ-3",
+      "title": "Verificación normativa (Vivienda Prioritaria, POT, CONRED, CONADI)",
+      "dept_id": "e17c8121-c7fd-49df-be7b-62959e3e77e5",
+      "dept_name": "Arquitectura",
+      "status": "pending",
+      "priority": "high",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "* **Causa:** la normativa (Decreto de Vivienda Prioritaria, ordenanzas del POT para G0 a G5, CONRED NRD2 y normas CONADI) abarca cientos de páginas de PDF, y el personal consulta cuentas personales sin fuentes.\n* **Solución (Prompts):** una **base de conocimiento** compartida con los PDF oficiales cargados (un cuaderno de NotebookLM o un proyecto en la herramienta de pago aprobada), con una instrucción fija para el asistente:\n  * Cada respuesta **cita artículo y párrafo**.\n  * Si la respuesta no está en las fuentes, lo dice y no la completa de memoria.\n  * Los límites numéricos se devuelven como fórmula o tabla con la fuente citada, y una persona revisa los críticos.\n* **Fuentes a cargar:** manuales de zonificación del POT (retiros, alturas, coeficiente de ocupación por zona), Vivienda Prioritaria, CONRED NRD2 (distancias de recorrido, anchos de salida, presurización), CONADI (accesibilidad, rampas, radios de giro).",
+      "summary": "RAG con los PDF oficiales; la IA debe citar artículo y párrafo"
+    },
+    {
+      "id": "5badaeae-f67a-4f25-8b7f-b385b4f341f6",
+      "code": "BIM-4",
+      "title": "Etiquetas y cotas que se superponen",
+      "dept_id": "3ad4acfe-7cd0-4b19-abbd-bb556e2e3885",
+      "dept_name": "BIM",
+      "status": "in_progress",
+      "priority": "medium",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "* **Causa:** el motor de dibujo de Revit no evalúa el espacio gráfico en blanco.\n* **Límite realista:** no prometer de más. La IA generativa no puede ubicar de forma confiable anotaciones 2D de CAD, y evitar colisiones en plantas irregulares es difícil.\n* **Recomendación:** una **prueba acotada de 14 días de un complemento de ubicación de anotaciones** (candidatos: FORMlab Dimensionator y Glyph). Si las plantas aún necesitan más de 15% de ajuste manual, el etiquetado sigue siendo un flujo supervisado por personas, apoyado en cadenas de cotas estándar y plantillas de líneas de llamada.\n* **Si el complemento no lo resuelve, una herramienta a la medida no es viable hoy.** El tema se revisa con Revit 2027.",
+      "summary": "Recomendar un complemento de ubicación de anotaciones. Si no resuelve el problema, una herramienta a la medida no es viable hoy; revisar con Revit 2027"
+    },
+    {
+      "id": "eaa92245-cb52-48f4-9a90-842fb05ccfbc",
+      "code": "RH-5",
+      "title": "Currículos que llegan sin orden",
+      "dept_id": "264e4c96-191b-4f95-bdc0-fdc4860744b5",
+      "dept_name": "RRHH",
+      "status": "pending",
+      "priority": "low",
+      "delivery": "Recomendación",
+      "waiting_for": null,
+      "solution": "- **Camino:** Recomendación. **La IA no califica, no ordena por mérito y no descarta a nadie.**\n- **Recomendación de método:** extraer solo datos **factuales** de cada currículo (nombre, correo, teléfono, estudios, años de experiencia, software que declara) hacia el tablero de talento en Monday.com o una hoja, conservando el PDF original adjunto.\n- **Cómo hacerlo con lo que ya tienen:** con Gemini en Workspace (Gmail, Drive y Sheets), un lote de currículos se pasa a una tabla con campos fijos; la persona de RR.HH. revisa y evalúa a cada postulante.\n- **Si el volumen crece:** una automatización con trigger de correo se evalúa después, nunca antes de probar el método manual con el volumen real.\n\n```json\n{\n  \"nombre_completo\": \"Nombre del candidato\",\n  \"correo\": \"candidato@correo.com\",\n  \"telefono\": \"+502 XXXXXXXX\",\n  \"estudios\": \"Arquitectura / Ingeniería Civil\",\n  \"anios_experiencia\": 4,\n  \"software\": [\"Revit\", \"AutoCAD\", \"SketchUp\"]\n}\n```",
+      "summary": "Recomendación de cómo extraer los datos factuales de cada currículo hacia el tablero de talento; la IA no califica ni descarta a nadie"
+    },
+    {
+      "id": "7a622ec4-7203-4562-b4a8-7294876915ec",
+      "code": "BIM-6",
+      "title": "Cantidades de Revit redigitadas a mano en el WBS del cliente",
+      "dept_id": "3ad4acfe-7cd0-4b19-abbd-bb556e2e3885",
+      "dept_name": "BIM",
+      "status": "in_progress",
+      "priority": "medium",
+      "delivery": "Herramienta primero",
+      "waiting_for": null,
+      "solution": "* **Causa:** los cuadros de Revit producen listas planas, y los dibujantes redigitan o pegan las cantidades en el WBS jerárquico del cliente.\n* **Solución (Herramienta primero):** un **código de rubro común** que se usa en Revit, en el presupuesto y en las órdenes de compra, para que las cantidades pasen al formato del cliente **sin digitarse**. La exportación del modelo (con la herramienta de BIM-2) llega a una hoja intermedia que las reagrupa por ese código.\n* **Entre equipos:** BIM, Construcción y quien arme la oferta acuerdan el código. **También alimenta CON-2 y CON-3.**\n* **Pregunta del seguimiento a los 30 días:** *¿cuánto tiempo toma hoy llenar el WBS del cliente?*\n* **Ojo con la dependencia:** el código es una convención que las personas deben mantener. Falla si un equipo deja de usarlo.",
+      "summary": "Un código de rubro común para pasar las cantidades al formato del cliente sin digitar (caso 2)"
+    },
+    {
+      "id": "219a85b1-ae2a-43e2-a76f-eba71ec9115c",
+      "code": "GP-5",
+      "title": "Prefactibilidad de terrenos en Excel con fórmulas frágiles",
+      "dept_id": "2fc55672-1df6-48bf-99c5-fc1db28e67bb",
+      "dept_name": "PM Studio Domus",
+      "status": "pending",
+      "priority": "medium",
+      "delivery": "Herramienta primero",
+      "waiting_for": null,
+      "solution": "* **Caso 4 de la propuesta (plantilla de prefactibilidad)**, dentro de Gerencia de Proyectos.\n* **Paso 1: corregir la plantilla actual**, con celdas protegidas, validación de datos y parámetros por zona en una tabla aparte, de modo que las fórmulas no se rompan al editar.\n* **Reunión de revisión con el jefe del área** y **seguimiento a los 30 días**, con la pregunta: *¿falta el cruce con el cono de aproximación?*\n* **Portal a la medida: en espera.** Un portal interno que calcule la prefactibilidad por zona y arme el informe en PDF requeriría de 60 a 80 horas (referencia, no cotización). Solo se evalúa después de corregir la plantilla y solo si la plantilla corregida no alcanza.",
+      "summary": "Corregir la plantilla actual; portal a la medida en espera"
+    },
+    {
+      "id": "0ca81931-7540-43c6-bfb9-03b5c555c396",
+      "code": "GD-3",
+      "title": "Matriz de contenido («esqueleto») armada a mano en diapositivas",
+      "dept_id": "fcb1a87f-f11a-48bb-9753-6083a44bf9f0",
+      "dept_name": "PM Domus Works",
+      "status": "in_progress",
+      "priority": "medium",
+      "delivery": "Prompts",
+      "waiting_for": null,
+      "solution": "### Diagnóstico: El cuello de botella del «esqueleto» semanal\n\nEn la dinámica actual del equipo, el paso del borrador con IA al entregable final presenta una fricción crítica:\n\n* **La matriz de contenido como «esqueleto» en diapositivas:**\n  Antes de pasar el contenido al equipo creativo y de diseño de Mercedes, redacción debe armar una matriz en diapositivas de presentación. Esta presentación es el «esqueleto» estructural de cada campaña.\n\n* **Armado manual de elementos dispersos:**\n  Tras generar borradores de texto o ideas en ChatGPT, el equipo debe extraer, pulir y pegar manualmente cada pieza en zonas específicas de cada diapositiva:\n  * El **caption** o copy del post.\n  * El **texto de arte** integrado que aparecerá dentro del diseño gráfico.\n  * Las **referencias visuales** o mockups que guían a los diseñadores.\n  * **Llamados a la acción (CTAs)**, fechas y horarios de publicación.\n\n* **Refinamiento humano y rescate del copy:**\n  El texto crudo de la IA no puede enviarse directamente porque suele sonar repetitivo o *«muy sin alma»*. El equipo usa la presentación como mesa de trabajo para ajustar vocabulario, cambiar frases y añadir notas antes de la aprobación.\n\n* **Cuello de botella operativo:**\n  Es la **tarea semanal más repetitiva y crítica**, pues toda la producción de piezas de redes depende de tener este esqueleto listo antes de que diseño y cliente puedan si quiera comenzar.\n\n---\n\n### Opción 1: Optimización con las herramientas actuales (Cero costo adicional)\n\nAprovechando Google Workspace y Monday.com que ya están en uso para eliminar el copiado y pegado diapositiva por diapositiva:\n\n1. **Salida de la IA estructurada en Markdown/Tabla:**\n   Configurar prompts que obliguen a la IA a devolver cada post desglosado exactamente en sus 5 componentes: Pilar/Ángulo, Texto de Arte, Caption, CTA y Referencia Visual.\n\n   | Post # | Pilar / Ángulo | Texto de Arte | Caption | CTA | Referencia Visual |\n   | :--- | :--- | :--- | :--- | :--- | :--- |\n   | 01 | [Estilo de vida / Historia] | \"Espacios que respiran vida.\" | Borrador del copy... | \"Agenda tu visita en el enlace.\" | Fotografía cálida con luz natural. |\n\n2. **Revisión en Google Sheets como \"Staging Area\":**\n   Pegar la tabla generada en Google Sheets. Allí los redactores pulen el tono, eliminan clichés y hacen el control de calidad humano antes de que pase a diseño.\n\n3. **Monday.com como tablero de control del flujo:**\n   Monday permite importar o pegar directamente filas desde Sheets. Cada post se convierte en un ítem con sus columnas correspondientes (Estado, Fecha, Redactor, Link de Arte), sirviendo para la coordinación de entregas de los viernes sin duplicar registros.",
+      "summary": "Ensamblaje manual de posts en diapositivas antes de diseño; la IA entrega en tabla para Sheets y Monday.com"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "3af96047-c43c-4934-a45f-2306c88ac605",
+      "name": "Emilio Ramirez",
+      "email": "eramirez@ixmaoperations.com"
+    },
+    {
+      "id": "7486411d-82d1-4653-b9c6-560c4f6187f6",
+      "name": "Alejandra Mejia",
+      "email": "alejandra.mejia@studiodomus.com"
+    },
+    {
+      "id": "da80df0b-328d-48c9-b70a-f271dd68c921",
+      "name": "Mercedes Schönfeld",
+      "email": "mercedes.schonfeld@domusworks.com"
+    },
+    {
+      "id": "4b51f71a-ee28-4e59-b939-2deb16afdb12",
+      "name": "Eduardo Solis",
+      "email": "eduardo.solis@domusworks.com"
+    },
+    {
+      "id": "8d426c9a-3975-4810-a4ef-4a6f42f81cfd",
+      "name": "Emilio",
+      "email": "emilio.a.ramirezl@gmail.com"
+    },
+    {
+      "id": "e68d5fd8-2ca1-49f9-bffa-2792ad0659e7",
+      "name": "André De León",
+      "email": "andre.deleon@domusworks.com"
+    },
+    {
+      "id": "92f44c0f-fcb8-494d-8da5-3d54f093f7e9",
+      "name": "Ana Isabel Morales",
+      "email": "ana.morales@studiodomus.com"
+    },
+    {
+      "id": "d6a13e9a-b6e8-4d9f-a2b0-c96121a69766",
+      "name": "CARLOS ROBERTO FLORES BALCARCEL",
+      "email": "carlos.flores@studiodomus.com"
+    },
+    {
+      "id": "bea4044a-6d3e-44f2-bd0d-2ccc640f5761",
+      "name": "Jennifer de Leon",
+      "email": "jennifer.deleon@studiodomus.com"
+    },
+    {
+      "id": "cba9afc4-b351-4200-9273-215608929330",
+      "name": "Jackenlyn Silva",
+      "email": "jackenlyn.silva@studiodomus.com"
+    },
+    {
+      "id": "8cd57224-893c-46b8-9f60-d8fd5de5444a",
+      "name": "Pablo Cuellar",
+      "email": "pablo.cuellar@studiodomus.com"
+    },
+    {
+      "id": "b9e3dde1-b325-4273-b96c-8bc725414ae7",
+      "name": "Stephanie Silva",
+      "email": "stephanie.silva@studiodomus.com"
+    },
+    {
+      "id": "d3fd0e94-5157-4a35-9d65-8a7e47cb93c3",
+      "name": "Maria Jose Estrada",
+      "email": "maria.estrada@studiodomus.com"
+    },
+    {
+      "id": "f1042683-6073-43af-a092-6a9b32726152",
+      "name": "Susan Jimenez",
+      "email": "susan.jimenez@domusworks.com"
+    },
+    {
+      "id": "f1bd9e3e-92a8-49c5-96cc-5cb8a02356f9",
+      "name": "Andrea Fuentes",
+      "email": "andrea.fuentes@domusworks.com"
+    },
+    {
+      "id": "fda2d069-0f7e-4ba3-97a4-cfca16d75245",
+      "name": "Jose Castillo",
+      "email": "jose.castillo@domusworks.com"
+    },
+    {
+      "id": "8a86eefb-6275-4ae7-aafd-165d95161fac",
+      "name": "Alejandra Chapas",
+      "email": "alejandra.chapas@domusworks.com"
+    },
+    {
+      "id": "6a619710-a990-44c5-9af7-346be1e642c7",
+      "name": "Marcela Ramirez",
+      "email": "marcela.ramirez@studiodomus.com"
+    },
+    {
+      "id": "77567b89-28f9-4fbd-a7b3-8d34ce3a261d",
+      "name": "Kimberly Castillo",
+      "email": "kimberly.castillo@studiodomus.com"
+    },
+    {
+      "id": "539a8dda-c6af-4f33-86f6-d75402415271",
+      "name": "Angie Estrada",
+      "email": "angie.estrada@studiodomus.com"
+    }
+  ],
+  "events": [
+    {
+      "id": "d9b30d16-6b4b-43a1-a29a-bc06e3033732",
+      "created_at": "2026-11-03T17:38:12.40544+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "GD-1",
+        "title": "Once personas comparten una sola cuenta de ChatGPT",
+        "dept": "PM Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "0ba3a1ee-f39d-4448-8dce-121c0a7f1b92",
+      "created_at": "2026-11-04T03:45:43.907262+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "GD-2",
+        "title": "Copys cansados y repetitivos (unos 85 posts al mes)",
+        "dept": "PM Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "746dc470-61ff-4907-8d89-77b9c73f14bc",
+      "created_at": "2026-11-04T03:45:48.528591+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "GD-3",
+        "title": "Matriz de contenido («esqueleto») armada a mano en diapositivas",
+        "dept": "PM Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "69342878-fece-41e7-bf50-482bec3d37a4",
+      "created_at": "2026-11-04T03:45:50.376548+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "GD-4",
+        "title": "Estrategia de marca sin apoyo de IA al inicio",
+        "dept": "PM Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "95a947af-896b-4e15-92ec-6dd3347a70d6",
+      "created_at": "2026-11-04T03:46:20.034961+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "in_progress",
+      "to_status": "pending",
+      "milestone": {
+        "code": "GD-1",
+        "title": "Once personas comparten una sola cuenta de ChatGPT",
+        "dept": "PM Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "71f28b3b-e6b8-4446-851b-6653f45f3571",
+      "created_at": "2026-11-04T03:46:33.395043+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "CON-4",
+        "title": "Nadie mide cuánto tardan las tareas",
+        "dept": "Construccion"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "a6fe570f-d7e3-4334-8ef7-a159a036ba7f",
+      "created_at": "2026-11-04T17:24:36.654864+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "BIM-2",
+        "title": "Modelo de Revit y hoja maestra (MET) desincronizados",
+        "dept": "BIM"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "dc8d39b6-f98c-4367-acbb-d5f5e7d696c1",
+      "created_at": "2026-11-04T17:52:52.372069+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "BIM-3",
+        "title": "Control de calidad y auditoría de planos ejecutivos asistida por IA",
+        "dept": "BIM"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "5dd6a7b8-38e3-410e-a35e-4f64cc83f52b",
+      "created_at": "2026-11-04T17:53:00.661596+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "BIM-1",
+        "title": "Especificaciones digitadas tres veces: Canva, Excel (MET) y Revit",
+        "dept": "BIM"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "3e3d7e12-4d9d-49b1-accd-544f02d9d59b",
+      "created_at": "2026-11-04T17:53:08.869661+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "BIM-6",
+        "title": "Cantidades de Revit redigitadas a mano en el WBS del cliente",
+        "dept": "BIM"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "5771f370-b992-4e7d-9f39-c0f15003a368",
+      "created_at": "2026-11-04T21:49:51.364186+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "CT-2",
+        "title": "Retenciones SAT desfasadas por el tipo de cambio",
+        "dept": "Admin"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "78559992-e49b-4b0f-85c0-2887ec0bd2ca",
+      "created_at": "2026-11-04T21:49:54.425506+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "CT-3",
+        "title": "Confusión de NIT entre 3 a 4 entidades legales",
+        "dept": "Admin"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "181048da-c078-46c1-908c-e09989aa2f56",
+      "created_at": "2026-11-04T21:49:57.79648+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "CT-1",
+        "title": "Facturas FEL y recibos digitados a mano en Excel y Aspel",
+        "dept": "Admin"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "44cca4c4-e347-4b78-9589-4431088f2075",
+      "created_at": "2026-11-04T21:50:18.267207+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "CT-5",
+        "title": "La IA inventa artículos de leyes guatemaltecas",
+        "dept": "Admin"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "c4980c62-40ab-4073-a21c-d815bb7384a5",
+      "created_at": "2026-11-04T21:50:20.810762+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "CT-4",
+        "title": "Temor a subir datos financieros a herramientas públicas",
+        "dept": "Admin"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "76d1a99e-5d71-4d99-9741-9e19479d733f",
+      "created_at": "2026-11-05T20:43:10.312756+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "INT-1",
+        "title": "Ediciones de render que deforman el espacio y acceso limitado a las herramientas de imagen",
+        "dept": "Interiores"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "4205a010-4519-41c7-9026-49afb37e7394",
+      "created_at": "2026-11-05T20:43:12.493976+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "INT-2",
+        "title": "Chats largos que pierden el hilo",
+        "dept": "Interiores"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "9325660a-9ce1-493c-84ce-7c68cc3727b0",
+      "created_at": "2026-11-05T20:43:15.654162+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "INT-3",
+        "title": "Storytelling, naming y moodboards toman 2 a 3 semanas",
+        "dept": "Interiores"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "321d6116-c4bb-4389-acb2-cfcd8542f01c",
+      "created_at": "2026-11-05T20:43:33.661243+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "DW-2",
+        "title": "Copy mensual repetitivo",
+        "dept": "Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "3ca58bdd-4b67-40d3-b0a0-fda9673536e2",
+      "created_at": "2026-11-05T20:43:37.875755+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "DW-3",
+        "title": "Prueba y error en Midjourney y compra de horas extra",
+        "dept": "Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "20d1fb96-1feb-41ec-972c-abd912a28902",
+      "created_at": "2026-11-05T20:43:40.368259+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "DW-4",
+        "title": "Imágenes con aspecto de IA genérica y geometría alterada",
+        "dept": "Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "311ef900-de5c-48cf-a8be-7103d6709177",
+      "created_at": "2026-11-05T20:43:44.840708+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "DW-5",
+        "title": "Personajes que cambian entre tomas de video",
+        "dept": "Domus Works"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "8085816b-ddb7-461b-a5d6-5664919efde2",
+      "created_at": "2026-11-05T22:05:46.527213+00:00",
+      "kind": "ticket_opened",
+      "actor": "Alejandra Chapas",
+      "from_status": null,
+      "to_status": "open",
+      "milestone": {
+        "code": "DW-4",
+        "title": "Imágenes con aspecto de IA genérica y geometría alterada",
+        "dept": "Domus Works"
+      },
+      "ticket_id": "b7470424-b7c2-468b-85be-9c95309c4cf7"
+    },
+    {
+      "id": "050d0c1a-4ff3-445b-bfd3-337150a9413d",
+      "created_at": "2026-11-06T17:30:41.956959+00:00",
+      "kind": "comment_added",
+      "actor": "Emilio Ramirez",
+      "from_status": null,
+      "to_status": null,
+      "milestone": {
+        "code": "DW-4",
+        "title": "Imágenes con aspecto de IA genérica y geometría alterada",
+        "dept": "Domus Works"
+      },
+      "ticket_id": "b7470424-b7c2-468b-85be-9c95309c4cf7"
+    },
+    {
+      "id": "501efe66-2386-4362-a1f6-7559af2289b2",
+      "created_at": "2026-11-06T17:31:04.272008+00:00",
+      "kind": "ticket_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "open",
+      "to_status": "needs_review",
+      "milestone": {
+        "code": "DW-4",
+        "title": "Imágenes con aspecto de IA genérica y geometría alterada",
+        "dept": "Domus Works"
+      },
+      "ticket_id": "b7470424-b7c2-468b-85be-9c95309c4cf7"
+    },
+    {
+      "id": "5b9d8349-0d83-4d11-99ab-73247544cca2",
+      "created_at": "2026-11-06T20:14:45.960459+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "BIM-4",
+        "title": "Etiquetas y cotas que se superponen",
+        "dept": "BIM"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "83fc9dca-bd79-4303-ae9c-f1832929d815",
+      "created_at": "2026-11-06T20:18:37.867064+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "in_progress",
+      "to_status": "waiting",
+      "milestone": {
+        "code": "BIM-3",
+        "title": "Control de calidad y auditoría de planos ejecutivos asistida por IA",
+        "dept": "BIM"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "83941dee-0e73-4468-b5bd-527cd3c30510",
+      "created_at": "2026-11-06T20:19:26.29289+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "waiting",
+      "milestone": {
+        "code": "CON-1",
+        "title": "Manual de calidad y garantías de ~100 páginas (3 a 4 semanas por proyecto)",
+        "dept": "Construccion"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "91596c4d-f4a6-4222-8e64-163d650f21b1",
+      "created_at": "2026-11-06T20:19:34.506157+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "waiting",
+      "milestone": {
+        "code": "CON-2",
+        "title": "Sobrecostos del presupuesto detectados después de comprar",
+        "dept": "Construccion"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "09fcbfc6-c2a2-47dc-8e98-74ca7e1e23c3",
+      "created_at": "2026-11-06T20:19:42.250116+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "waiting",
+      "milestone": {
+        "code": "CON-3",
+        "title": "Órdenes de compra hechas a mano",
+        "dept": "Construccion"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "c568a247-d768-4ad3-b4f6-6f95f1a49cc8",
+      "created_at": "2026-11-06T20:20:48.584004+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "in_progress",
+      "to_status": "waiting",
+      "milestone": {
+        "code": "CON-4",
+        "title": "Nadie mide cuánto tardan las tareas",
+        "dept": "Construccion"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "7ccfedeb-3e59-4dcd-bad6-061a0f350b8c",
+      "created_at": "2026-11-06T20:34:11.442069+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "in_progress",
+      "to_status": "waiting",
+      "milestone": {
+        "code": "CT-1",
+        "title": "Facturas FEL y recibos digitados a mano en Excel y Aspel",
+        "dept": "Admin"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "3f54a230-a98c-4843-82e0-9f5fa00d984a",
+      "created_at": "2026-11-06T20:35:24.443436+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "waiting",
+      "milestone": {
+        "code": "GP-4",
+        "title": "Acuerdos de reunión digitados a mano en Monday.com",
+        "dept": "PM Studio Domus"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "dfd046eb-731c-48c7-bc1c-d2048a987740",
+      "created_at": "2026-11-06T20:35:37.618483+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "GP-1",
+        "title": "Actas con transcripciones largas y errores de jerga técnica",
+        "dept": "PM Studio Domus"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "8ff23a88-89d0-4e8b-8765-2a2042414b0e",
+      "created_at": "2026-11-06T20:35:40.219843+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "GP-2",
+        "title": "Reuniones presenciales y en obra sin registro",
+        "dept": "PM Studio Domus"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "58943f22-51e0-4242-bbcf-72c993f9a5b0",
+      "created_at": "2026-11-06T20:41:42.611632+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "pending",
+      "to_status": "in_progress",
+      "milestone": {
+        "code": "GP-3",
+        "title": "Agendar con clientes y consultores externos",
+        "dept": "PM Studio Domus"
+      },
+      "ticket_id": null
+    },
+    {
+      "id": "8084588e-97ee-426d-8c95-1617e29d7bf0",
+      "created_at": "2026-11-09T23:29:43.604017+00:00",
+      "kind": "plan_status",
+      "actor": "Emilio Ramirez",
+      "from_status": "waiting",
+      "to_status": "pending",
+      "milestone": {
+        "code": "CON-3",
+        "title": "Órdenes de compra hechas a mano",
+        "dept": "Construccion"
+      },
+      "ticket_id": null
+    }
+  ],
+  "tickets": [
+    {
+      "id": "b7470424-b7c2-468b-85be-9c95309c4cf7",
+      "ticket_number": 1,
+      "title": "Imágenes con aspecto de IA genérica y geometría alterada",
+      "description": "¿Existe algún parametro especifico o palabras fijas que se deba agregar al generar las imágenes? considerando que debemos eliminar palabras genéricas («photorealistic, 8k») a parte de especificaciones técnicas (lente, hora del día, luz difusa y temperatura de color neutra.) que sintetice las especificaciones",
+      "priority": "medium",
+      "status": "needs_review",
+      "created_by": "Alejandra Chapas",
+      "created_at": "2026-11-05T22:05:46.527213+00:00",
+      "milestone": {
+        "code": "DW-4",
+        "title": "Imágenes con aspecto de IA genérica y geometría alterada"
+      },
+      "comments": [
+        {
+          "author": "Emilio Ramirez",
+          "created_at": "2026-11-06T17:30:41.956959+00:00",
+          "message": "**Hola,**\r\n\r\nGracias por levantar el ticket con esta duda! Actualicé la documentación técnica del problema para dejar el diagnóstico y los siguientes pasos mucho más claros.\r\n\r\nSobre tu consulta puntual de parámetros y palabras fijas:\r\n\r\n### 1. Parámetros obligatorios (Flags al final del prompt)\r\n\r\n* **`--style raw`**: Desactiva el procesado artificial y saturado por defecto de Midjourney.\r\n\r\n\r\n* **`--s 100`** *(rango 50 a 120)*: Evita alucinaciones o alteraciones en vanos y perfiles arquitectónicos.\r\n\r\n\r\n* **`--iw 2.0`**: Fuerza el peso máximo de adherencia al render o fachada base del cliente.\r\n\r\n\r\n* **`--p [código]`**: Aplica la personalización de estilo específica de cada desarrollador para que los proyectos no se vean idénticos.\r\n\r\n\r\n\r\n---\r\n\r\n### 2. Términos a evitar vs. Tokens técnicos de síntesis\r\n\r\nEn lugar de adjetivos genéricos (*photorealistic, 8k, masterpiece, unreal engine*), usamos especificaciones ópticas reales:\r\n\r\n* **Estilo editorial:** `architectural editorial photograph`, `Architectural Digest style`.\r\n\r\n\r\n* **Cámara y óptica:** `shot on Hasselblad H6D-100c`, `24mm tilt-shift lens` *(mantiene las verticales rectas)*, `eye-level one-point perspective`.\r\n\r\n\r\n* **Luz y acabado:** `natural morning overcast daylight`, `neutral color grade`, `subtle photographic film grain`.\r\n\r\n\r\n\r\n---\r\n\r\n### 3. Plantilla modular para probar\r\n\r\n```text\r\n[Espacio + Función], [2-3 Materiales específicos y acabado], architectural editorial photograph, Architectural Digest style, shot on Hasselblad H6D-100c, 24mm tilt-shift lens, eye-level one-point perspective, natural morning overcast daylight, neutral color grade, subtle film grain --ar 16:9 --style raw --s 100 --iw 2.0 --v 6.1\r\n\r\n```\r\n\r\nEl archivo actualizado con los ejemplos comparativos y los enlaces directos a la documentación oficial ya está disponible en la base del proyecto. Pruébalo y me cuentas qué tal!"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "id": "d9c95c6c-7a42-41b9-80b6-f689f3dce0ed",
+      "file_name": "v1.IA-t9rpocpklCo0P.xs0h5tDNfCMyfq1hh78XSQ.slcqLpMCXHlyYaRSQFBxmOX-uVUZvqdNyPX3Ft70gBRoDrqW",
+      "label": "v1.NyVCAF2XDsg_2wzP.Uh-AYaEhtGMMcjy6ai7cxw._-uScIpciVoFnCGZ7OKJBm4",
+      "size_bytes": 69574,
+      "created_at": "2026-11-01T23:26:18.35018+00:00",
+      "dept_name": "BIM"
+    },
+    {
+      "id": "ea47508a-72df-4475-851a-bc269748631e",
+      "file_name": "v1.hVXBiNnXXPAs9FQo.xtmdTwj69st7swZBagieoQ.uYQXSHIA632EXBFaldR-T9IgiKsBMJj9zmkl_lDTnVXvHrBpjw",
+      "label": "v1.35gL84SOb66zOaNo.5NKxkEOgdsJmm6BWRyiGNg.bxuJhJRRZMX-929mR_ww",
+      "size_bytes": 64761,
+      "created_at": "2026-11-01T23:26:24.978101+00:00",
+      "dept_name": "BIM"
+    },
+    {
+      "id": "47f2c4d4-b67e-4c3a-bbff-084f9b4351c9",
+      "file_name": "v1.HacxVq98mkT4B9Ha.qjGwoz6GSsnXejSHpNnqfA.rkwRxT4JCe2D7gE5y87LxRYBROGylzzyveMgKr10Hg",
+      "label": "v1.Bbq3YeEYqxIefrnB.pHDPOmvUZjrUk-y7TIg5dw._m-CeUwyqr332jSEROlIlWwmZR-YtcKGCJEQvty-JIaIBL7uKDF_Qjdj",
+      "size_bytes": 6431,
+      "created_at": "2026-11-03T04:44:47.764404+00:00",
+      "dept_name": "BIM"
+    }
+  ]
+}

@@ -379,6 +379,15 @@ describe("lunch on an on-site day", () => {
   it("a day marked IN-PERSON on the calendar protects lunch too", () => {
     expect(startsOn(generateSlots(query({ overrides: { [WED]: "IN_PERSON" } })), WED)).not.toContain("12:30");
   });
+
+  it("respects dynamic lunch from Google Calendar (e.g. 13:00–13:55 leaves 12:30 open and protects 13:00)", () => {
+    const claimed = [meeting(WED, "10:00", "10:30")];
+    const lunchOverride = { [WED]: { start: at(WED, "13:00"), end: at(WED, "13:55") } };
+    const slots = startsOn(generateSlots(query({ mode: "in_person", meetings: claimed, lunches: lunchOverride })), WED);
+    expect(slots).toContain("12:30");
+    expect(slots).not.toContain("13:00");
+    expect(slots).not.toContain("13:30");
+  });
 });
 
 describe("a client's office days (home-office days)", () => {

@@ -1,11 +1,11 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_AVAILABILITY } from "@/lib/availability-config";
-import { getHostBusy } from "@/lib/google-calendar";
+import { getHostBusy, getHostLunchEvents, type LunchInterval } from "@/lib/google-calendar";
 import { syncMeetingsQuietly } from "@/lib/meeting-sync";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { addDays, localDate, zonedTimeToUtc } from "@/lib/tz";
-import { buildOnSiteDay, impliedVisits, mergeVisits, type BusySpan, type OnSiteDay, type Span, type VisitWindow } from "./onsite-schedule";
+import { buildOnSiteDay, impliedVisits, mergeVisits, subtract, type BusySpan, type OnSiteDay, type Span, type VisitWindow } from "./onsite-schedule";
 
 /**
  * When the owner is at a project's office, for the project page and its tickets.
@@ -91,8 +91,9 @@ export async function loadOnSiteDays(visits: UpcomingVisit[], projectId: string,
   const to = Math.max(...shown.map((v) => zonedTimeToUtc(v.date, v.end, tz)));
 
   let busy: BusySpan[] | null = null;
+  const calendarLunches: LunchInterval[] = [];
   try {
-    const [hostBusy, own] = await Promise.all([
+    const [hostBusy, own, lunches] = await Promise.all([
       getHostBusy(Math.max(from, now), to),
       supabaseAdmin()
         .from("meetings")
@@ -101,16 +102,32 @@ export async function loadOnSiteDays(visits: UpcomingVisit[], projectId: string,
         .in("status", ["pending", "confirmed"])
         .lt("start_time", new Date(to).toISOString())
         .gt("end_time", new Date(from).toISOString()),
+      getHostLunchEvents(from, to).catch((error) => {
+        console.warn("[portal] owner calendar lunch events unreadable:", error instanceof Error ? error.message : error);
+        return [] as LunchInterval[];
+      }),
     ]);
+    calendarLunches.push(...lunches);
+
+    // Host busy from /freeBusy includes lunch events. Subtract lunch intervals from hostBusy
+    // so they are not categorized as meeting/busy blocks.
+    const nonLunchHostBusy = hostBusy.flatMap((b) => {
+      const isExactLunch = lunches.some((l) => Math.abs(b.start - l.start) < 60_000 && Math.abs(b.end - l.end) < 60_000);
+      if (isExactLunch) return [];
+      return subtract(b, lunches);
+    });
+
     const mine: Span[] = (own.data ?? []).map((m) => ({ start: Date.parse(m.start_time), end: Date.parse(m.end_time) }));
-    busy = hostBusy.map((b) => ({ start: b.start, end: b.end, mine: mine.some((m) => m.start < b.end && b.start < m.end) }));
+    busy = nonLunchHostBusy.map((b) => ({ start: b.start, end: b.end, mine: mine.some((m) => m.start < b.end && b.start < m.end) }));
   } catch (error) {
     console.error("[portal] owner calendar unreadable for on-site days:", error instanceof Error ? error.message : error);
   }
 
   const days: OnSiteDayDetail[] = [];
   for (const visit of shown) {
-    const day = buildOnSiteDay({ visit, timeZone: tz, now, busy, lunch: config.lunch, bufferMinutes: config.inPerson.bufferMinutes });
+    const dayLunch = calendarLunches.find((l) => localDate(l.start, tz) === visit.date);
+    const lunch = dayLunch ? { start: dayLunch.start, end: dayLunch.end } : config.lunch;
+    const day = buildOnSiteDay({ visit, timeZone: tz, now, busy, lunch, bufferMinutes: config.inPerson.bufferMinutes });
     if (day) days.push({ ...day, announced: visit.announced, id: visit.id });
   }
   return days;

@@ -118,6 +118,20 @@ describe("a day with fewer hours", () => {
     const day = build([], { visit: { date, start: "12:30", end: "15:00" } })!;
     expect(picture(day)).toEqual(["12:30-13:00 lunch", "13:00-15:00 free"]);
   });
+  it("supports dynamic lunch span matching Google Calendar (e.g. 13:00–13:55)", () => {
+    const lunchSpan = { start: at("13:00"), end: at("13:55") };
+    const day = build([meeting("11:10", "11:40")], { lunch: lunchSpan })!;
+    expect(picture(day)).toEqual([
+      "10:00-10:55 free",
+      "10:55-11:10 gap",
+      "11:10-11:40 busy",
+      "11:40-11:55 gap",
+      "11:55-13:00 free",
+      "13:00-13:55 lunch",
+      "13:55-15:30 free",
+    ]);
+    expect(windows(day)).toContain("11:55-13:00");
+  });
 });
 
 describe("today and the past", () => {

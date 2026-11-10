@@ -82,5 +82,8 @@ export const DEFAULT_AVAILABILITY: AvailabilityConfig = {
   maxInPersonDaysPerWeek: 2,
   hideOnlineOnOnSiteDays: false,
   onSite: { sparseGapMinutes: 150, digestLookaheadDays: 3 },
-  lunch: { start: "12:30", end: "13:00" },
+  lunch: {
+    start: process.env.LUNCH_START_TIME || "12:30",
+    end: process.env.LUNCH_END_TIME || "13:00",
+  },
 };

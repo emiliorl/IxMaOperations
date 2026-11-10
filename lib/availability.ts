@@ -44,6 +44,8 @@ export interface SlotQuery {
    * home on Fridays has nobody to meet that day). Absent = no such limit (the public page).
    */
   officeWeekdays?: readonly number[];
+  /** Per-date lunch intervals from Google Calendar (keyed by "YYYY-MM-DD"). When absent, config.lunch is used. */
+  lunches?: Record<string, Interval>;
 }
 
 const MINUTE = 60_000;
@@ -187,7 +189,7 @@ export function generateSlots(query: SlotQuery): Slot[] {
     const windowStart = zonedTimeToUtc(date, rules.startTime, tz);
     const windowEnd = zonedTimeToUtc(date, rules.endTime, tz);
 
-    const lunch = {
+    const lunch = query.lunches?.[date] ?? {
       start: zonedTimeToUtc(date, config.lunch.start, tz),
       end: zonedTimeToUtc(date, config.lunch.end, tz),
     };

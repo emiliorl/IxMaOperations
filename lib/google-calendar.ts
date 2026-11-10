@@ -131,11 +131,47 @@ export function parseOverrideTitle(summary: string | undefined): DayOverride | n
   return null;
 }
 
+export function isLunchEventTitle(summary: string | undefined): boolean {
+  const title = (summary ?? "").trim().toLowerCase();
+  return /\b(lunch|comida|almuerzo)\b/i.test(title);
+}
+
+export interface LunchInterval extends Interval {
+  summary: string;
+}
+
 interface CalendarEvent {
   summary?: string;
   status?: string;
   start?: { date?: string; dateTime?: string };
   end?: { date?: string; dateTime?: string };
+}
+
+/**
+ * Events on the owner's primary calendar that represent lunch (e.g. titled "Lunch", "Comida", "Almuerzo").
+ * Used so on-site days and the booking scheduler match the owner's real lunch time.
+ */
+export async function getHostLunchEvents(timeMin: number, timeMax: number): Promise<LunchInterval[]> {
+  const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+  const params = new URLSearchParams({
+    timeMin: new Date(timeMin).toISOString(),
+    timeMax: new Date(timeMax).toISOString(),
+    singleEvents: "true",
+    maxResults: "250",
+    fields: "items(summary,status,start,end)",
+  });
+  const data = await hostFetch<{ items?: CalendarEvent[] }>(`/calendars/${encodeURIComponent(calendarId)}/events?${params}`);
+  const result: LunchInterval[] = [];
+  for (const event of data.items ?? []) {
+    if (event.status === "cancelled" || !event.start?.dateTime || !event.end?.dateTime) continue;
+    if (!isLunchEventTitle(event.summary)) continue;
+    result.push({
+      summary: event.summary?.trim() || "Lunch",
+      start: Date.parse(event.start.dateTime),
+      end: Date.parse(event.end.dateTime),
+    });
+  }
+  return result;
 }
 
 /**

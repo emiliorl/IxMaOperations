@@ -73,7 +73,7 @@ function mergeBusy(spans: BusySpan[]): BusySpan[] {
 }
 
 /** `span` without the parts covered by `holes` (which must be sorted and not overlap). */
-function subtract(span: Span, holes: Span[]): Span[] {
+export function subtract(span: Span, holes: Span[]): Span[] {
   const pieces: Span[] = [];
   let cursor = span.start;
   for (const hole of holes) {
@@ -91,7 +91,7 @@ export function buildOnSiteDay(input: {
   now: number;
   /** The owner's busy times; null when the calendar could not be read. */
   busy: BusySpan[] | null;
-  lunch: { start: string; end: string };
+  lunch: { start: string; end: string } | Span | null;
   bufferMinutes: number;
   minFreeMinutes?: number;
 }): OnSiteDay | null {
@@ -111,11 +111,18 @@ export function buildOnSiteDay(input: {
       return inside ? [{ ...inside, mine: b.mine }] : [];
     })
   );
-  const lunchWindow = clip(
-    { start: zonedTimeToUtc(visit.date, input.lunch.start, timeZone), end: zonedTimeToUtc(visit.date, input.lunch.end, timeZone) },
-    start,
-    end
-  );
+  const lunchWindow = input.lunch
+    ? clip(
+        typeof (input.lunch as Span).start === "number"
+          ? (input.lunch as Span)
+          : {
+              start: zonedTimeToUtc(visit.date, (input.lunch as { start: string; end: string }).start, timeZone),
+              end: zonedTimeToUtc(visit.date, (input.lunch as { start: string; end: string }).end, timeZone),
+            },
+        start,
+        end
+      )
+    : null;
   // A meeting over lunch wins: lunch is only what is left of it.
   const lunch = lunchWindow ? subtract(lunchWindow, busy) : [];
 
