@@ -162,3 +162,16 @@ export function tokenizePromptLine(line: string): InlinePromptToken[] {
 
   return tokens.length > 0 ? tokens : [{ kind: "text", value: line }];
 }
+
+/**
+ * Turns heading text into a stable, URL-safe anchor id ("7.1 Qué usar" → "7-1-que-usar"),
+ * so `[Sección 7](#7-guia-para-personas-humanos)` can jump to that heading.
+ */
+export function slugifyHeading(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}

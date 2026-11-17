@@ -2,8 +2,9 @@ import { isValidElement, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { safeHttpUrl } from "@/lib/portal/constants";
-import { classifyCodeBlock, splitMarkdownBlocks } from "@/lib/portal/markdown-blocks";
+import { classifyCodeBlock, slugifyHeading, splitMarkdownBlocks } from "@/lib/portal/markdown-blocks";
 import { CodeBlock } from "./CodeBlock";
+import { HashLinkOpener } from "./HashLinkOpener";
 
 function extractText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") return String(node);
@@ -23,10 +24,18 @@ function extractText(node: ReactNode): string {
  * multi-prompt playbooks feel like an approachable workspace guide rather than code docs.
  */
 const components: Components = {
-  h1: (props) => <h3 className="mt-7 mb-2.5 text-lg sm:text-xl font-semibold tracking-tight text-white first:mt-0" {...props} />,
-  h2: (props) => <h3 className="mt-7 mb-2.5 text-lg sm:text-xl font-semibold tracking-tight text-white first:mt-0" {...props} />,
-  h3: (props) => <h4 className="mt-6 mb-2 text-base font-semibold text-zinc-100 first:mt-0" {...props} />,
-  h4: (props) => <h5 className="mt-4 mb-1.5 text-sm font-semibold text-zinc-200 first:mt-0" {...props} />,
+  h1: ({ children, ...props }) => (
+    <h3 id={slugifyHeading(extractText(children))} className="mt-7 mb-2.5 scroll-mt-24 text-lg sm:text-xl font-semibold tracking-tight text-white first:mt-0" {...props}>{children}</h3>
+  ),
+  h2: ({ children, ...props }) => (
+    <h3 id={slugifyHeading(extractText(children))} className="mt-7 mb-2.5 scroll-mt-24 text-lg sm:text-xl font-semibold tracking-tight text-white first:mt-0" {...props}>{children}</h3>
+  ),
+  h3: ({ children, ...props }) => (
+    <h4 id={slugifyHeading(extractText(children))} className="mt-6 mb-2 scroll-mt-24 text-base font-semibold text-zinc-100 first:mt-0" {...props}>{children}</h4>
+  ),
+  h4: ({ children, ...props }) => (
+    <h5 id={slugifyHeading(extractText(children))} className="mt-4 mb-1.5 scroll-mt-24 text-sm font-semibold text-zinc-200 first:mt-0" {...props}>{children}</h5>
+  ),
   p: (props) => <p className="my-2.5 break-words text-sm sm:text-[15px] leading-relaxed text-zinc-300 first:mt-0 last:mb-0" {...props} />,
   ul: (props) => <ul className="my-3 list-disc space-y-2 pl-5 text-sm sm:text-[15px] text-zinc-300 marker:text-zinc-500" {...props} />,
   ol: (props) => (
@@ -71,20 +80,29 @@ const components: Components = {
   th: (props) => <th className="px-4 py-3 font-semibold" {...props} />,
   td: (props) => <td className="border-t border-zinc-800/70 px-4 py-3 align-top leading-relaxed" {...props} />,
   img: ({ src, alt, ...props }) => {
-    if (!src) return null;
+    if (!src || typeof src !== "string") return null;
     return (
-      <figure className="my-5 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60 shadow-md">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt ?? ""} className="w-full h-auto object-cover" {...props} />
+      <figure className="my-5 mx-auto w-fit max-w-full overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60 shadow-md">
+        <a href={src} target="_blank" rel="noreferrer noopener" title="Abrir a tamaño completo">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={alt ?? ""} loading="lazy" className="mx-auto block h-auto max-h-56 w-auto max-w-full object-contain sm:max-h-72" {...props} />
+        </a>
         {alt && (
           <figcaption className="border-t border-zinc-800/80 bg-zinc-900/60 px-4 py-2 text-center text-xs text-zinc-400">
-            {alt}
+            {alt} · clic para ampliar
           </figcaption>
         )}
       </figure>
     );
   },
   a: ({ href, children }) => {
+    if (href?.startsWith("#")) {
+      return (
+        <a href={href} className="text-zinc-100 underline underline-offset-4 hover:text-white">
+          {children}
+        </a>
+      );
+    }
     const safe = safeHttpUrl(href ?? null);
     if (!safe) return <>{children}</>;
     return (
@@ -99,12 +117,14 @@ export function Markdown({ children }: { children: string }) {
   const segments = splitMarkdownBlocks(children);
   return (
     <div className="max-w-none">
+      <HashLinkOpener />
       {segments.map((segment, index) =>
         segment.kind === "details" ? (
           <details
             key={index}
+            id={slugifyHeading([segment.step, segment.title].filter(Boolean).join(" "))}
             open={index === 0 || (index === 1 && segments[0]?.kind === "markdown")}
-            className="group my-3 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40 transition-colors hover:border-zinc-700 open:border-zinc-700 open:bg-zinc-900/60"
+            className="group my-3 scroll-mt-24 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40 transition-colors hover:border-zinc-700 open:border-zinc-700 open:bg-zinc-900/60"
           >
             <summary className="flex cursor-pointer list-none select-none items-center justify-between gap-4 px-4 py-3.5 sm:px-5 sm:py-4 hover:bg-zinc-900/60">
               <span className="flex min-w-0 items-start gap-3.5">

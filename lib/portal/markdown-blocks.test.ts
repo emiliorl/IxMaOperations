@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyCodeBlock, parseCollapsibleHeader, splitMarkdownBlocks, tokenizePromptLine } from "./markdown-blocks";
+import { classifyCodeBlock, parseCollapsibleHeader, slugifyHeading, splitMarkdownBlocks, tokenizePromptLine } from "./markdown-blocks";
 
 describe("parseCollapsibleHeader", () => {
   it("extracts step badge, title, and optional subtitle separated by em-dash", () => {
@@ -110,5 +110,12 @@ describe("tokenizePromptLine", () => {
       { kind: "placeholder", value: "[DEFECTO]" },
       { kind: "text", value: ": Error de cota" },
     ]);
+  });
+});
+
+describe("slugifyHeading", () => {
+  it("strips accents and punctuation into a URL-safe id", () => {
+    expect(slugifyHeading("7. Guía para Personas (Humanos)")).toBe("7-guia-para-personas-humanos");
+    expect(slugifyHeading("7.1 Qué usar en vez de \"hiperrealista\"")).toBe("7-1-que-usar-en-vez-de-hiperrealista");
   });
 });
