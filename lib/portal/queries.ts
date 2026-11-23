@@ -135,13 +135,22 @@ function one<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
-export async function listProjects(supabase: SupabaseClient): Promise<ProjectSummary[]> {
+export const HIDDEN_PROBLEM_CODES = new Set(["GP-5", "ARQ-5", "RH-5"]);
+
+export function isHiddenProblemCode(code: string | null | undefined): boolean {
+  return Boolean(code && HIDDEN_PROBLEM_CODES.has(code.trim().toUpperCase()));
+}
+
+export async function listProjects(
+  supabase: SupabaseClient,
+  opts?: { includeHidden?: boolean }
+): Promise<ProjectSummary[]> {
   // One query per table for ALL projects (not one per project). Row-level
   // security limits each to what this person may see, so the numbers on a card
   // are the numbers they would find inside the project.
   const [projects, plan, tickets] = await Promise.all([
     supabase.from("projects").select("id,name,slug,status,organizations(name)"),
-    supabase.from("project_milestones").select("project_id,status"),
+    supabase.from("project_milestones").select("project_id,status,code"),
     supabase.from("tickets").select("project_id,status"),
   ]);
   if (projects.error) throw new Error(`Failed to load projects: ${projects.error.message}`);
@@ -149,8 +158,10 @@ export async function listProjects(supabase: SupabaseClient): Promise<ProjectSum
   if (plan.error) console.warn(`[portal] plan progress unavailable: ${plan.error.message}`);
   if (tickets.error) console.warn(`[portal] ticket counts unavailable: ${tickets.error.message}`);
 
+  const includeHidden = opts?.includeHidden ?? false;
   const planByProject = new Map<string, { status: MilestoneStatus }[]>();
   for (const row of plan.error ? [] : (plan.data ?? [])) {
+    if (!includeHidden && isHiddenProblemCode(plainOrNull((row as { code?: string | null }).code))) continue;
     planByProject.set(row.project_id, [...(planByProject.get(row.project_id) ?? []), { status: row.status }]);
   }
   const ticketsByProject = new Map<string, { open: number; review: number }>();
@@ -319,7 +330,11 @@ const PROJECT_CORE =
  * embedded through the foreign keys. Row-level security applies to every
  * embedded table exactly as it would to a separate query.
  */
-export async function getProjectDetail(supabase: SupabaseClient, slug: string): Promise<ProjectDetail | null> {
+export async function getProjectDetail(
+  supabase: SupabaseClient,
+  slug: string,
+  opts?: { includeHidden?: boolean }
+): Promise<ProjectDetail | null> {
   const run = (extended: boolean, withWaiting = true) => {
     let milestoneCols = "id,title,description,status,department_id,due_date,sort_order";
     if (extended) {
@@ -373,20 +388,22 @@ export async function getProjectDetail(supabase: SupabaseClient, slug: string): 
       .filter((d): d is Department => d !== null)
       .map((d) => ({ id: d.id, name: plain(d.name) }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    milestones: (project.project_milestones ?? []).map((m) => ({
-      id: m.id,
-      title: plain(m.title),
-      description: plainOrNull(m.description),
-      status: m.status,
-      departmentId: m.department_id,
-      dueDate: m.due_date,
-      sortOrder: m.sort_order,
-      code: plainOrNull(m.code),
-      priority: m.priority ?? "medium",
-      delivery: plainOrNull(m.delivery),
-      summary: plainOrNull(m.summary),
-      waitingFor: plainOrNull(m.waiting_for),
-    })),
+    milestones: (project.project_milestones ?? [])
+      .map((m) => ({
+        id: m.id,
+        title: plain(m.title),
+        description: plainOrNull(m.description),
+        status: m.status,
+        departmentId: m.department_id,
+        dueDate: m.due_date,
+        sortOrder: m.sort_order,
+        code: plainOrNull(m.code),
+        priority: m.priority ?? "medium",
+        delivery: plainOrNull(m.delivery),
+        summary: plainOrNull(m.summary),
+        waitingFor: plainOrNull(m.waiting_for),
+      }))
+      .filter((m) => (opts?.includeHidden ?? false) || !isHiddenProblemCode(m.code)),
     team: (project.project_members ?? []).map((m) => {
       const profile = one<{ display_name: string; email?: string }>(m.profiles as never);
       return {
@@ -776,7 +793,12 @@ export interface ProblemDetail {
   tickets: TicketSummary[];
 }
 
-export async function getProblem(supabase: SupabaseClient, projectId: string, milestoneId: string): Promise<ProblemDetail | null> {
+export async function getProblem(
+  supabase: SupabaseClient,
+  projectId: string,
+  milestoneId: string,
+  opts?: { includeHidden?: boolean }
+): Promise<ProblemDetail | null> {
   // All four only need the ids we already have, so they run together. If the
   // item turns out not to exist (or isn't visible), the rest is simply discarded.
   const [itemResult, details, cost, tickets] = await Promise.all([
@@ -827,6 +849,8 @@ export async function getProblem(supabase: SupabaseClient, projectId: string, mi
     resources: string | null;
     waiting_for?: string | null;
   } | null;
+  const code = plainOrNull(extra?.code);
+  if (!(opts?.includeHidden ?? false) && isHiddenProblemCode(code)) return null;
 
   return {
     id: item.id,

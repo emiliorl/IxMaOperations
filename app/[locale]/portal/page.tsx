@@ -9,7 +9,7 @@ export default async function PortalHomePage(props: { params: Promise<{ locale: 
   const { locale } = await props.params;
   setRequestLocale(locale);
   const { supabase, isAdmin } = await requireUser(locale);
-  const projects = await listProjects(supabase);
+  const projects = await listProjects(supabase, { includeHidden: isAdmin });
 
   // Most people have exactly one project: take them straight to it.
   if (projects.length === 1 && !isAdmin) redirect({ href: `/portal/projects/${projects[0].slug}`, locale });

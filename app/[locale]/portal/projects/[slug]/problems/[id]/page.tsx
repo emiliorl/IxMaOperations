@@ -43,7 +43,7 @@ export default async function ProblemPage(props: { params: Promise<{ locale: str
 
   // None of these depend on each other, only on the project.
   const [problem, access, allActivity, t, timeZone, sharedFiles] = await Promise.all([
-    getProblem(supabase, project.id, id),
+    getProblem(supabase, project.id, id, { includeHidden: isAdmin }),
     getProjectAccess(supabase, user.id, project.id, project.organizationId),
     // "Ticket opened" is already visible as a row in the ticket history below, so it's left out here.
     getProjectEvents(supabase, project.id, null, 30, { milestoneId: id, excludeKind: "ticket_opened" }),

@@ -2,7 +2,7 @@ import "server-only";
 import { decryptLoose } from "@/lib/field-crypto";
 import { createSupabaseServer, supabaseConfigured } from "@/lib/supabase/server";
 import { timeZoneOrDefault } from "./preferences";
-import { getOfficeWeekdays } from "./queries";
+import { getOfficeWeekdays, isHiddenProblemCode } from "./queries";
 import type { TopicArea, TopicProblem } from "./booking-topic";
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
@@ -91,16 +91,19 @@ export async function resolveBookingContext(input: { projectSlug?: string | null
     .filter((d): d is { id: string; name: string } => d !== null)
     .map((d) => ({ id: d.id, name: decryptLoose(d.name) ?? "" }))
     .sort((a, b) => a.name.localeCompare(b.name));
+  const isAdmin = user.app_metadata?.role === "admin";
   // Before the problem-details migration these columns don't exist: the booking still works, just without the problem list.
   const problems: TopicProblem[] = problemResult.error
     ? []
-    : ((problemResult.data ?? []) as { id: string; title: string; code: string | null; priority: TopicProblem["priority"] | null; department_id: string | null }[]).map((m) => ({
-        id: m.id,
-        code: decryptLoose(m.code),
-        title: decryptLoose(m.title) ?? "",
-        priority: m.priority ?? "medium",
-        areaId: m.department_id,
-      }));
+    : ((problemResult.data ?? []) as { id: string; title: string; code: string | null; priority: TopicProblem["priority"] | null; department_id: string | null }[])
+        .map((m) => ({
+          id: m.id,
+          code: decryptLoose(m.code),
+          title: decryptLoose(m.title) ?? "",
+          priority: m.priority ?? "medium",
+          areaId: m.department_id,
+        }))
+        .filter((m) => isAdmin || !isHiddenProblemCode(m.code));
 
   return {
     userId: user.id,

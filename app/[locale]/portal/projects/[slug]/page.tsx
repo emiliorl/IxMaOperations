@@ -89,7 +89,7 @@ export default async function ProjectPage(props: {
   setRequestLocale(locale);
 
   const { supabase, user, isAdmin } = await requireUser(locale);
-  const project = await getProjectDetail(supabase, slug);
+  const project = await getProjectDetail(supabase, slug, { includeHidden: isAdmin });
   if (!project) notFound(); // a project you can't see looks exactly like one that doesn't exist
 
   // Only the project is needed to start all of these, so they run together.
